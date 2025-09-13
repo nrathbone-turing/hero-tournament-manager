@@ -54,8 +54,8 @@ describe("EventDetail", () => {
   });
 
   test("allows adding a new entrant", async () => {
-    // GET event with no entrants → POST new entrant → GET event with new entrant
     global.fetch
+      // GET /events/1
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -68,6 +68,12 @@ describe("EventDetail", () => {
           matches: [],
         }),
       })
+      // GET /entrants?event_id=1 (initial EntrantDashboard call)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [],
+      })
+      // POST /entrants
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -77,23 +83,21 @@ describe("EventDetail", () => {
           event_id: 1,
         }),
       })
+      // GET /entrants?event_id=1 after add
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          id: 1,
-          name: "Hero Cup",
-          date: "2025-09-12",
-          rules: "Bo3",
-          status: "open",
-          entrants: [{ id: 3, name: "Ironman", alias: "Tony" }],
-          matches: [],
-        }),
+        json: async () => [
+          { id: 3, name: "Ironman", alias: "Tony", event_id: 1 },
+        ],
       });
 
     renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
 
-    await userEvent.type(screen.getByLabelText(/name/i), "Ironman");
-    await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
+    const nameInput = await screen.findByLabelText(/name/i);
+    const aliasInput = screen.getByLabelText(/alias/i);
+
+    await userEvent.type(nameInput, "Ironman");
+    await userEvent.type(aliasInput, "Tony");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
