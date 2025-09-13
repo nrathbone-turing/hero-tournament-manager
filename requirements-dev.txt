@@ -1,0 +1,6 @@
+-r backend/requirements.txt
+pytest
+
+# Dev-only tools
+flake8==7.1.1
+black==24.8.0
