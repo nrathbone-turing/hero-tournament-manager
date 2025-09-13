@@ -58,6 +58,8 @@ Screenshots will be added once frontend components are built
 - **Backend:** Flask, SQLAlchemy, PostgreSQL, Flask-Migrate
 - **Frontend:** React, React Router, fetch API, Semantic UI/Tailwind
 - **DevOps:** GitHub for version control, deployment targets (Render/Heroku/GitHub Pages/Google Cloud)
+  - Flake8 (linting)
+  - Black (auto-formatting)
 - **Testing:** pytest (backend), React Testing Library (frontend)
 
 ---
@@ -81,6 +83,35 @@ npm start
 *(Frontend dev server runs at http://localhost:3000, backend runs at http://localhost:5500)*
 
 ---
+
+## Development Tools
+
+### Backend Linting & Formatting
+- **Lint (check code style):**
+```
+npm run lint:backend
+```
+- **Format (auto-fix code style):**
+```
+npm run format:backend
+```
+- **One-step fix (format then lint):**
+```
+npm run fix:backend
+```
+These commands use [Flake8](https://flake8.pycqa.org/) for linting and [Black](https://black.readthedocs.io/) for auto-formatting.
+
+### Requirements
+- Standard dependencies are in `backend/requirements.txt`
+- Dev-only dependencies (linting, formatting, pytest) are in `requirements-dev.txt`
+
+Install both when working locally:
+```
+pip install -r backend/requirements.txt
+pip install -r requirements-dev.txt
+```
+
+--- 
 
 ## API Endpoints
 - CRUD for Events
