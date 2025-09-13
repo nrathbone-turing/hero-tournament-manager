@@ -1,24 +1,21 @@
 // File: frontend/src/__tests__/EventDetail.test.jsx
 // Purpose: Tests for EventDetail component.
 // Notes:
-// - Renders details for a single event
-// - Shows entrants and matches for that event
-// - Uses mocked fetch calls
+// - Renders details for a single event.
+// - Shows entrants and matches for that event.
+// - Uses mocked fetch responses with partial text matching for reliability.
 
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import EventDetail from "../components/EventDetail"
 
 describe("EventDetail", () => {
   beforeEach(() => {
+    jest.restoreAllMocks()
     global.fetch = jest.fn()
   })
 
-  afterEach(() => {
-    jest.resetAllMocks()
-  })
-
   test("renders event name and date", async () => {
-    fetch.mockResolvedValueOnce({
+    global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         id: 1,
@@ -33,12 +30,13 @@ describe("EventDetail", () => {
 
     render(<EventDetail eventId={1} />)
 
-    expect(await screen.findByText("Hero Cup")).toBeInTheDocument()
+    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument()
     expect(screen.getByText(/2025-09-12/)).toBeInTheDocument()
+    expect(screen.getByText(/open/)).toBeInTheDocument()
   })
 
   test("renders entrants list", async () => {
-    fetch.mockResolvedValueOnce({
+    global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         id: 1,
@@ -56,12 +54,12 @@ describe("EventDetail", () => {
 
     render(<EventDetail eventId={1} />)
 
-    expect(await screen.findByText("Spiderman")).toBeInTheDocument()
-    expect(screen.getByText("Batman")).toBeInTheDocument()
+    expect(await screen.findByText(/Spiderman/)).toBeInTheDocument()
+    expect(await screen.findByText(/Batman/)).toBeInTheDocument()
   })
 
   test("renders matches list", async () => {
-    fetch.mockResolvedValueOnce({
+    global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         id: 1,
