@@ -34,11 +34,9 @@ test("displays events returned from API", async () => {
 
   render(<EventDashboard />)
 
-  // Wait for events to appear
-  await waitFor(() => {
-    expect(screen.getByText("Hero Cup")).toBeInTheDocument()
-    expect(screen.getByText("Villain Showdown")).toBeInTheDocument()
-  })
+  const items = await screen.findAllByRole("listitem")
+  expect(items[0]).toHaveTextContent("Hero Cup")
+  expect(items[1]).toHaveTextContent("Villain Showdown")
 })
 
 test("shows empty state when no events exist", async () => {
