@@ -1,3 +1,10 @@
+// File: frontend/src/__tests__/EntrantDashboard.test.jsx
+// Purpose: Tests for EntrantDashboard component.
+// Notes:
+// - Uses renderWithRouter for consistent Router context.
+// - Mocks fetch responses for GET, POST, and refresh flows.
+// - Covers CRUD-style interactions: load entrants, empty state, add entrant.
+
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
