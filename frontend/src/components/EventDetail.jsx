@@ -3,28 +3,30 @@
 // Notes:
 // - Fetches event data from backend using eventId.
 // - Renders event info, entrants list, and matches list.
-// - Handles loading and error states gracefully.
+// - Integrates EntrantDashboard for adding entrants.
 
 import { useEffect, useState } from "react";
+import EntrantDashboard from "./EntrantDashboard";
 
 export default function EventDetail({ eventId }) {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchEvent() {
-      try {
-        const response = await fetch(`/events/${eventId}`);
-        if (!response.ok) throw new Error("Failed to fetch event");
-        const data = await response.json();
-        setEvent(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  async function fetchEvent() {
+    try {
+      const response = await fetch(`/events/${eventId}`);
+      if (!response.ok) throw new Error("Failed to fetch event");
+      const data = await response.json();
+      setEvent(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchEvent();
   }, [eventId]);
 
@@ -38,7 +40,10 @@ export default function EventDetail({ eventId }) {
       <p>
         {event.name} — {event.date} ({event.status})
       </p>
+
+      {/* Entrants */}
       <h2>Entrants</h2>
+      <EntrantDashboard eventId={eventId} onEntrantAdded={fetchEvent} />
       {event.entrants && event.entrants.length > 0 ? (
         <ul>
           {event.entrants.map((entrant) => (
@@ -50,15 +55,15 @@ export default function EventDetail({ eventId }) {
       ) : (
         <p>No entrants yet</p>
       )}
+
+      {/* Matches */}
       <h2>Matches</h2>
       {event.matches && event.matches.length > 0 ? (
         <ul>
           {event.matches.map((match) => (
             <li key={match.id}>
-              Round {match.round}: {match.scores} — Winner: {
-                                                              match.winner ||
-                                                              (event.entrants.find(e => e.id === match.winner_id)?.name || "Unknown")
-                                                            }
+              Round {match.round}: {match.scores} — Winner:{" "}
+              {match.winner || "TBD"}
             </li>
           ))}
         </ul>

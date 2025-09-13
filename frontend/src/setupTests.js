@@ -31,15 +31,23 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-// Silence act(...) warnings in tests (since we handle async with findBy/waitFor)
+// Silence act(...) warnings + React Router future flag warnings
 const originalError = console.error;
+const originalWarn = console.warn;
+
 beforeAll(() => {
   console.error = (...args) => {
     if (/not wrapped in act/.test(args[0])) return;
     originalError.call(console, ...args);
   };
+
+  console.warn = (...args) => {
+    if (/React Router Future Flag Warning/.test(args[0])) return;
+    originalWarn.call(console, ...args);
+  };
 });
 
 afterAll(() => {
   console.error = originalError;
+  console.warn = originalWarn;
 });
