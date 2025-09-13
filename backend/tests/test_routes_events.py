@@ -7,6 +7,7 @@
 
 import pytest
 from backend.models import Event, db
+from sqlalchemy import select
 
 
 def test_create_event(client):
@@ -44,11 +45,13 @@ def test_update_event(client):
 
     # Act: update status
     response = client.put(f"/events/{event.id}", json={"status": "closed"})
-
-    # Assert
     assert response.status_code == 200
     data = response.get_json()
     assert data["status"] == "closed"
+
+    # Assert
+    result = db.session.execute(select(Event).filter_by(id=event.id)).scalar_one()
+    assert result.status == "closed"
 
 
 def test_delete_event(client):
@@ -62,4 +65,5 @@ def test_delete_event(client):
 
     # Assert
     assert response.status_code == 204
-    assert Event.query.get(event.id) is None
+    result = db.session.execute(select(Event).filter_by(id=event.id)).scalar_one_or_none()
+    assert result is None

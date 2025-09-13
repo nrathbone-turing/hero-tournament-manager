@@ -8,6 +8,7 @@
 
 import pytest
 from backend.models import Event, Entrant, Match, db
+from sqlalchemy import select
 
 
 def seed_event_and_entrants():
@@ -81,6 +82,9 @@ def test_update_match(client):
     data = response.get_json()
     assert data["scores"] == "2-0"
 
+    result = db.session.execute(select(Match).filter_by(id=match.id)).scalar_one()
+    assert result.scores == "2-0"
+
 
 def test_delete_match(client):
     event, e1, e2 = seed_event_and_entrants()
@@ -96,5 +100,7 @@ def test_delete_match(client):
     db.session.commit()
 
     response = client.delete(f"/matches/{match.id}")
+
     assert response.status_code == 204
-    assert Match.query.get(match.id) is None
+    result = db.session.execute(select(Match).filter_by(id=match.id)).scalar_one_or_none()
+    assert result is None
