@@ -5,32 +5,32 @@
 // - Renders event info, entrants list, and matches list.
 // - Handles loading and error states gracefully.
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
 export default function EventDetail({ eventId }) {
-  const [event, setEvent] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchEvent() {
       try {
-        const response = await fetch(`/events/${eventId}`)
-        if (!response.ok) throw new Error("Failed to fetch event")
-        const data = await response.json()
-        setEvent(data)
+        const response = await fetch(`/events/${eventId}`);
+        if (!response.ok) throw new Error("Failed to fetch event");
+        const data = await response.json();
+        setEvent(data);
       } catch (err) {
-        setError(err.message)
+        setError(err.message);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
-    fetchEvent()
-  }, [eventId])
+    fetchEvent();
+  }, [eventId]);
 
-  if (loading) return <p>Loading event...</p>
-  if (error) return <p>Error: {error}</p>
-  if (!event) return <p>No event found</p>
+  if (loading) return <p>Loading event...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!event) return <p>No event found</p>;
 
   return (
     <div>
@@ -63,5 +63,5 @@ export default function EventDetail({ eventId }) {
         <p>No matches yet</p>
       )}
     </div>
-  )
+  );
 }

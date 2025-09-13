@@ -5,47 +5,51 @@
 // - Provides form to create new events.
 // - Re-fetches event list after creating an event.
 
-import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 function EventDashboard() {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [formData, setFormData] = useState({ name: "", date: "", status: "open" })
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    date: "",
+    status: "open",
+  });
 
   async function fetchEvents() {
     try {
-      const response = await fetch("http://localhost:5500/events")
-      if (!response.ok) throw new Error("Failed to fetch events")
-      const data = await response.json()
-      setEvents(data)
+      const response = await fetch("http://localhost:5500/events");
+      if (!response.ok) throw new Error("Failed to fetch events");
+      const data = await response.json();
+      setEvents(data);
     } catch (err) {
-      console.error(err)
-      setEvents([])
+      console.error(err);
+      setEvents([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchEvents()
-  }, [])
+    fetchEvents();
+  }, []);
 
   async function handleSubmit(e) {
-    e.preventDefault()
+    e.preventDefault();
     try {
       const response = await fetch("http://localhost:5500/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      })
-      if (!response.ok) throw new Error("Failed to create event")
+      });
+      if (!response.ok) throw new Error("Failed to create event");
       // Re-fetch events after creation
-      await fetchEvents()
+      await fetchEvents();
       // Reset form
-      setFormData({ name: "", date: "", status: "open" })
+      setFormData({ name: "", date: "", status: "open" });
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
 
@@ -79,7 +83,9 @@ function EventDashboard() {
           <select
             id="status"
             value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, status: e.target.value })
+            }
           >
             <option value="open">Open</option>
             <option value="closed">Closed</option>
@@ -105,7 +111,7 @@ function EventDashboard() {
         <p>No events available</p>
       )}
     </div>
-  )
+  );
 }
 
-export default EventDashboard
+export default EventDashboard;
