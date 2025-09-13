@@ -50,3 +50,46 @@ test("shows empty state when no events exist", async () => {
   // Use regex for robustness against punctuation/spacing
   expect(await screen.findByText(/no events available/i)).toBeInTheDocument()
 })
+
+test("renders event creation form", () => {
+  render(<EventDashboard />)
+
+  expect(screen.getByLabelText(/name/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/date/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/status/i)).toBeInTheDocument()
+  expect(screen.getByRole("button", { name: /create event/i })).toBeInTheDocument()
+})
+
+test("adds new event after form submission", async () => {
+  const mockEvents = [
+    { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+  ]
+
+  // First fetch = existing events
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => mockEvents,
+  })
+
+  // Second fetch = updated events after creation
+  fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => [
+      ...mockEvents,
+      { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
+    ],
+  })
+
+  render(<EventDashboard />)
+
+  // Fill out the form
+  screen.getByLabelText(/name/i).value = "Villain Showdown"
+  screen.getByLabelText(/date/i).value = "2025-09-13"
+  screen.getByLabelText(/status/i).value = "closed"
+
+  screen.getByRole("button", { name: /create event/i }).click()
+
+  await waitFor(() => {
+    expect(screen.getByText("Villain Showdown")).toBeInTheDocument()
+  })
+})
