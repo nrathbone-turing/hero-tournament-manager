@@ -11,7 +11,8 @@
 
     
     "lint:frontend": "cd frontend && npm run lint",
-    "format:frontend": "cd frontend && npx prettier --write .",
+    "format:frontend": "cd frontend && npm run format",
+    "fix:frontend": "cd frontend && npm run format && npm run lint",
     "test:frontend": "cd frontend && npm test",
     "start:frontend": "cd frontend && npm start",
 
