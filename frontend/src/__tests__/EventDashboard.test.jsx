@@ -11,6 +11,11 @@ import EntrantDashboard from "../components/EntrantDashboard";
 
 describe("EntrantDashboard", () => {
   test("renders Entrants heading", () => {
+    global.fetch = jest.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => [],
+    });
+
     renderWithRouter(<EntrantDashboard eventId={1} />);
     expect(screen.getByText(/entrants/i)).toBeInTheDocument();
   });
