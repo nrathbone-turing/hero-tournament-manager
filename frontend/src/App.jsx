@@ -1,17 +1,21 @@
 // File: frontend/src/App.jsx
-// Purpose: Root React component.
+// Purpose: Root component for React app.
 // Notes:
-// - Provides top-level layout and navigation shell.
+// - Sets up routing for dashboard and event detail.
+// - Provides navigation link placeholders for now.
 
-import React from "react"
+import { Routes, Route } from "react-router-dom"
 import EventDashboard from "./components/EventDashboard"
+import EventDetail from "./components/EventDetail"
 
 function App() {
   return (
     <div>
       <h1>Hero Tournament Manager</h1>
-      <p>Welcome! Manage events, entrants, and matches.</p>
-      <EventDashboard />
+      <Routes>
+        <Route path="/" element={<EventDashboard />} />
+        <Route path="/events/:id" element={<EventDetail />} />
+      </Routes>
     </div>
   )
 }
