@@ -9,7 +9,7 @@ from backend.models import db
 from backend.routes.events import bp as events_bp
 from backend.routes.entrants import bp as entrants_bp
 from backend.routes.matches import bp as matches_bp
-
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +17,7 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
+    CORS(app)  # <-- allow frontend on localhost:3000 to call
 
     # Register Blueprints
     app.register_blueprint(events_bp)
