@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+*.db
+__pycache__/
+*.pyc
 
 # production
 /build

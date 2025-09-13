@@ -1,13 +1,17 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+// File: frontend/src/App.jsx
+// Purpose: Root React component.
+// Notes:
+// - Provides top-level layout and navigation shell.
+
+import React from "react"
 import EventDashboard from "./components/EventDashboard"
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/events" element={<EventDashboard />} />
-      </Routes>
-    </Router>
+    <div>
+      <h1>Hero Tournament Manager</h1>
+      <EventDashboard />
+    </div>
   )
 }
 
