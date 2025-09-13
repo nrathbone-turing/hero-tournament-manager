@@ -1,0 +1,4 @@
+"scripts": {
+  "lint:backend": "flake8 backend",
+  "format:backend": "black backend"
+}
