@@ -10,6 +10,7 @@ function App() {
   return (
     <div>
       <h1>Hero Tournament Manager</h1>
+      <p>Welcome! Manage events, entrants, and matches.</p>
       <EventDashboard />
     </div>
   )
