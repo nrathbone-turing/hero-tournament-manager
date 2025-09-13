@@ -6,7 +6,6 @@
 # - Covers create, read, update, delete operations for Entrants.
 # - Runs against an in-memory SQLite database for isolation.
 
-import pytest
 from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
@@ -55,7 +54,7 @@ def test_update_entrant(client):
     assert response.status_code == 200
     data = response.get_json()
     assert data["alias"] == "Updated Alias"
-    
+
     result = db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one()
     assert result.alias == "Updated Alias"
 
@@ -69,5 +68,7 @@ def test_delete_entrant(client):
     response = client.delete(f"/entrants/{entrant.id}")
 
     assert response.status_code == 204
-    result = db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one_or_none()
+    result = db.session.execute(
+        select(Entrant).filter_by(id=entrant.id)
+    ).scalar_one_or_none()
     assert result is None

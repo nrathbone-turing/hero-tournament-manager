@@ -3,13 +3,20 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    
     "lint:backend": "flake8 backend",
     "format:backend": "black backend",
     "fix:backend": "black backend && flake8 backend",
-    "lint:frontend": "cd frontend && npm run lint",
     "test:backend": "pytest -q --disable-warnings",
+
+    
+    "lint:frontend": "cd frontend && npm run lint",
+    "format:frontend": "cd frontend && npm run format",
+    "fix:frontend": "cd frontend && npm run format && npm run lint",
     "test:frontend": "cd frontend && npm test",
     "start:frontend": "cd frontend && npm start",
+
+    
     "test": "npm run test:backend && npm run test:frontend"
   },
   "devDependencies": {}

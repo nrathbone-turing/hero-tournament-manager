@@ -31,12 +31,21 @@ def create_event():
 def get_events():
     """Retrieve all Events."""
     events = Event.query.all()
-    return jsonify(
-        [
-            {"id": e.id, "name": e.name, "date": e.date, "rules": e.rules, "status": e.status}
-            for e in events
-        ]
-    ), 200
+    return (
+        jsonify(
+            [
+                {
+                    "id": e.id,
+                    "name": e.name,
+                    "date": e.date,
+                    "rules": e.rules,
+                    "status": e.status,
+                }
+                for e in events
+            ]
+        ),
+        200,
+    )
 
 
 @bp.route("/<int:event_id>", methods=["PUT"])
@@ -47,9 +56,18 @@ def update_event(event_id):
     for key, value in data.items():
         setattr(event, key, value)
     db.session.commit()
-    return jsonify(
-        {"id": event.id, "name": event.name, "date": event.date, "rules": event.rules, "status": event.status}
-    ), 200
+    return (
+        jsonify(
+            {
+                "id": event.id,
+                "name": event.name,
+                "date": event.date,
+                "rules": event.rules,
+                "status": event.status,
+            }
+        ),
+        200,
+    )
 
 
 @bp.route("/<int:event_id>", methods=["DELETE"])

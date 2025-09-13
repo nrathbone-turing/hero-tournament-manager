@@ -6,7 +6,6 @@
 # - Covers create, read, update, delete operations for Matches.
 # - Runs against an in-memory SQLite database for isolation.
 
-import pytest
 from backend.models import Event, Entrant, Match, db
 from sqlalchemy import select
 
@@ -102,5 +101,7 @@ def test_delete_match(client):
     response = client.delete(f"/matches/{match.id}")
 
     assert response.status_code == 204
-    result = db.session.execute(select(Match).filter_by(id=match.id)).scalar_one_or_none()
+    result = db.session.execute(
+        select(Match).filter_by(id=match.id)
+    ).scalar_one_or_none()
     assert result is None

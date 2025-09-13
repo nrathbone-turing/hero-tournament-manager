@@ -11,6 +11,7 @@ from backend.routes.entrants import bp as entrants_bp
 from backend.routes.matches import bp as matches_bp
 from flask_cors import CORS
 
+
 def create_app():
     app = Flask(__name__)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tournaments.db"

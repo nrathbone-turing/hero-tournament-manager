@@ -4,9 +4,9 @@
 // - Sets up routing for dashboard and event detail.
 // - Provides navigation link placeholders for now.
 
-import { Routes, Route } from "react-router-dom"
-import EventDashboard from "./components/EventDashboard"
-import EventDetail from "./components/EventDetail"
+import { Routes, Route } from "react-router-dom";
+import EventDashboard from "./components/EventDashboard";
+import EventDetail from "./components/EventDetail";
 
 function App() {
   return (
@@ -17,7 +17,7 @@ function App() {
         <Route path="/events/:id" element={<EventDetail />} />
       </Routes>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

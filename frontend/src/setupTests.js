@@ -5,7 +5,7 @@
 // - Provides a default global.fetch mock that can be overridden per test.
 // - Suppresses common React warnings by ensuring state updates happen inside act.
 
-import "@testing-library/jest-dom"
+import "@testing-library/jest-dom";
 
 // Default fetch mock
 beforeEach(() => {
@@ -15,26 +15,31 @@ beforeEach(() => {
       json: () =>
         Promise.resolve([
           { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
-          { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" }
-        ])
-    })
-  )
-})
+          {
+            id: 2,
+            name: "Villain Showdown",
+            date: "2025-09-13",
+            status: "closed",
+          },
+        ]),
+    }),
+  );
+});
 
 // Reset mocks between tests
 afterEach(() => {
-  jest.clearAllMocks()
-})
+  jest.clearAllMocks();
+});
 
 // Silence act(...) warnings in tests (since we handle async with findBy/waitFor)
-const originalError = console.error
+const originalError = console.error;
 beforeAll(() => {
   console.error = (...args) => {
-    if (/not wrapped in act/.test(args[0])) return
-    originalError.call(console, ...args)
-  }
-})
+    if (/not wrapped in act/.test(args[0])) return;
+    originalError.call(console, ...args);
+  };
+});
 
 afterAll(() => {
-  console.error = originalError
-})
+  console.error = originalError;
+});

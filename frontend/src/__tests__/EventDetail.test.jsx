@@ -4,9 +4,9 @@
 // - Uses renderWithRouter so component has Router context.
 // - Mocks fetch responses to simulate backend API.
 
-import { screen } from "@testing-library/react"
-import EventDetail from "../components/EventDetail"
-import { renderWithRouter } from "../test-utils"
+import { screen } from "@testing-library/react";
+import EventDetail from "../components/EventDetail";
+import { renderWithRouter } from "../test-utils";
 
 describe("EventDetail", () => {
   test("renders event name and date", async () => {
@@ -21,13 +21,13 @@ describe("EventDetail", () => {
         entrants: [],
         matches: [],
       }),
-    })
+    });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
 
-    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument()
-    expect(await screen.findByText(/2025-09-12/)).toBeInTheDocument()
-  })
+    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
+    expect(await screen.findByText(/2025-09-12/)).toBeInTheDocument();
+  });
 
   test("renders entrants list", async () => {
     global.fetch.mockResolvedValueOnce({
@@ -44,13 +44,13 @@ describe("EventDetail", () => {
         ],
         matches: [],
       }),
-    })
+    });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
 
-    expect(await screen.findByText(/Spiderman/)).toBeInTheDocument()
-    expect(await screen.findByText(/Batman/)).toBeInTheDocument()
-  })
+    expect(await screen.findByText(/Spiderman/)).toBeInTheDocument();
+    expect(await screen.findByText(/Batman/)).toBeInTheDocument();
+  });
 
   test("renders matches list", async () => {
     global.fetch.mockResolvedValueOnce({
@@ -62,15 +62,13 @@ describe("EventDetail", () => {
         rules: "Bo3",
         status: "open",
         entrants: [],
-        matches: [
-          { id: 1, round: 1, scores: "2-1", winner: "Spiderman" },
-        ],
+        matches: [{ id: 1, round: 1, scores: "2-1", winner: "Spiderman" }],
       }),
-    })
+    });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
 
-    expect(await screen.findByText(/Round 1/)).toBeInTheDocument()
-    expect(await screen.findByText(/Winner: Spiderman/)).toBeInTheDocument()
-  })
-})
+    expect(await screen.findByText(/Round 1/)).toBeInTheDocument();
+    expect(await screen.findByText(/Winner: Spiderman/)).toBeInTheDocument();
+  });
+});
