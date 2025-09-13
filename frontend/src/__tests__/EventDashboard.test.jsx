@@ -47,7 +47,6 @@ test("shows empty state when no events exist", async () => {
 
   render(<EventDashboard />)
 
-  await waitFor(() => {
-    expect(screen.getByText(/no events available/i)).toBeInTheDocument()
-  })
+  // Use regex for robustness against punctuation/spacing
+  expect(await screen.findByText(/no events available/i)).toBeInTheDocument()
 })
