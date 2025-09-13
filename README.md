@@ -85,7 +85,6 @@ npm start
 ---
 
 ## Development Tools
-
 ### Backend Linting & Formatting
 - **Lint (check code style):**
 ```
@@ -101,6 +100,17 @@ npm run fix:backend
 ```
 These commands use [Flake8](https://flake8.pycqa.org/) for linting and [Black](https://black.readthedocs.io/) for auto-formatting.
 
+### Frontend Linting & Formatting
+- **Lint (check code style):**
+```
+npm run lint:frontend
+```
+- **Format (auto-fix code style):**
+```
+npm run format:frontend
+```
+These commands use [ESLint](https://eslint.org/) for linting and [Prettier](https://prettier.io/) for formatting.
+
 ### Requirements
 - Standard dependencies are in `backend/requirements.txt`
 - Dev-only dependencies (linting, formatting, pytest) are in `requirements-dev.txt`
@@ -109,6 +119,24 @@ Install both when working locally:
 ```
 pip install -r backend/requirements.txt
 pip install -r requirements-dev.txt
+```
+
+---
+
+## Running Tests
+### Backend Tests (pytest)
+```
+npm run test:backend
+```
+
+### Frontend Tests (Jest & RTL)
+```
+npm run test:frontend
+```
+
+### Full Suite (backend + frontend)
+```
+npm test
 ```
 
 --- 
@@ -121,62 +149,27 @@ pip install -r requirements-dev.txt
 
 ---
 
-## Running Tests
-### Backend Tests
-Run directly:
-
-```
-cd backend
-pytest -v
-```
-
-Or via npm script:
-```
-npm run test:backend
-```
-This runs both model tests and API route tests (CRUD for Events) against an in-memory SQLite database.
-
-### Frontend Tests
-Run directly:
-
-```
-cd frontend
-npm test
-```
-
-Or via npm script:
-```
-npm run test:frontend
-```
-
-### Full Suite (backend + frontend)
-```
-npm test
-```
-
---- 
-
 ## Project Structure
 ```
+## Project Structure
+
 hero-tournament-manager/
-├── backend/
+├── backend/                # Flask backend (API + models + routes + tests)
 │   ├── app.py
 │   ├── config.py
 │   ├── models.py
+│   ├── requirements.txt
 │   ├── routes/
-│   │   ├── __init__.py
 │   │   ├── events.py
 │   │   ├── entrants.py
 │   │   └── matches.py
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   ├── test_models.py
-│   │   ├── test_routes_events.py
-│   │   ├── test_routes_entrants.py
-│   │   └── test_routes_matches.py
-│   └── requirements.txt
+│   └── tests/
+│       ├── test_models.py
+│       ├── test_routes_events.py
+│       ├── test_routes_entrants.py
+│       └── test_routes_matches.py
 │
-├── frontend/
+├── frontend/               # React frontend
 │   ├── package.json
 │   ├── public/
 │   └── src/
@@ -190,11 +183,13 @@ hero-tournament-manager/
 │           ├── App.test.jsx
 │           └── EventDashboard.test.jsx
 │
-├── venv/
-├── requirements-dev.txt
-├── package.json        # root-level, manages lint/test scripts
-├── README.md
-└── LICENSE
+├── venv/                   # Python virtual environment (ignored in Git)
+├── requirements-dev.txt    # Dev-only Python deps (pytest, flake8, black)
+├── package.json            # Root-level scripts (lint/test orchestration)
+├── pyproject.toml          # Config for tools like Black
+├── pytest.ini              # Pytest config
+├── README.md               # Project docs
+└── LICENSE                 # License file
 ```
 
 ## Future Improvements
