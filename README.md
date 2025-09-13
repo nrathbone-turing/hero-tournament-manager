@@ -109,6 +109,10 @@ npm run lint:frontend
 ```
 npm run format:frontend
 ```
+- **One-step fix (format then lint):**
+```
+npm run fix:frontend
+```
 These commands use [ESLint](https://eslint.org/) for linting and [Prettier](https://prettier.io/) for formatting.
 
 ### Requirements
