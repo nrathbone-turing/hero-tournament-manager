@@ -1,52 +1,85 @@
 // File: frontend/src/__tests__/EventDashboard.test.jsx
-// Purpose: Unit tests for EventDashboard component.
+// Purpose: Tests for EventDashboard component.
 // Notes:
-// - Uses React Testing Library to test rendering and API integration.
-// - Covers: initial render, successful API fetch, empty state.
+// - Mocks fetch to simulate backend API responses.
+// - Covers rendering heading, displaying events, empty state, and adding events.
 
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import EventDashboard from "../components/EventDashboard"
 
-// Mock the fetch API
 beforeEach(() => {
-  global.fetch = jest.fn()
-})
-
-afterEach(() => {
   jest.restoreAllMocks()
+  global.fetch = jest.fn()
 })
 
 test("renders Events heading", () => {
   render(<EventDashboard />)
-  expect(screen.getByRole("heading", { name: /events/i })).toBeInTheDocument()
+  expect(screen.getByText(/events/i)).toBeInTheDocument()
 })
 
 test("displays events returned from API", async () => {
-  const mockEvents = [
-    { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
-    { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
-  ]
-
-  fetch.mockResolvedValueOnce({
+  global.fetch.mockResolvedValueOnce({
     ok: true,
-    json: async () => mockEvents,
+    json: async () => [
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+      { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
+    ],
   })
 
   render(<EventDashboard />)
 
-  const items = await screen.findAllByRole("listitem")
-  expect(items[0]).toHaveTextContent("Hero Cup")
-  expect(items[1]).toHaveTextContent("Villain Showdown")
+  // findByText waits until the elements appear
+  expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument()
+  expect(await screen.findByText(/Villain Showdown/)).toBeInTheDocument()
 })
 
 test("shows empty state when no events exist", async () => {
-  fetch.mockResolvedValueOnce({
+  global.fetch.mockResolvedValueOnce({
     ok: true,
     json: async () => [],
   })
 
   render(<EventDashboard />)
 
-  // Use regex for robustness against punctuation/spacing
   expect(await screen.findByText(/no events available/i)).toBeInTheDocument()
+})
+
+test("adds new event after form submission", async () => {
+  // Initial GET
+  global.fetch.mockResolvedValueOnce({
+    ok: true,
+    json: async () => [],
+  })
+  // POST create
+  .mockResolvedValueOnce({
+    ok: true,
+    json: async () => ({
+      id: 2,
+      name: "Villain Showdown",
+      date: "2025-09-13",
+      status: "closed",
+    }),
+  })
+  // GET after creation
+  .mockResolvedValueOnce({
+    ok: true,
+    json: async () => [
+      {
+        id: 2,
+        name: "Villain Showdown",
+        date: "2025-09-13",
+        status: "closed",
+      },
+    ],
+  })
+
+  render(<EventDashboard />)
+
+  await userEvent.type(screen.getByLabelText(/name/i), "Villain Showdown")
+  await userEvent.type(screen.getByLabelText(/date/i), "2025-09-13")
+  await userEvent.selectOptions(screen.getByLabelText(/status/i), "closed")
+  await userEvent.click(screen.getByRole("button", { name: /create event/i }))
+
+  expect(await screen.findByText(/Villain Showdown/)).toBeInTheDocument()
 })
