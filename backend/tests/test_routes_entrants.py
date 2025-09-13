@@ -8,6 +8,7 @@
 
 import pytest
 from backend.models import Event, Entrant, db
+from sqlalchemy import select
 
 
 def create_event_for_testing():
@@ -65,5 +66,7 @@ def test_delete_entrant(client):
     db.session.commit()
 
     response = client.delete(f"/entrants/{entrant.id}")
+
     assert response.status_code == 204
-    assert Entrant.query.get(entrant.id) is None
+    result = db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one_or_none()
+    assert result is None

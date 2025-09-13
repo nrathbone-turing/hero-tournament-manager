@@ -8,6 +8,7 @@
 
 import pytest
 from backend.models import Event, Entrant, Match, db
+from sqlalchemy import select
 
 
 def seed_event_and_entrants():
@@ -96,5 +97,7 @@ def test_delete_match(client):
     db.session.commit()
 
     response = client.delete(f"/matches/{match.id}")
+
     assert response.status_code == 204
-    assert Match.query.get(match.id) is None
+    result = db.session.execute(select(Match).filter_by(id=match.id)).scalar_one_or_none()
+    assert result is None
