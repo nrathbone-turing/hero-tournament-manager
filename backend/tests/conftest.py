@@ -27,3 +27,9 @@ def session(app):
     with app.app_context():
         yield db.session
         db.session.rollback()
+
+
+@pytest.fixture
+def client(app):
+    """Fixture for Flask test client to send simulated HTTP requests."""
+    return app.test_client()
