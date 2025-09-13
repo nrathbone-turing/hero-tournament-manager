@@ -55,7 +55,10 @@ export default function EventDetail({ eventId }) {
         <ul>
           {event.matches.map((match) => (
             <li key={match.id}>
-              Round {match.round}: {match.scores} — Winner: {match.winner}
+              Round {match.round}: {match.scores} — Winner: {
+                                                              match.winner ||
+                                                              (event.entrants.find(e => e.id === match.winner_id)?.name || "Unknown")
+                                                            }
             </li>
           ))}
         </ul>

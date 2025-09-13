@@ -19,7 +19,7 @@ function EventDashboard() {
 
   async function fetchEvents() {
     try {
-      const response = await fetch("http://localhost:5500/events");
+      const response = await fetch("/events");
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
       setEvents(data);
@@ -38,7 +38,7 @@ function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5500/events", {
+      const response = await fetch("/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
