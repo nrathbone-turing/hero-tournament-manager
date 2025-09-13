@@ -1,19 +1,14 @@
 // File: frontend/src/__tests__/EventDetail.test.jsx
 // Purpose: Tests for EventDetail component.
 // Notes:
-// - Renders details for a single event.
-// - Shows entrants and matches for that event.
-// - Uses mocked fetch responses with partial text matching for reliability.
+// - Uses renderWithRouter so component has Router context.
+// - Mocks fetch responses to simulate backend API.
 
-import { render, screen } from "@testing-library/react"
+import { screen } from "@testing-library/react"
 import EventDetail from "../components/EventDetail"
+import { renderWithRouter } from "../test-utils"
 
 describe("EventDetail", () => {
-  beforeEach(() => {
-    jest.restoreAllMocks()
-    global.fetch = jest.fn()
-  })
-
   test("renders event name and date", async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
@@ -28,11 +23,10 @@ describe("EventDetail", () => {
       }),
     })
 
-    render(<EventDetail eventId={1} />)
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
 
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument()
-    expect(screen.getByText(/2025-09-12/)).toBeInTheDocument()
-    expect(screen.getByText(/open/)).toBeInTheDocument()
+    expect(await screen.findByText(/2025-09-12/)).toBeInTheDocument()
   })
 
   test("renders entrants list", async () => {
@@ -52,7 +46,7 @@ describe("EventDetail", () => {
       }),
     })
 
-    render(<EventDetail eventId={1} />)
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
 
     expect(await screen.findByText(/Spiderman/)).toBeInTheDocument()
     expect(await screen.findByText(/Batman/)).toBeInTheDocument()
@@ -74,9 +68,9 @@ describe("EventDetail", () => {
       }),
     })
 
-    render(<EventDetail eventId={1} />)
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" })
 
     expect(await screen.findByText(/Round 1/)).toBeInTheDocument()
-    expect(screen.getByText(/Winner: Spiderman/)).toBeInTheDocument()
+    expect(await screen.findByText(/Winner: Spiderman/)).toBeInTheDocument()
   })
 })

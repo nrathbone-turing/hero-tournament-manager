@@ -9,3 +9,6 @@ frontend/build/
 
 # Mac
 .DS_Store
+
+# Ignore Flask instance folder
+instance/

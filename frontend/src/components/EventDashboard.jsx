@@ -6,6 +6,7 @@
 // - Re-fetches event list after creating an event.
 
 import { useState, useEffect } from "react"
+import { Link } from "react-router-dom"
 
 function EventDashboard() {
   const [events, setEvents] = useState([])
@@ -93,9 +94,10 @@ function EventDashboard() {
         <p>Loading...</p>
       ) : events.length > 0 ? (
         <ul>
-          {events.map((ev) => (
-            <li key={ev.id}>
-              {ev.name} — {ev.date} ({ev.status})
+          {events.map((e) => (
+            <li key={e.id}>
+              {e.name} — {e.date} ({e.status}){" "}
+              <Link to={`/events/${e.id}`}>View Event</Link>
             </li>
           ))}
         </ul>
