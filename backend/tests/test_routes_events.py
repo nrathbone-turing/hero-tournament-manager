@@ -5,7 +5,6 @@
 # - Covers create, read, update, delete operations for Event.
 # - Runs against an in-memory SQLite database for isolation.
 
-import pytest
 from backend.models import Event, db
 from sqlalchemy import select
 
@@ -13,7 +12,12 @@ from sqlalchemy import select
 def test_create_event(client):
     response = client.post(
         "/events",
-        json={"name": "Hero Cup", "date": "2025-09-12", "rules": "Bo3", "status": "open"},
+        json={
+            "name": "Hero Cup",
+            "date": "2025-09-12",
+            "rules": "Bo3",
+            "status": "open",
+        },
     )
     assert response.status_code == 201
     data = response.get_json()
@@ -65,5 +69,7 @@ def test_delete_event(client):
 
     # Assert
     assert response.status_code == 204
-    result = db.session.execute(select(Event).filter_by(id=event.id)).scalar_one_or_none()
+    result = db.session.execute(
+        select(Event).filter_by(id=event.id)
+    ).scalar_one_or_none()
     assert result is None
