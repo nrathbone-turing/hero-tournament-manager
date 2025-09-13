@@ -82,6 +82,9 @@ def test_update_match(client):
     data = response.get_json()
     assert data["scores"] == "2-0"
 
+    result = db.session.execute(select(Match).filter_by(id=match.id)).scalar_one()
+    assert result.scores == "2-0"
+
 
 def test_delete_match(client):
     event, e1, e2 = seed_event_and_entrants()

@@ -51,12 +51,13 @@ def test_update_entrant(client):
     db.session.add(entrant)
     db.session.commit()
 
-    response = client.put(
-        f"/entrants/{entrant.id}", json={"alias": "Updated Alias"}
-    )
+    response = client.put(f"/entrants/{entrant.id}", json={"alias": "Updated Alias"})
     assert response.status_code == 200
     data = response.get_json()
     assert data["alias"] == "Updated Alias"
+    
+    result = db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one()
+    assert result.alias == "Updated Alias"
 
 
 def test_delete_entrant(client):
