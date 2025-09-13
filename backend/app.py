@@ -6,6 +6,7 @@
 
 from flask import Flask
 from backend.models import db
+from flask_migrate import Migrate
 from backend.routes.events import bp as events_bp
 from backend.routes.entrants import bp as entrants_bp
 from backend.routes.matches import bp as matches_bp
@@ -19,6 +20,7 @@ def create_app():
 
     db.init_app(app)
     CORS(app)  # <-- allow frontend on localhost:3000 to call
+    migrate = Migrate(app, db)
 
     # Register Blueprints
     app.register_blueprint(events_bp)
