@@ -1,6 +1,13 @@
+# File: backend/tests/conftest.py
+# Purpose: Global pytest fixtures for backend tests.
+# Provides:
+# - app: Flask app configured with in-memory SQLite DB
+# - session: SQLAlchemy session scoped to test context
+
 import pytest
 from flask import Flask
 from backend.models import db
+
 
 @pytest.fixture(scope="session")
 def app():
@@ -13,6 +20,7 @@ def app():
         db.create_all()
         yield app
         db.drop_all()
+
 
 @pytest.fixture
 def session(app):
