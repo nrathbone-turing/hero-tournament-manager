@@ -123,14 +123,34 @@ pip install -r requirements-dev.txt
 
 ## Running Tests
 ### Backend Tests
+Run directly:
+
 ```
 cd backend
 pytest -v
 ```
 
+Or via npm script:
+```
+npm run test:backend
+```
+This runs both model tests and API route tests (CRUD for Events) against an in-memory SQLite database.
+
 ### Frontend Tests
+Run directly:
+
 ```
 cd frontend
+npm test
+```
+
+Or via npm script:
+```
+npm run test:frontend
+```
+
+### Full Suite (backend + frontend)
+```
 npm test
 ```
 
@@ -144,13 +164,19 @@ hero-tournament-manager/
 │   ├── config.py
 │   ├── models.py
 │   ├── routes/
-│   ├── migrations/
+│   │   └── events.py
+│   ├── tests/
+│   │   ├── conftest.py
+│   │   ├── test_models.py
+│   │   └── test_routes_events.py
 │   └── requirements.txt
 ├── frontend/
 │   ├── package.json
 │   ├── public/
 │   └── src/
 ├── venv/
+├── requirements-dev.txt
+├── package.json
 ├── README.md
 └── LICENSE
 ```
