@@ -164,19 +164,35 @@ hero-tournament-manager/
 │   ├── config.py
 │   ├── models.py
 │   ├── routes/
-│   │   └── events.py
+│   │   ├── __init__.py
+│   │   ├── events.py
+│   │   ├── entrants.py
+│   │   └── matches.py
 │   ├── tests/
 │   │   ├── conftest.py
 │   │   ├── test_models.py
-│   │   └── test_routes_events.py
+│   │   ├── test_routes_events.py
+│   │   ├── test_routes_entrants.py
+│   │   └── test_routes_matches.py
 │   └── requirements.txt
+│
 ├── frontend/
 │   ├── package.json
 │   ├── public/
 │   └── src/
+│       ├── App.jsx
+│       ├── App.css
+│       ├── index.js
+│       ├── index.css
+│       ├── components/
+│       │   └── EventDashboard.jsx
+│       └── __tests__/
+│           ├── App.test.jsx
+│           └── EventDashboard.test.jsx
+│
 ├── venv/
 ├── requirements-dev.txt
-├── package.json
+├── package.json        # root-level, manages lint/test scripts
 ├── README.md
 └── LICENSE
 ```
