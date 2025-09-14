@@ -3,6 +3,7 @@
 # Notes:
 # - Supports create, read (list), update, and delete.
 # - Uses Match.to_dict() for consistent serialization.
+# - Always returns matches with entrant names for frontend convenience.
 
 from flask import Blueprint, request, jsonify
 from backend.models import db, Match
@@ -24,7 +25,7 @@ def create_match():
     )
     db.session.add(match)
     db.session.commit()
-    return jsonify(match.to_dict()), 201
+    return jsonify(match.to_dict(include_names=True)), 201
 
 
 @bp.route("", methods=["GET"])
@@ -35,7 +36,7 @@ def get_matches():
     if event_id:
         query = query.filter_by(event_id=event_id)
     matches = query.all()
-    return jsonify([m.to_dict() for m in matches]), 200
+    return jsonify([m.to_dict(include_names=True) for m in matches]), 200
 
 
 @bp.route("/<int:match_id>", methods=["PUT"])
@@ -46,7 +47,7 @@ def update_match(match_id):
     for key, value in data.items():
         setattr(match, key, value)
     db.session.commit()
-    return jsonify(match.to_dict()), 200
+    return jsonify(match.to_dict(include_names=True)), 200
 
 
 @bp.route("/<int:match_id>", methods=["DELETE"])

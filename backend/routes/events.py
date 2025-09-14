@@ -3,6 +3,7 @@
 # Notes:
 # - Supports create, read (list), update, and delete.
 # - Uses Event.to_dict() for consistent serialization.
+# - Enriches matches with entrant names when returning a single event.
 
 from flask import Blueprint, request, jsonify
 from backend.models import db, Event
@@ -34,9 +35,12 @@ def get_events():
 
 @bp.route("/<int:event_id>", methods=["GET"])
 def get_event(event_id):
-    """Retrieve a single Event with entrants + matches."""
+    """Retrieve a single Event with entrants + matches (with names)."""
     event = Event.query.get_or_404(event_id)
-    return jsonify(event.to_dict(include_related=True)), 200
+    data = event.to_dict(include_related=True)
+    # enrich matches with entrant names
+    data["matches"] = [m.to_dict(include_names=True) for m in event.matches]
+    return jsonify(data), 200
 
 
 @bp.route("/<int:event_id>", methods=["PUT"])
