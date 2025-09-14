@@ -1,9 +1,8 @@
 // File: frontend/src/__tests__/App.test.jsx
 // Purpose: Routing tests for App component.
 // Notes:
-// - Uses renderWithRouter + global fetch mock.
-// - Confirms EventDashboard and EventDetail render in correct routes.
 // - Relies on global fetch mock from setupTests.js.
+// - Explicitly mocks /events again for navigation back to dashboard.
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -20,12 +19,12 @@ describe("App routing", () => {
 
   test("renders EventDashboard on home route", async () => {
     renderWithRouter(<App />, { route: "/" });
-    // From global fetch mock in setupTests.js
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
     expect(screen.getByText(/Villain Showdown/i)).toBeInTheDocument();
   });
 
   test("renders EventDetail on event detail route", async () => {
+    // Mock single event for /events/1
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
@@ -45,19 +44,43 @@ describe("App routing", () => {
   });
 
   test("navigates between Dashboard and EventDetail", async () => {
+    // Step 1: mock list for dashboard
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+      ],
+    });
+
     renderWithRouter(<App />, { route: "/" });
+    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
 
-    // Click link to Hero Cup
-    await userEvent.click(await screen.findByRole("link", { name: /hero cup/i }));
+    // Step 2: mock single event for detail
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        name: "Hero Cup",
+        date: "2025-09-12",
+        status: "open",
+        entrants: [],
+        matches: [],
+      }),
+    });
 
-    // Verify EventDetail loads
-    expect(await screen.findByRole("heading", { name: /event detail/i }))
-      .toBeInTheDocument();
+    await userEvent.click(screen.getByRole("link", { name: /hero cup/i }));
+    expect(await screen.findByRole("heading", { name: /event detail/i })).toBeInTheDocument();
 
-    // Click back to Events
+    // Step 3: mock list again for navigation back
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [
+        { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+        { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
+      ],
+    });
+
     await userEvent.click(screen.getByRole("link", { name: /back to events/i }));
-
-    // Verify Dashboard is shown again
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
   });
 });
