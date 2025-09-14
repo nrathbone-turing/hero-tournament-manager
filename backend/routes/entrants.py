@@ -11,10 +11,8 @@ from backend.models import db, Entrant
 
 bp = Blueprint("entrants", __name__, url_prefix="/entrants")
 
-
 @bp.route("", methods=["POST"])
 def create_entrant():
-    """Create a new Entrant."""
     data = request.get_json()
     entrant = Entrant(
         name=data.get("name"),
@@ -23,63 +21,28 @@ def create_entrant():
     )
     db.session.add(entrant)
     db.session.commit()
-    return (
-        jsonify(
-            {
-                "id": entrant.id,
-                "name": entrant.name,
-                "alias": entrant.alias,
-                "event_id": entrant.event_id,
-            }
-        ),
-        201,
-    )
-
+    return jsonify(entrant.to_dict()), 201
 
 @bp.route("", methods=["GET"])
 def get_entrants():
-    """Retrieve all Entrants."""
-    entrants = Entrant.query.all()
-    return (
-        jsonify(
-            [
-                {
-                    "id": e.id,
-                    "name": e.name,
-                    "alias": e.alias,
-                    "event_id": e.event_id,
-                }
-                for e in entrants
-            ]
-        ),
-        200,
-    )
-
+    event_id = request.args.get("event_id")
+    if event_id:
+        entrants = Entrant.query.filter_by(event_id=event_id).all()
+    else:
+        entrants = Entrant.query.all()
+    return jsonify([e.to_dict() for e in entrants]), 200
 
 @bp.route("/<int:entrant_id>", methods=["PUT"])
 def update_entrant(entrant_id):
-    """Update an Entrant by ID."""
     entrant = Entrant.query.get_or_404(entrant_id)
     data = request.get_json()
     for key, value in data.items():
         setattr(entrant, key, value)
     db.session.commit()
-    return (
-        jsonify(
-            {
-                "id": entrant.id,
-                "name": entrant.name,
-                "alias": entrant.alias,
-                "event_id": entrant.event_id,
-            }
-        ),
-        200,
-    )
-
+    return jsonify(entrant.to_dict()), 200
 
 @bp.route("/<int:entrant_id>", methods=["DELETE"])
 def delete_entrant(entrant_id):
-    """Delete an Entrant by ID."""
     entrant = Entrant.query.get_or_404(entrant_id)
     db.session.delete(entrant)
     db.session.commit()
