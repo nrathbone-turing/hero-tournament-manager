@@ -10,17 +10,15 @@ import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
 import { API_BASE_URL } from "../api";
 
-export default function EventDetail({ eventId }) {
+export default function EventDetail() {
   const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || "";
-
   async function fetchEvent() {
     try {
-      const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
+      const response = await fetch(`${API_BASE_URL}/events/${id}`);
       if (!response.ok) throw new Error("Failed to fetch event");
       const data = await response.json();
       setEvent(data);
@@ -34,7 +32,7 @@ export default function EventDetail({ eventId }) {
 
   useEffect(() => {
     fetchEvent();
-  }, [eventId]);
+  }, [id]);
 
   if (loading) return <p>Loading event...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -48,11 +46,11 @@ export default function EventDetail({ eventId }) {
       </p>
 
       <p>
-        <a href="/" role="link">Back to Events</a>
+        <Link to="/">Back to Events</Link>
       </p>
 
       <h2>Entrants</h2>
-      <EntrantDashboard eventId={eventId} onEntrantAdded={fetchEvent} />
+      <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
       {event.entrants?.length > 0 ? (
         <ul>
           {event.entrants.map((entrant) => (
@@ -66,7 +64,7 @@ export default function EventDetail({ eventId }) {
       )}
 
       <h2>Matches</h2>
-      <MatchDashboard eventId={eventId} onMatchAdded={fetchEvent} />
+      <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
       {event.matches?.length > 0 ? (
         <ul>
           {event.matches.map((m) => (
