@@ -1,11 +1,26 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Displays a list of Events and allows creation of new Events.
 // Notes:
+// - Styled with MUI components for consistency with the rest of the app.
 // - Uses REACT_APP_API_URL env var for backend requests.
-// - Falls back to relative paths if not provided.
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import {
+  Container,
+  Typography,
+  Box,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  List,
+  ListItem,
+  ListItemText,
+  CircularProgress,
+} from "@mui/material";
 import { API_BASE_URL } from "../api";
 
 function EventDashboard() {
@@ -55,61 +70,83 @@ function EventDashboard() {
   }
 
   return (
-    <div data-testid="event-dashboard">
-      <h1>Events</h1>
+    <Container maxWidth="md" sx={{ mt: 6 }}>
+      <Typography variant="h4" gutterBottom align="center">
+        Events
+      </Typography>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-        </div>
+      {/* Create Event Form */}
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}
+      >
+        <TextField
+          id="name"
+          label="Event Name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
 
-        <div>
-          <label htmlFor="date">Date</label>
-          <input
-            id="date"
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          />
-        </div>
+        <TextField
+          id="date"
+          label="Date"
+          type="date"
+          value={formData.date}
+          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+          InputLabelProps={{ shrink: true }}
+          required
+        />
 
-        <div>
-          <label htmlFor="status">Status</label>
-          <select
+        <FormControl>
+          <InputLabel id="status-label">Status</InputLabel>
+          <Select
+            labelId="status-label"
             id="status"
             value={formData.status}
             onChange={(e) =>
               setFormData({ ...formData, status: e.target.value })
             }
           >
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
-          </select>
-        </div>
+            <MenuItem value="open">Open</MenuItem>
+            <MenuItem value="closed">Closed</MenuItem>
+          </Select>
+        </FormControl>
 
-        <button type="submit">Create Event</button>
-      </form>
+        <Button type="submit" variant="contained" color="primary">
+          Create Event
+        </Button>
+      </Box>
 
+      {/* Event List */}
       {loading ? (
-        <p>Loading...</p>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : events.length > 0 ? (
-        <ul>
+        <List>
           {events.map((e) => (
-            <li key={e.id}>
-              <Link to={`/events/${e.id}`}>{e.name}</Link> — {e.date} (
-              {e.status})
-            </li>
+            <ListItem
+              key={e.id}
+              component={Link}
+              to={`/events/${e.id}`}
+              sx={{
+                textDecoration: "none",
+                color: "inherit",
+                "&:hover": { bgcolor: "action.hover" },
+              }}
+            >
+              <ListItemText primary={e.name} secondary={`${e.date} (${e.status})`} />
+            </ListItem>
           ))}
-        </ul>
+        </List>
       ) : (
-        <p>No events available</p>
+        <Typography align="center" color="text.secondary">
+          No events available
+        </Typography>
       )}
-    </div>
+    </Container>
   );
 }
 

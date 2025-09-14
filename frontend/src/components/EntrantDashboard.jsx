@@ -1,11 +1,19 @@
 // File: frontend/src/components/EntrantDashboard.jsx
-// Purpose: Form for managing entrants for an event.
+// Purpose: MUI-styled form for adding entrants to an event.
 // Notes:
-// - Does NOT render list; parent (EventDetail) owns entrants.
-// - Calls onEntrantAdded after POST.
+// - Uses API_BASE_URL env var for backend requests.
+// - Calls onEntrantAdded callback after successful POST.
 
 import { useState } from "react";
 import { API_BASE_URL } from "../api";
+import {
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  Box,
+} from "@mui/material";
 
 export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   const [formData, setFormData] = useState({ name: "", alias: "" });
@@ -19,6 +27,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add entrant");
+
       setFormData({ name: "", alias: "" });
       if (typeof onEntrantAdded === "function") onEntrantAdded();
     } catch (err) {
@@ -27,31 +36,37 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   }
 
   return (
-    <div data-testid="entrant-dashboard">
-      <h3>Add Entrant</h3>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            id="name"
+    <Card sx={{ mb: 3 }}>
+      <CardContent>
+        <Typography variant="h6" gutterBottom>
+          Add Entrant
+        </Typography>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
+          <TextField
+            label="Name"
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.target.value })
             }
+            required
           />
-        </div>
-        <div>
-          <label htmlFor="alias">Alias</label>
-          <input
-            id="alias"
+          <TextField
+            label="Alias"
             value={formData.alias}
             onChange={(e) =>
               setFormData({ ...formData, alias: e.target.value })
             }
+            required
           />
-        </div>
-        <button type="submit">Add Entrant</button>
-      </form>
-    </div>
+          <Button type="submit" variant="contained" color="primary">
+            Add Entrant
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
