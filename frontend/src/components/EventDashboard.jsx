@@ -1,12 +1,12 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Displays a list of Events and allows creation of new Events.
 // Notes:
-// - Fetches /events on mount.
-// - Provides form to create new events.
-// - Links to EventDetail for each event.
+// - Uses REACT_APP_API_URL env var for backend requests.
+// - Falls back to relative paths if not provided.
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../api";
 
 function EventDashboard() {
   const [events, setEvents] = useState([]);
@@ -19,7 +19,7 @@ function EventDashboard() {
 
   async function fetchEvents() {
     try {
-      const response = await fetch("/events");
+      const response = await fetch(`${API_BASE_URL}/events`);
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
       setEvents(data);
@@ -38,12 +38,15 @@ function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch("/events", {
+      const response = await fetch(`${API_BASE_URL}/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error("Failed to create event");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create event: ${errorText}`);
+      }
       await fetchEvents();
       setFormData({ name: "", date: "", status: "open" });
     } catch (err) {
@@ -52,7 +55,7 @@ function EventDashboard() {
   }
 
   return (
-    <div>
+    <div data-testid="event-dashboard">
       <h1>Events</h1>
 
       <form onSubmit={handleSubmit}>

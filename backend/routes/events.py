@@ -2,9 +2,7 @@
 # Purpose: Defines Flask Blueprint for Event CRUD routes.
 # Notes:
 # - Supports create, read (list), update, and delete.
-# - Uses SQLAlchemy models from backend.models.
-# - Returns JSON responses with appropriate status codes.
-# - Mounted under `/events` via url_prefix in Blueprint.
+# - Uses Event.to_dict() for consistent serialization.
 
 from flask import Blueprint, request, jsonify
 from backend.models import db, Event
@@ -24,28 +22,21 @@ def create_event():
     )
     db.session.add(event)
     db.session.commit()
-    return jsonify({"id": event.id, "name": event.name, "status": event.status}), 201
+    return jsonify(event.to_dict()), 201
 
 
 @bp.route("", methods=["GET"])
 def get_events():
     """Retrieve all Events."""
     events = Event.query.all()
-    return (
-        jsonify(
-            [
-                {
-                    "id": e.id,
-                    "name": e.name,
-                    "date": e.date,
-                    "rules": e.rules,
-                    "status": e.status,
-                }
-                for e in events
-            ]
-        ),
-        200,
-    )
+    return jsonify([e.to_dict() for e in events]), 200
+
+
+@bp.route("/<int:event_id>", methods=["GET"])
+def get_event(event_id):
+    """Retrieve a single Event with entrants + matches."""
+    event = Event.query.get_or_404(event_id)
+    return jsonify(event.to_dict(include_related=True)), 200
 
 
 @bp.route("/<int:event_id>", methods=["PUT"])
@@ -56,18 +47,7 @@ def update_event(event_id):
     for key, value in data.items():
         setattr(event, key, value)
     db.session.commit()
-    return (
-        jsonify(
-            {
-                "id": event.id,
-                "name": event.name,
-                "date": event.date,
-                "rules": event.rules,
-                "status": event.status,
-            }
-        ),
-        200,
-    )
+    return jsonify(event.to_dict()), 200
 
 
 @bp.route("/<int:event_id>", methods=["DELETE"])
