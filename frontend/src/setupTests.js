@@ -1,11 +1,14 @@
 // File: frontend/src/setupTests.js
 // Purpose: Global test setup for React Testing Library.
 // Notes:
-// - Runs before each test.
-// - Provides a default global.fetch mock that can be overridden per test.
-// - Suppresses common React warnings by ensuring state updates happen inside act.
+// - Ensures consistent API base URL for tests.
+// - Provides default global.fetch mock (override per test if needed).
+// - Suppresses noisy React warnings (act, React Router).
 
 import "@testing-library/jest-dom";
+
+// Always provide API base URL for tests
+process.env.REACT_APP_API_URL = "http://localhost:3001";
 
 // Default fetch mock
 beforeEach(() => {
@@ -22,7 +25,7 @@ beforeEach(() => {
             status: "closed",
           },
         ]),
-    }),
+    })
   );
 });
 
@@ -31,7 +34,7 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-// Silence act(...) warnings + React Router future flag warnings
+// Silence warnings
 const originalError = console.error;
 const originalWarn = console.warn;
 

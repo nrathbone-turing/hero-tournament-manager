@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
+import { API_BASE_URL } from "../api";
 
 export default function EventDetail({ eventId }) {
   const [event, setEvent] = useState(null);
