@@ -5,16 +5,15 @@
 // - Calls onEntrantAdded after POST.
 
 import { useState } from "react";
+import { API_BASE_URL } from "../api";
 
 export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   const [formData, setFormData] = useState({ name: "", alias: "" });
 
-  const API_URL = process.env.REACT_APP_API_URL || "";
-
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/entrants`, {
+      const response = await fetch(`${API_BASE_URL}/entrants`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),

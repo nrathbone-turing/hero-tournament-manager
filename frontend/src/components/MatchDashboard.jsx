@@ -5,6 +5,7 @@
 // - Calls onMatchAdded after POST.
 
 import { useState } from "react";
+import { API_BASE_URL } from "../api";
 
 export default function MatchDashboard({ eventId, onMatchAdded }) {
   const [formData, setFormData] = useState({
@@ -15,12 +16,10 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     winner: "",
   });
 
-  const API_URL = process.env.REACT_APP_API_URL || "";
-
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/matches`, {
+      const response = await fetch(`${API_BASE_URL}/matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),

@@ -20,7 +20,7 @@ function EventDashboard() {
 
   async function fetchEvents() {
     try {
-      const response = await fetch(`${API_URL}/events`);
+      const response = await fetch(`${API_BASE_URL}/events`);
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
       setEvents(data);

@@ -17,7 +17,7 @@ export default function EventDetail({ eventId }) {
 
   async function fetchEvent() {
     try {
-      const response = await fetch(`${API_URL}/events/${eventId}`);
+      const response = await fetch(`${API_BASE_URL}/events/${eventId}`);
       if (!response.ok) throw new Error("Failed to fetch event");
       const data = await response.json();
       setEvent(data);
