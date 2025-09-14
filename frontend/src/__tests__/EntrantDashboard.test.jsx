@@ -4,7 +4,7 @@
 // - Only tests form behavior (EventDetail owns entrant list).
 // - Ensures callback is called after POST.
 
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
 import EntrantDashboard from "../components/EntrantDashboard";
@@ -29,8 +29,11 @@ describe("EntrantDashboard", () => {
 
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
+    
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-    expect(mockOnAdded).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockOnAdded).toHaveBeenCalled();
+    });
   });
 });
