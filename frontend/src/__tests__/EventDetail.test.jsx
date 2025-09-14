@@ -93,8 +93,32 @@ describe("EventDetail", () => {
     await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-    // ✅ Check entrants in EventDetail’s list
+    // Check entrants in EventDetail’s list
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
     expect(await screen.findByText(/Tony/)).toBeInTheDocument();
+  });
+
+  test("renders match winner by entrant name", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        name: "Hero Cup",
+        date: "2025-09-12",
+        status: "open",
+        entrants: [
+          { id: 1, name: "Spiderman", alias: "Webslinger" },
+          { id: 2, name: "Batman", alias: "Dark Knight" },
+        ],
+        matches: [
+          { id: 10, round: 1, scores: "2-1", winner_id: 2 },
+        ],
+      }),
+    });
+
+    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
+
+    expect(await screen.findByText(/Round 1: 2-1/)).toBeInTheDocument();
+    expect(await screen.findByText(/Winner: Batman \(Dark Knight\)/)).toBeInTheDocument();
   });
 });

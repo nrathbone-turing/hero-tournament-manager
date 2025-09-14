@@ -1,8 +1,7 @@
 // File: frontend/src/__tests__/MatchDashboard.test.jsx
 // Purpose: Tests for MatchDashboard component.
 // Notes:
-// - Only tests form submission since EventDetail owns match list.
-// - Ensures callback is called after POST.
+// - Ensures POST includes winner_id and callback is called.
 
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -17,10 +16,10 @@ describe("MatchDashboard", () => {
     expect(screen.getByLabelText(/entrant 1 id/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/entrant 2 id/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/scores/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/winner/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/winner id/i)).toBeInTheDocument();
   });
 
-  test("submits new match and triggers callback", async () => {
+  test("submits new match with winner_id and triggers callback", async () => {
     const mockOnAdded = jest.fn();
 
     global.fetch.mockResolvedValueOnce({
@@ -31,7 +30,7 @@ describe("MatchDashboard", () => {
         entrant1_id: 1,
         entrant2_id: 2,
         scores: "2-0",
-        winner: "Spiderman",
+        winner_id: 1,
         event_id: 1,
       }),
     });
@@ -42,7 +41,7 @@ describe("MatchDashboard", () => {
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
     await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
-    await userEvent.type(screen.getByLabelText(/winner/i), "Spiderman");
+    await userEvent.type(screen.getByLabelText(/winner id/i), "1");
 
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
