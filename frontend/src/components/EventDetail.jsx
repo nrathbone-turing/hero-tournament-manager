@@ -80,7 +80,7 @@ export default function EventDetail() {
   const sortedMatches = event.matches ? sortData(event.matches, matchOrder) : [];
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, px: 2 }}>
+    <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
       {/* Header */}
       <Box display="flex" alignItems="center" gap={2} sx={{ mb: 3 }}>
         <Button component={Link} to="/" variant="outlined">
@@ -92,7 +92,8 @@ export default function EventDetail() {
       </Box>
 
       {/* 3-column layout, single row, uniform height */}
-      <Grid container spacing={2} sx={{ alignItems: "stretch" }}>
+      {/* Use CSS gap instead of Grid spacing to avoid outer negative margins and right-edge sliver */}
+      <Grid container sx={{ alignItems: "stretch", gap: 2, flexWrap: { xs: "wrap", md: "nowrap" } }}>
         {/* Left: Dashboards (1/4 width) */}
         <Grid item xs={12} md={3} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
