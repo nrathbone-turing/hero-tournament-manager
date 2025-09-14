@@ -3,7 +3,7 @@
 // Notes:
 // - Ensures consistent API base URL for tests.
 // - Provides default global.fetch mock (override per test if needed).
-// - Suppresses noisy React warnings (act, React Router).
+// - Suppresses noisy React warnings (act, React Router, MUI Grid deprecations).
 
 import "@testing-library/jest-dom";
 
@@ -18,12 +18,7 @@ beforeEach(() => {
       json: () =>
         Promise.resolve([
           { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
-          {
-            id: 2,
-            name: "Villain Showdown",
-            date: "2025-09-13",
-            status: "closed",
-          },
+          { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
         ]),
     })
   );
@@ -41,6 +36,7 @@ const originalWarn = console.warn;
 beforeAll(() => {
   console.error = (...args) => {
     if (/not wrapped in act/.test(args[0])) return;
+    if (/MUI: The prop `xs` of `Grid` is deprecated/.test(args[0])) return;
     originalError.call(console, ...args);
   };
 

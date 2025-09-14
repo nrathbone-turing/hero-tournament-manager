@@ -21,12 +21,12 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TableSortLabel,
   Button,
+  TextField
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
-import { API_BASE_URL } from "../api";
+import { API_BASE_URL, deleteEntrant } from "../api";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -34,6 +34,7 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState(0);
+  const [removeId, setRemoveId] = useState("");
 
   // sort states
   const [entrantOrder, setEntrantOrder] = useState({ orderBy: "id", direction: "asc" });
@@ -61,12 +62,6 @@ export default function EventDetail() {
   if (error) return <p>Error: {error}</p>;
   if (!event) return <p>No event found</p>;
 
-  // helper sort
-  function handleSort(orderState, setOrderState, column) {
-    const isAsc = orderState.orderBy === column && orderState.direction === "asc";
-    setOrderState({ orderBy: column, direction: isAsc ? "desc" : "asc" });
-  }
-
   function sortData(data, orderState) {
     return [...data].sort((a, b) => {
       const { orderBy, direction } = orderState;
@@ -79,6 +74,18 @@ export default function EventDetail() {
   const sortedEntrants = event.entrants ? sortData(event.entrants, entrantOrder) : [];
   const sortedMatches = event.matches ? sortData(event.matches, matchOrder) : [];
 
+  async function handleRemoveEntrant(e) {
+    e.preventDefault();
+    try {
+      await deleteEntrant(id, Number(removeId)); // ensure numeric
+      setRemoveId("");
+      fetchEvent(); // refresh the list
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove entrant");
+    }
+  }
+
   return (
     <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
       {/* Header */}
@@ -86,14 +93,20 @@ export default function EventDetail() {
         <Button component={Link} to="/" variant="outlined">
           Back to Events
         </Button>
+        <Typography variant="h4" component="h1">
+          Event Detail
+        </Typography>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           {event.name} — {event.date} ({event.status})
         </Typography>
       </Box>
 
       {/* 3-column layout, single row, uniform height */}
-      {/* Use CSS gap instead of Grid spacing to avoid outer negative margins and right-edge sliver */}
-      <Grid container sx={{ alignItems: "stretch", gap: 2, flexWrap: { xs: "wrap", md: "nowrap" } }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{ alignItems: "stretch", flexWrap: { xs: "wrap", md: "nowrap" } }}
+      >
         {/* Left: Dashboards (1/4 width) */}
         <Grid item xs={12} md={3} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
@@ -101,9 +114,31 @@ export default function EventDetail() {
               <Tab label="Add Entrant" />
               <Tab label="Add Match" />
             </Tabs>
-            <Box sx={{ mt: 2, flex: 1, overflow: "auto" }}>
+            <Box sx={{ mt: 2, flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
               {tab === 0 ? (
-                <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                <>
+                  <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                  <Box
+                    component="form"
+                    onSubmit={handleRemoveEntrant}
+                    sx={{ display: "flex", flexDirection: "column", gap: 2, mt: "auto" }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      Remove Entrant
+                    </Typography>
+                    <TextField
+                      label="Entrant ID"
+                      type="number"
+                      value={removeId}
+                      onChange={(e) => setRemoveId(e.target.value)}
+                      required
+                      size="small"
+                    />
+                    <Button type="submit" variant="contained" color="error">
+                      Remove Entrant
+                    </Button>
+                  </Box>
+                </>
               ) : (
                 <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
               )}
