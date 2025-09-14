@@ -3,8 +3,10 @@
 // Notes:
 // - Uses renderWithRouter + global fetch mock.
 // - Confirms EventDashboard and EventDetail render in correct routes.
+// - Relies on global fetch mock from setupTests.js.
 
 import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import App from "../App";
 import { renderWithRouter } from "../test-utils";
 
@@ -42,7 +44,20 @@ describe("App routing", () => {
     ).toBeInTheDocument();
   });
 
-  test.skip("navigates between Dashboard and EventDetail", () => {
-    // TODO: add once EventDashboard exposes navigation <Link>
+  test("navigates between Dashboard and EventDetail", async () => {
+    renderWithRouter(<App />, { route: "/" });
+
+    // Click link to Hero Cup
+    await userEvent.click(await screen.findByRole("link", { name: /hero cup/i }));
+
+    // Verify EventDetail loads
+    expect(await screen.findByRole("heading", { name: /event detail/i }))
+      .toBeInTheDocument();
+
+    // Click back to Events
+    await userEvent.click(screen.getByRole("link", { name: /back to events/i }));
+
+    // Verify Dashboard is shown again
+    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
   });
 });

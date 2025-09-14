@@ -1,10 +1,12 @@
 // File: frontend/src/components/EventDetail.jsx
 // Purpose: Displays details for a single Event, including entrants and matches.
 // Notes:
-// - Owns entrants + matches lists.
-// - Wires EntrantDashboard and MatchDashboard forms for adding.
+// - Fetches event data from backend using eventId.
+// - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
+// - Includes navigation back to EventDashboard.
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
 
@@ -41,9 +43,10 @@ export default function EventDetail({ eventId }) {
         {event.name} — {event.date} ({event.status})
       </p>
 
-      {/* Entrants Section */}
-      <EntrantDashboard eventId={eventId} onEntrantAdded={fetchEvent} />
+      <Link to="/">Back to Events</Link>
+
       <h2>Entrants</h2>
+      <EntrantDashboard eventId={eventId} onEntrantAdded={fetchEvent} />
       {event.entrants && event.entrants.length > 0 ? (
         <ul>
           {event.entrants.map((entrant) => (
@@ -56,9 +59,8 @@ export default function EventDetail({ eventId }) {
         <p>No entrants yet</p>
       )}
 
-      {/* Matches Section */}
-      <MatchDashboard eventId={eventId} onMatchAdded={fetchEvent} />
       <h2>Matches</h2>
+      <MatchDashboard eventId={eventId} onMatchAdded={fetchEvent} />
       {event.matches && event.matches.length > 0 ? (
         <ul>
           {event.matches.map((match) => (
