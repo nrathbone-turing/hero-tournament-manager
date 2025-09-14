@@ -56,7 +56,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   }
 
   return (
-    <div>
+    <div data-testid="entrant-dashboard">
       <h2>Entrants</h2>
 
       {/* Add Entrant form */}

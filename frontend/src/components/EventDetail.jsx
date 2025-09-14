@@ -35,7 +35,7 @@ export default function EventDetail({ eventId }) {
   if (!event) return <p>No event found</p>;
 
   return (
-    <div>
+    <div data-testid="event-detail">
       <h1>Event Detail</h1>
       <p>
         {event.name} — {event.date} ({event.status})

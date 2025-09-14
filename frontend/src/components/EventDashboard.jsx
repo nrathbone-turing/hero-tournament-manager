@@ -26,7 +26,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   }
 
   return (
-    <div>
+    <div data-testid="event-dashboard">
       <h3>Add Entrant</h3>
       <form onSubmit={handleSubmit}>
         <div>
