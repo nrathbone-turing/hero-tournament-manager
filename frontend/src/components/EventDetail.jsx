@@ -1,8 +1,6 @@
 // File: frontend/src/components/EventDetail.jsx
 // Purpose: Displays details for a single Event, including entrants and matches.
 // Notes:
-// - Uses REACT_APP_API_URL env var for backend requests.
-// - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
 // - Resolves winner_id to entrant name/alias, falls back to TBD.
 
 import { useEffect, useState } from "react";
@@ -69,7 +67,9 @@ export default function EventDetail() {
       {event.matches?.length > 0 ? (
         <ul>
           {event.matches.map((m) => {
-            const winner = event.entrants?.find((e) => e.id === m.winner_id);
+            const winner = event.entrants?.find(
+              (e) => String(e.id) === String(m.winner_id)
+            );
             return (
               <li key={m.id}>
                 Round {m.round}: {m.scores} — Winner:{" "}

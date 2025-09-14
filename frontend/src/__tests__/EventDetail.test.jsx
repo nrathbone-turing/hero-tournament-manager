@@ -93,7 +93,7 @@ describe("EventDetail", () => {
     await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-    // ✅ Check entrants in EventDetail’s list
+    // Check entrants in EventDetail’s list
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
     expect(await screen.findByText(/Tony/)).toBeInTheDocument();
   });
