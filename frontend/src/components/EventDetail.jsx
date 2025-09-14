@@ -3,6 +3,7 @@
 // Notes:
 // - Uses REACT_APP_API_URL env var for backend requests.
 // - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
+// - Resolves winner_id to entrant name/alias, falls back to TBD.
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -67,11 +68,15 @@ export default function EventDetail() {
       <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
       {event.matches?.length > 0 ? (
         <ul>
-          {event.matches.map((m) => (
-            <li key={m.id}>
-              Round {m.round}: {m.scores} — Winner: {m.winner || "TBD"}
-            </li>
-          ))}
+          {event.matches.map((m) => {
+            const winner = event.entrants?.find((e) => e.id === m.winner_id);
+            return (
+              <li key={m.id}>
+                Round {m.round}: {m.scores} — Winner:{" "}
+                {winner ? `${winner.name} (${winner.alias})` : "TBD"}
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p>No matches yet</p>
