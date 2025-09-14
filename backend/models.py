@@ -30,6 +30,19 @@ class Event(db.Model):
     def __repr__(self):
         return f"<Event {self.name} ({self.date})>"
 
+    def to_dict(self, include_related=False):
+        data = {
+            "id": self.id,
+            "name": self.name,
+            "date": self.date,
+            "rules": self.rules,
+            "status": self.status,
+        }
+        if include_related:
+            data["entrants"] = [e.to_dict() for e in self.entrants]
+            data["matches"] = [m.to_dict() for m in self.matches]
+        return data
+
 
 class Entrant(db.Model):
     __tablename__ = "entrants"
@@ -44,6 +57,14 @@ class Entrant(db.Model):
 
     def __repr__(self):
         return f"<Entrant {self.name} ({self.alias})>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "alias": self.alias,
+            "event_id": self.event_id,
+        }
 
 
 class Match(db.Model):
@@ -62,3 +83,14 @@ class Match(db.Model):
 
     def __repr__(self):
         return f"<Match Event {self.event_id} Round {self.round}>"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "event_id": self.event_id,
+            "round": self.round,
+            "entrant1_id": self.entrant1_id,
+            "entrant2_id": self.entrant2_id,
+            "scores": self.scores,
+            "winner_id": self.winner_id,
+        }
