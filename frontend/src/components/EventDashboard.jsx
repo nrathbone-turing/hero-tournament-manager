@@ -1,25 +1,51 @@
-// File: frontend/src/components/EntrantDashboard.jsx
-// Purpose: Handles adding new entrants to an event.
+// File: frontend/src/components/EventDashboard.jsx
+// Purpose: Displays a list of Events and allows creation of new Events.
 // Notes:
-// - Simplified: no longer manages its own entrant list.
-// - After adding entrant, notifies parent via onEntrantAdded.
+// - Owns events list state.
+// - Provides form to create new events.
+// - Re-fetches event list after creation.
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
-export default function EntrantDashboard({ eventId, onEntrantAdded }) {
-  const [formData, setFormData] = useState({ name: "", alias: "" });
+export default function EventDashboard() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: "",
+    date: "",
+    status: "open",
+  });
+
+  async function fetchEvents() {
+    try {
+      const response = await fetch("/events");
+      if (!response.ok) throw new Error("Failed to fetch events");
+      const data = await response.json();
+      setEvents(data);
+    } catch (err) {
+      console.error(err);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch("/entrants", {
+      const response = await fetch("/events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, event_id: eventId }),
+        body: JSON.stringify(formData),
       });
-      if (!response.ok) throw new Error("Failed to add entrant");
-      setFormData({ name: "", alias: "" });
-      if (onEntrantAdded) onEntrantAdded();
+      if (!response.ok) throw new Error("Failed to create event");
+      await fetchEvents();
+      setFormData({ name: "", date: "", status: "open" });
     } catch (err) {
       console.error(err);
     }
@@ -27,30 +53,53 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
 
   return (
     <div data-testid="event-dashboard">
-      <h3>Add Entrant</h3>
+      <h1>Events</h1>
+
+      {/* Create Event Form */}
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            id="name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label htmlFor="alias">Alias</label>
-          <input
-            id="alias"
-            value={formData.alias}
-            onChange={(e) =>
-              setFormData({ ...formData, alias: e.target.value })
-            }
-          />
-        </div>
-        <button type="submit">Add Entrant</button>
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+        />
+
+        <label htmlFor="date">Date</label>
+        <input
+          id="date"
+          type="date"
+          value={formData.date}
+          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+        />
+
+        <label htmlFor="status">Status</label>
+        <select
+          id="status"
+          value={formData.status}
+          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+        >
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+        </select>
+
+        <button type="submit">Create Event</button>
       </form>
+
+      {/* Events List */}
+      {loading ? (
+        <p>Loading...</p>
+      ) : events.length > 0 ? (
+        <ul>
+          {events.map((e) => (
+            <li key={e.id}>
+              {e.name} — {e.date} ({e.status}){" "}
+              <Link to={`/events/${e.id}`}>View</Link>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No events</p>
+      )}
     </div>
   );
 }
