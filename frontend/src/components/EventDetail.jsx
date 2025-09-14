@@ -1,8 +1,10 @@
 // File: frontend/src/components/EventDetail.jsx
-// Purpose: Event details with a 3-column layout:
-//  - Left (md=3): Tabbed dashboards (Add Entrant / Add Match)
-//  - Middle (md=3): Entrants list (fixed height, scrollable, stable on tab switch)
-//  - Right (md=6): Matches table (full width/height, sortable headers)
+// Purpose: Event details with 3-column layout (dashboards / entrants / matches).
+// Notes:
+// - Wider grid (less left-right buffer).
+// - Title + back button spacing reduced.
+// - Tab labels forced single line (no wrap).
+// - Removed duplicate headers inside dashboards.
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -29,7 +31,7 @@ import {
   TableSortLabel,
 } from "@mui/material";
 
-const PANEL_H = 420; // keeps columns visually consistent
+const PANEL_H = 420;
 
 function TabPanel({ value, index, children }) {
   return (
@@ -48,11 +50,8 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // tabs state
   const [tab, setTab] = useState(0);
 
-  // table sorting state
   const [orderBy, setOrderBy] = useState("round");
   const [order, setOrder] = useState("asc");
 
@@ -81,7 +80,6 @@ export default function EventDetail() {
     setOrderBy(col);
   }
 
-  // generic stable sort helpers
   function descendingComparator(a, b, key) {
     if ((b?.[key] ?? "") < (a?.[key] ?? "")) return -1;
     if ((b?.[key] ?? "") > (a?.[key] ?? "")) return 1;
@@ -116,17 +114,22 @@ export default function EventDetail() {
   const sortedMatches = stableSort(event.matches, getComparator(order, orderBy));
 
   return (
-    <Container maxWidth="lg" data-testid="event-detail" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        {event.name} — {event.date} ({event.status})
-      </Typography>
-
-      <Button variant="outlined" component={Link} to="/" sx={{ mb: 3 }}>
-        Back to Events
-      </Button>
+    <Container maxWidth="xl" data-testid="event-detail" sx={{ mt: 2 }}>
+      <Grid container alignItems="center" spacing={2} sx={{ mb: 2 }}>
+        <Grid item>
+          <Typography variant="h4">
+            {event.name} — {event.date} ({event.status})
+          </Typography>
+        </Grid>
+        <Grid item>
+          <Button variant="outlined" component={Link} to="/">
+            Back to Events
+          </Button>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={2} alignItems="stretch">
-        {/* Left: Tabbed dashboards (Add Entrant / Add Match) */}
+        {/* Left: Tabbed dashboards */}
         <Grid item xs={12} md={3}>
           <Card
             sx={{
@@ -142,8 +145,8 @@ export default function EventDetail() {
               variant="fullWidth"
               sx={{ borderBottom: 1, borderColor: "divider" }}
             >
-              <Tab label="Add Entrant" />
-              <Tab label="Add Match" />
+              <Tab label="Add Entrant" sx={{ whiteSpace: "nowrap" }} />
+              <Tab label="Add Match" sx={{ whiteSpace: "nowrap" }} />
             </Tabs>
 
             <TabPanel value={tab} index={0}>
@@ -156,7 +159,7 @@ export default function EventDetail() {
           </Card>
         </Grid>
 
-        {/* Middle: Entrants list (fixed height, scrollable) */}
+        {/* Middle: Entrants */}
         <Grid item xs={12} md={3}>
           <Card
             sx={{
@@ -185,7 +188,7 @@ export default function EventDetail() {
           </Card>
         </Grid>
 
-        {/* Right: Matches table (fills width/height, sortable headers) */}
+        {/* Right: Matches */}
         <Grid item xs={12} md={6}>
           <Card
             sx={{
