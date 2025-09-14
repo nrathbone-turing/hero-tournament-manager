@@ -2,17 +2,17 @@
 # Purpose: Defines Flask Blueprint for Match CRUD routes.
 # Notes:
 # - Supports create, read (list), update, and delete.
-# - Matches are linked to Events and Entrants via FKs.
-# - Returns JSON responses with appropriate status codes.
-# - Mounted under `/matches` via url_prefix in Blueprint.
+# - Uses Match.to_dict() for consistent serialization.
 
 from flask import Blueprint, request, jsonify
 from backend.models import db, Match
 
 bp = Blueprint("matches", __name__, url_prefix="/matches")
 
+
 @bp.route("", methods=["POST"])
 def create_match():
+    """Create a new Match."""
     data = request.get_json()
     match = Match(
         event_id=data.get("event_id"),
@@ -26,17 +26,21 @@ def create_match():
     db.session.commit()
     return jsonify(match.to_dict()), 201
 
+
 @bp.route("", methods=["GET"])
 def get_matches():
-    event_id = request.args.get("event_id")
+    """Retrieve all Matches (optionally filter by event_id)."""
+    event_id = request.args.get("event_id", type=int)
+    query = Match.query
     if event_id:
-        matches = Match.query.filter_by(event_id=event_id).all()
-    else:
-        matches = Match.query.all()
+        query = query.filter_by(event_id=event_id)
+    matches = query.all()
     return jsonify([m.to_dict() for m in matches]), 200
+
 
 @bp.route("/<int:match_id>", methods=["PUT"])
 def update_match(match_id):
+    """Update a Match by ID."""
     match = Match.query.get_or_404(match_id)
     data = request.get_json()
     for key, value in data.items():
@@ -44,8 +48,10 @@ def update_match(match_id):
     db.session.commit()
     return jsonify(match.to_dict()), 200
 
+
 @bp.route("/<int:match_id>", methods=["DELETE"])
 def delete_match(match_id):
+    """Delete a Match by ID."""
     match = Match.query.get_or_404(match_id)
     db.session.delete(match)
     db.session.commit()
