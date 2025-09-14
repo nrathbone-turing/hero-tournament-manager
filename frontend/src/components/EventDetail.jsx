@@ -1,30 +1,32 @@
 // File: frontend/src/components/EventDetail.jsx
-// Purpose: Displays details for a single Event, including entrants and matches.
+// Purpose: Three-column layout: forms (left), entrants list (middle), matches (right).
 // Notes:
-// - Uses REACT_APP_API_URL env var for backend requests.
-// - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
-// - Updated layout with MUI Grid and min widths for better fit.
+// - Forms remain tabbed in left column
+// - Entrants list pulled into its own dedicated column
+// - Matches expand to take up remaining width
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { API_BASE_URL } from "../api";
-import EntrantDashboard from "./EntrantDashboard";
-import MatchDashboard from "./MatchDashboard";
 import {
   Grid,
   Card,
   CardContent,
   Typography,
   Button,
-  List,
-  ListItem,
+  Tabs,
+  Tab,
+  Box,
 } from "@mui/material";
+import EntrantDashboard from "./EntrantDashboard";
+import MatchDashboard from "./MatchDashboard";
+import { API_BASE_URL } from "../api";
 
 export default function EventDetail() {
   const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState(0);
 
   async function fetchEvent() {
     try {
@@ -50,7 +52,7 @@ export default function EventDetail() {
 
   return (
     <div data-testid="event-detail">
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" sx={{ mb: 2, fontWeight: "bold" }}>
         {event.name} — {event.date} ({event.status})
       </Typography>
 
@@ -63,81 +65,86 @@ export default function EventDetail() {
         Back to Events
       </Button>
 
-      <Grid container spacing={3}>
-        {/* Left column: Entrant + Match forms */}
-        <Grid
-          item
-          xs={12}
-          sm={4}
-          md={3}
-          sx={{ minWidth: 250, display: "flex", flexDirection: "column", gap: 2 }}
-        >
+      <Grid container spacing={2}>
+        {/* Left column: Forms */}
+        <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Add Entrant
-              </Typography>
-              <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
-            </CardContent>
-          </Card>
+              <Tabs
+                value={tab}
+                onChange={(e, newValue) => setTab(newValue)}
+                variant="fullWidth"
+                sx={{ mb: 2 }}
+              >
+                <Tab label="Add Entrant" />
+                <Tab label="Add Match" />
+              </Tabs>
 
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Add Match
-              </Typography>
-              <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
+              {tab === 0 && (
+                <Box>
+                  <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                </Box>
+              )}
+              {tab === 1 && (
+                <Box>
+                  <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
+                </Box>
+              )}
             </CardContent>
           </Card>
         </Grid>
 
         {/* Middle column: Entrants */}
-        <Grid item xs={12} sm={4} md={3} sx={{ minWidth: 200 }}>
-          <Card>
+        <Grid item xs={12} md={3}>
+          <Card sx={{ height: "100%" }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Entrants
               </Typography>
               {event.entrants?.length > 0 ? (
-                <List dense>
+                <ul>
                   {event.entrants.map((entrant) => (
-                    <ListItem key={entrant.id}>
+                    <li key={entrant.id}>
                       {entrant.id} — {entrant.name} ({entrant.alias})
-                    </ListItem>
+                    </li>
                   ))}
-                </List>
+                </ul>
               ) : (
-                <Typography variant="body2">No entrants yet</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No entrants yet
+                </Typography>
               )}
             </CardContent>
           </Card>
         </Grid>
 
         {/* Right column: Matches */}
-        <Grid item xs={12} sm={8} md={6} sx={{ minWidth: 400 }}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Matches
               </Typography>
               {event.matches?.length > 0 ? (
-                <List dense>
+                <ul>
                   {event.matches.map((m) => {
                     const winner = event.entrants?.find(
                       (e) => e.id === m.winner_id
                     );
                     return (
-                      <ListItem key={m.id}>
+                      <li key={m.id}>
                         Round {m.round}: {m.scores} — Winner:{" "}
                         {winner
                           ? `${winner.name} (${winner.alias})`
                           : "TBD"}
-                      </ListItem>
+                      </li>
                     );
                   })}
-                </List>
+                </ul>
               ) : (
-                <Typography variant="body2">No matches yet</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No matches yet
+                </Typography>
               )}
             </CardContent>
           </Card>
