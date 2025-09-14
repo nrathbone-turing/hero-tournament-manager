@@ -21,7 +21,6 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TableSortLabel,
   Button,
   TextField
 } from "@mui/material";
@@ -35,11 +34,11 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState(0);
+  const [removeId, setRemoveId] = useState("");
 
   // sort states
   const [entrantOrder, setEntrantOrder] = useState({ orderBy: "id", direction: "asc" });
   const [matchOrder, setMatchOrder] = useState({ orderBy: "round", direction: "asc" });
-  const [removeId, setRemoveId] = useState("");
 
   async function fetchEvent() {
     try {
@@ -63,12 +62,6 @@ export default function EventDetail() {
   if (error) return <p>Error: {error}</p>;
   if (!event) return <p>No event found</p>;
 
-  // helper sort
-  function handleSort(orderState, setOrderState, column) {
-    const isAsc = orderState.orderBy === column && orderState.direction === "asc";
-    setOrderState({ orderBy: column, direction: isAsc ? "desc" : "asc" });
-  }
-
   function sortData(data, orderState) {
     return [...data].sort((a, b) => {
       const { orderBy, direction } = orderState;
@@ -84,7 +77,7 @@ export default function EventDetail() {
   async function handleRemoveEntrant(e) {
     e.preventDefault();
     try {
-      await deleteEntrant(id, removeId);
+      await deleteEntrant(id, Number(removeId)); // ensure numeric
       setRemoveId("");
       fetchEvent(); // refresh the list
     } catch (err) {
@@ -100,14 +93,20 @@ export default function EventDetail() {
         <Button component={Link} to="/" variant="outlined">
           Back to Events
         </Button>
+        <Typography variant="h4" component="h1">
+          Event Detail
+        </Typography>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           {event.name} — {event.date} ({event.status})
         </Typography>
       </Box>
 
       {/* 3-column layout, single row, uniform height */}
-      {/* Use CSS gap instead of Grid spacing to avoid outer negative margins and right-edge sliver */}
-      <Grid container sx={{ alignItems: "stretch", gap: 2, flexWrap: { xs: "wrap", md: "nowrap" } }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{ alignItems: "stretch", flexWrap: { xs: "wrap", md: "nowrap" } }}
+      >
         {/* Left: Dashboards (1/4 width) */}
         <Grid item xs={12} md={3} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
@@ -119,7 +118,11 @@ export default function EventDetail() {
               {tab === 0 ? (
                 <>
                   <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
-                  <Box component="form" onSubmit={handleRemoveEntrant} sx={{ display: "flex", flexDirection: "column", gap: 2, mt: "auto" }}>
+                  <Box
+                    component="form"
+                    onSubmit={handleRemoveEntrant}
+                    sx={{ display: "flex", flexDirection: "column", gap: 2, mt: "auto" }}
+                  >
                     <Typography variant="h6" gutterBottom>
                       Remove Entrant
                     </Typography>
