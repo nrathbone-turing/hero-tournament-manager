@@ -44,10 +44,13 @@ export default function EventDetail({ eventId }) {
         {event.name} — {event.date} ({event.status})
       </p>
 
-      {/* Entrants */}
+      <p>
+        <a href="/" role="link">Back to Events</a>
+      </p>
+
       <h2>Entrants</h2>
       <EntrantDashboard eventId={eventId} onEntrantAdded={fetchEvent} />
-      {event.entrants && event.entrants.length > 0 ? (
+      {event.entrants?.length > 0 ? (
         <ul>
           {event.entrants.map((entrant) => (
             <li key={entrant.id}>
@@ -59,15 +62,13 @@ export default function EventDetail({ eventId }) {
         <p>No entrants yet</p>
       )}
 
-      {/* Matches */}
       <h2>Matches</h2>
       <MatchDashboard eventId={eventId} onMatchAdded={fetchEvent} />
-      {event.matches && event.matches.length > 0 ? (
+      {event.matches?.length > 0 ? (
         <ul>
-          {event.matches.map((match) => (
-            <li key={match.id}>
-              Round {match.round}: {match.scores} — Winner:{" "}
-              {match.winner || "TBD"}
+          {event.matches.map((m) => (
+            <li key={m.id}>
+              Round {m.round}: {m.scores} — Winner: {m.winner || "TBD"}
             </li>
           ))}
         </ul>

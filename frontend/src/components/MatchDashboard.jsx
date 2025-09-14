@@ -1,13 +1,12 @@
 // File: frontend/src/components/MatchDashboard.jsx
-// Purpose: Displays and manages Matches for a specific Event.
+// Purpose: Form for managing matches for an event.
 // Notes:
-// - Uses REACT_APP_API_URL env var for backend requests.
+// - Does NOT render list; parent (EventDetail) owns matches.
+// - Calls onMatchAdded after POST.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function MatchDashboard({ eventId, onMatchAdded }) {
-  const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     round: "",
     entrant1_id: "",
@@ -18,24 +17,6 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
 
   const API_URL = process.env.REACT_APP_API_URL || "";
 
-  async function fetchMatches() {
-    try {
-      const response = await fetch(`${API_URL}/matches?event_id=${eventId}`);
-      if (!response.ok) throw new Error("Failed to fetch matches");
-      const data = await response.json();
-      setMatches(data);
-    } catch (err) {
-      console.error(err);
-      setMatches([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchMatches();
-  }, [eventId]);
-
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -45,7 +26,6 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add match");
-      await fetchMatches();
       setFormData({
         round: "",
         entrant1_id: "",
@@ -53,9 +33,7 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         scores: "",
         winner: "",
       });
-      if (typeof onMatchAdded === "function") {
-        onMatchAdded();
-      }
+      if (typeof onMatchAdded === "function") onMatchAdded();
     } catch (err) {
       console.error(err);
     }
@@ -63,8 +41,7 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
 
   return (
     <div data-testid="match-dashboard">
-      <h2>Matches</h2>
-
+      <h3>Add Match</h3>
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="round">Round</label>
@@ -116,20 +93,6 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         </div>
         <button type="submit">Add Match</button>
       </form>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : matches.length > 0 ? (
-        <ul>
-          {matches.map((m) => (
-            <li key={m.id}>
-              Round {m.round}: {m.scores} — Winner: {m.winner || "TBD"}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No matches</p>
-      )}
     </div>
   );
 }

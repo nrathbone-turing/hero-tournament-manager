@@ -1,34 +1,15 @@
 // File: frontend/src/components/EntrantDashboard.jsx
-// Purpose: Displays and manages Entrants for a specific Event.
+// Purpose: Form for managing entrants for an event.
 // Notes:
-// - Uses REACT_APP_API_URL env var for backend requests.
+// - Does NOT render list; parent (EventDetail) owns entrants.
+// - Calls onEntrantAdded after POST.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function EntrantDashboard({ eventId, onEntrantAdded }) {
-  const [entrants, setEntrants] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ name: "", alias: "" });
 
   const API_URL = process.env.REACT_APP_API_URL || "";
-
-  async function fetchEntrants() {
-    try {
-      const response = await fetch(`${API_URL}/entrants?event_id=${eventId}`);
-      if (!response.ok) throw new Error("Failed to fetch entrants");
-      const data = await response.json();
-      setEntrants(data);
-    } catch (err) {
-      console.error(err);
-      setEntrants([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchEntrants();
-  }, [eventId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -39,11 +20,8 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add entrant");
-      await fetchEntrants();
       setFormData({ name: "", alias: "" });
-      if (typeof onEntrantAdded === "function") {
-        onEntrantAdded();
-      }
+      if (typeof onEntrantAdded === "function") onEntrantAdded();
     } catch (err) {
       console.error(err);
     }
@@ -51,8 +29,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
 
   return (
     <div data-testid="entrant-dashboard">
-      <h2>Entrants</h2>
-
+      <h3>Add Entrant</h3>
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="name">Name</label>
@@ -76,20 +53,6 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         </div>
         <button type="submit">Add Entrant</button>
       </form>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : entrants.length > 0 ? (
-        <ul>
-          {entrants.map((e) => (
-            <li key={e.id}>
-              {e.name} ({e.alias})
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No entrants</p>
-      )}
     </div>
   );
 }
