@@ -1,8 +1,7 @@
 // File: frontend/src/__tests__/EventDetail.test.jsx
 // Purpose: Tests for EventDetail component with Entrants + Matches.
 // Notes:
-// - EventDetail now owns entrants state (source of truth).
-// - EntrantDashboard is tested separately for its form behavior.
+// - EventDetail owns entrant list and re-fetches after EntrantDashboard submission.
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -17,7 +16,6 @@ describe("EventDetail", () => {
         id: 1,
         name: "Hero Cup",
         date: "2025-09-12",
-        rules: "Bo3",
         status: "open",
         entrants: [],
         matches: [],
@@ -37,7 +35,6 @@ describe("EventDetail", () => {
         id: 1,
         name: "Hero Cup",
         date: "2025-09-12",
-        rules: "Bo3",
         status: "open",
         entrants: [
           { id: 1, name: "Spiderman", alias: "Webslinger" },
@@ -77,7 +74,7 @@ describe("EventDetail", () => {
           event_id: 1,
         }),
       })
-      // GET /events/1 (after refetch)
+      // GET /events/1 (after POST)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -96,7 +93,7 @@ describe("EventDetail", () => {
     await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-    // Entrant now appears in EventDetail’s entrants list
+    // ✅ Check entrants in EventDetail’s list
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
     expect(await screen.findByText(/Tony/)).toBeInTheDocument();
   });
