@@ -1,9 +1,10 @@
 // File: frontend/src/components/EventDetail.jsx
-// Purpose: Three-column layout: forms (left), entrants list (middle), matches (right).
+// Purpose: Displays details for a single Event, including entrants and matches.
 // Notes:
-// - Forms remain tabbed in left column
-// - Entrants list pulled into its own dedicated column
-// - Matches expand to take up remaining width
+// - Uses Material UI Grid layout for responsive 3-column design.
+// - Entrant + Match dashboards grouped in tabs (left).
+// - Entrants list fixed-width, scrollable (middle).
+// - Matches displayed in a full-width table (right).
 
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
@@ -16,6 +17,11 @@ import {
   Tabs,
   Tab,
   Box,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
@@ -52,7 +58,7 @@ export default function EventDetail() {
 
   return (
     <div data-testid="event-detail">
-      <Typography variant="h4" sx={{ mb: 2, fontWeight: "bold" }}>
+      <Typography variant="h4" gutterBottom>
         {event.name} — {event.date} ({event.status})
       </Typography>
 
@@ -60,92 +66,103 @@ export default function EventDetail() {
         component={Link}
         to="/"
         variant="outlined"
+        color="primary"
         sx={{ mb: 3 }}
       >
         Back to Events
       </Button>
 
       <Grid container spacing={2}>
-        {/* Left column: Forms */}
+        {/* LEFT: Entrant + Match Dashboards */}
         <Grid item xs={12} md={3}>
           <Card>
+            <Tabs
+              value={tab}
+              onChange={(_, newVal) => setTab(newVal)}
+              variant="fullWidth"
+            >
+              <Tab label="Add Entrant" />
+              <Tab label="Add Match" />
+            </Tabs>
             <CardContent>
-              <Tabs
-                value={tab}
-                onChange={(e, newValue) => setTab(newValue)}
-                variant="fullWidth"
-                sx={{ mb: 2 }}
-              >
-                <Tab label="Add Entrant" />
-                <Tab label="Add Match" />
-              </Tabs>
-
               {tab === 0 && (
-                <Box>
-                  <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
-                </Box>
+                <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
               )}
               {tab === 1 && (
-                <Box>
-                  <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
-                </Box>
+                <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
               )}
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Middle column: Entrants */}
-        <Grid item xs={12} md={3}>
+        {/* MIDDLE: Entrants List */}
+        <Grid
+          item
+          xs={12}
+          md={3}
+          sx={{ minWidth: 220, flex: "0 0 220px" }}
+        >
           <Card sx={{ height: "100%" }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Entrants
-              </Typography>
-              {event.entrants?.length > 0 ? (
-                <ul>
-                  {event.entrants.map((entrant) => (
-                    <li key={entrant.id}>
-                      {entrant.id} — {entrant.name} ({entrant.alias})
+              <Typography variant="h6">Entrants</Typography>
+              <Box
+                sx={{
+                  maxHeight: 400,
+                  overflowY: "auto",
+                  pr: 1,
+                  mt: 1,
+                }}
+              >
+                <ul style={{ paddingLeft: "1rem", margin: 0 }}>
+                  {event.entrants?.map((e) => (
+                    <li key={e.id}>
+                      {e.id} — {e.name} ({e.alias})
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No entrants yet
-                </Typography>
-              )}
+              </Box>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Right column: Matches */}
-        <Grid item xs={12} md={6}>
+        {/* RIGHT: Matches Table */}
+        <Grid item xs={12} md>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Matches
               </Typography>
-              {event.matches?.length > 0 ? (
-                <ul>
-                  {event.matches.map((m) => {
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Round</TableCell>
+                    <TableCell>Entrant 1</TableCell>
+                    <TableCell>Entrant 2</TableCell>
+                    <TableCell>Scores</TableCell>
+                    <TableCell>Winner</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {event.matches?.map((m) => {
                     const winner = event.entrants?.find(
                       (e) => e.id === m.winner_id
                     );
                     return (
-                      <li key={m.id}>
-                        Round {m.round}: {m.scores} — Winner:{" "}
-                        {winner
-                          ? `${winner.name} (${winner.alias})`
-                          : "TBD"}
-                      </li>
+                      <TableRow key={m.id}>
+                        <TableCell>{m.round}</TableCell>
+                        <TableCell>{m.entrant1_id}</TableCell>
+                        <TableCell>{m.entrant2_id}</TableCell>
+                        <TableCell>{m.scores}</TableCell>
+                        <TableCell>
+                          {winner
+                            ? `${winner.name} (${winner.alias})`
+                            : "TBD"}
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
-                </ul>
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  No matches yet
-                </Typography>
-              )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </Grid>
