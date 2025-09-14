@@ -1,8 +1,8 @@
 // File: frontend/src/__tests__/EntrantDashboard.test.jsx
 // Purpose: Tests for EntrantDashboard component.
 // Notes:
-// - Relies on global fetch mocks.
-// - Covers list + add flow; edit/delete can be added later.
+// - Only tests form behavior (EventDetail owns entrant list).
+// - Ensures callback is called after POST.
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,69 +10,27 @@ import { renderWithRouter } from "../test-utils";
 import EntrantDashboard from "../components/EntrantDashboard";
 
 describe("EntrantDashboard", () => {
-  test("renders entrants heading", async () => {
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
-
+  test("renders Add Entrant form", () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(await screen.findByText(/entrants/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /add entrant/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/alias/i)).toBeInTheDocument();
   });
 
-  test("displays entrants returned from API", async () => {
+  test("submits new entrant and triggers callback", async () => {
+    const mockOnAdded = jest.fn();
+
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => [
-        { id: 1, name: "Spiderman", alias: "Webslinger" },
-        { id: 2, name: "Batman", alias: "Dark Knight" },
-      ],
+      json: async () => ({ id: 3, name: "Wonder Woman", alias: "Amazon Princess" }),
     });
 
-    renderWithRouter(<EntrantDashboard eventId={1} />);
+    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
 
-    expect(
-      await screen.findByText(/Spiderman.*Webslinger/)
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText(/Batman.*Dark Knight/)
-    ).toBeInTheDocument();
-  });
+    await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
+    await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
+    await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-  test("adds a new entrant via form", async () => {
-    global.fetch
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [], // initial GET
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 3,
-          name: "Wonder Woman",
-          alias: "Amazon Princess",
-        }),
-      }) // POST
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          { id: 3, name: "Wonder Woman", alias: "Amazon Princess" },
-        ],
-      }); // GET after POST
-
-    renderWithRouter(<EntrantDashboard eventId={1} />);
-
-    await userEvent.type(await screen.findByLabelText(/name/i), "Wonder Woman");
-    await userEvent.type(
-      screen.getByLabelText(/alias/i),
-      "Amazon Princess"
-    );
-    await userEvent.click(
-      screen.getByRole("button", { name: /add entrant/i })
-    );
-
-    expect(
-      await screen.findByText(/Wonder Woman.*Amazon Princess/)
-    ).toBeInTheDocument();
+    expect(mockOnAdded).toHaveBeenCalled();
   });
 });
