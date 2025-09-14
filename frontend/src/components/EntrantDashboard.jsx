@@ -39,16 +39,24 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add entrant");
+
+      // Refresh local entrants list
       await fetchEntrants();
+
+      // Reset form fields
       setFormData({ name: "", alias: "" });
-      if (onEntrantAdded) onEntrantAdded(); // 🔥 notify parent
+
+      // Notify parent (EventDetail) so it re-fetches the full event
+      if (typeof onEntrantAdded === "function") {
+        onEntrantAdded();
+      }
     } catch (err) {
       console.error(err);
     }
   }
 
   return (
-    <div>
+    <div data-testid="entrant-dashboard">
       <h2>Entrants</h2>
 
       {/* Add Entrant form */}

@@ -2,11 +2,11 @@
 // Purpose: Displays details for a single Event, including entrants and matches.
 // Notes:
 // - Fetches event data from backend using eventId.
-// - Renders event info, entrants list, and matches list.
-// - Integrates EntrantDashboard for adding entrants.
+// - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
 
 import { useEffect, useState } from "react";
 import EntrantDashboard from "./EntrantDashboard";
+import MatchDashboard from "./MatchDashboard";
 
 export default function EventDetail({ eventId }) {
   const [event, setEvent] = useState(null);
@@ -35,7 +35,7 @@ export default function EventDetail({ eventId }) {
   if (!event) return <p>No event found</p>;
 
   return (
-    <div>
+    <div data-testid="event-detail">
       <h1>Event Detail</h1>
       <p>
         {event.name} — {event.date} ({event.status})
@@ -58,6 +58,7 @@ export default function EventDetail({ eventId }) {
 
       {/* Matches */}
       <h2>Matches</h2>
+      <MatchDashboard eventId={eventId} onMatchAdded={fetchEvent} />
       {event.matches && event.matches.length > 0 ? (
         <ul>
           {event.matches.map((match) => (
