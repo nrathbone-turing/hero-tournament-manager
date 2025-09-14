@@ -82,13 +82,13 @@ export default function EventDetail() {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, px: 2 }}>
       {/* Header */}
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-          {event.name} — {event.date} ({event.status})
-        </Typography>
+      <Box display="flex" alignItems="center" gap={2} sx={{ mb: 3 }}>
         <Button component={Link} to="/" variant="outlined">
           Back to Events
         </Button>
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          {event.name} — {event.date} ({event.status})
+        </Typography>
       </Box>
 
       {/* 3-column layout, single row, uniform height */}
