@@ -23,10 +23,11 @@ import {
   TableBody,
   TableSortLabel,
   Button,
+  TextField
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
-import { API_BASE_URL } from "../api";
+import { API_BASE_URL, deleteEntrant } from "../api";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -38,6 +39,7 @@ export default function EventDetail() {
   // sort states
   const [entrantOrder, setEntrantOrder] = useState({ orderBy: "id", direction: "asc" });
   const [matchOrder, setMatchOrder] = useState({ orderBy: "round", direction: "asc" });
+  const [removeId, setRemoveId] = useState("");
 
   async function fetchEvent() {
     try {
@@ -79,6 +81,18 @@ export default function EventDetail() {
   const sortedEntrants = event.entrants ? sortData(event.entrants, entrantOrder) : [];
   const sortedMatches = event.matches ? sortData(event.matches, matchOrder) : [];
 
+  async function handleRemoveEntrant(e) {
+    e.preventDefault();
+    try {
+      await deleteEntrant(id, removeId);
+      setRemoveId("");
+      fetchEvent(); // refresh the list
+    } catch (err) {
+      console.error(err);
+      alert("Failed to remove entrant");
+    }
+  }
+
   return (
     <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
       {/* Header */}
@@ -101,9 +115,27 @@ export default function EventDetail() {
               <Tab label="Add Entrant" />
               <Tab label="Add Match" />
             </Tabs>
-            <Box sx={{ mt: 2, flex: 1, overflow: "auto" }}>
+            <Box sx={{ mt: 2, flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
               {tab === 0 ? (
-                <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                <>
+                  <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                  <Box component="form" onSubmit={handleRemoveEntrant} sx={{ display: "flex", flexDirection: "column", gap: 2, mt: "auto" }}>
+                    <Typography variant="h6" gutterBottom>
+                      Remove Entrant
+                    </Typography>
+                    <TextField
+                      label="Entrant ID"
+                      type="number"
+                      value={removeId}
+                      onChange={(e) => setRemoveId(e.target.value)}
+                      required
+                      size="small"
+                    />
+                    <Button type="submit" variant="contained" color="error">
+                      Remove Entrant
+                    </Button>
+                  </Box>
+                </>
               ) : (
                 <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
               )}
