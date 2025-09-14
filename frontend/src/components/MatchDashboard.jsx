@@ -1,12 +1,13 @@
 // File: frontend/src/components/MatchDashboard.jsx
-// Purpose: Form for adding matches to an event.
+// Purpose: Displays and manages Matches for a specific Event.
 // Notes:
-// - No local list; EventDetail owns match list.
-// - Calls onMatchAdded after POST.
+// - Uses REACT_APP_API_URL env var for backend requests.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function MatchDashboard({ eventId, onMatchAdded }) {
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     round: "",
     entrant1_id: "",
@@ -15,15 +16,36 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     winner: "",
   });
 
+  const API_URL = process.env.REACT_APP_API_URL || "";
+
+  async function fetchMatches() {
+    try {
+      const response = await fetch(`${API_URL}/matches?event_id=${eventId}`);
+      if (!response.ok) throw new Error("Failed to fetch matches");
+      const data = await response.json();
+      setMatches(data);
+    } catch (err) {
+      console.error(err);
+      setMatches([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchMatches();
+  }, [eventId]);
+
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch("/matches", {
+      const response = await fetch(`${API_URL}/matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add match");
+      await fetchMatches();
       setFormData({
         round: "",
         entrant1_id: "",
@@ -31,7 +53,9 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         scores: "",
         winner: "",
       });
-      if (typeof onMatchAdded === "function") onMatchAdded();
+      if (typeof onMatchAdded === "function") {
+        onMatchAdded();
+      }
     } catch (err) {
       console.error(err);
     }
@@ -39,53 +63,73 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
 
   return (
     <div data-testid="match-dashboard">
-      <h3>Add Match</h3>
+      <h2>Matches</h2>
+
       <form onSubmit={handleSubmit}>
-        <label htmlFor="round">Round</label>
-        <input
-          id="round"
-          value={formData.round}
-          onChange={(e) => setFormData({ ...formData, round: e.target.value })}
-        />
-
-        <label htmlFor="entrant1_id">Entrant 1 ID</label>
-        <input
-          id="entrant1_id"
-          value={formData.entrant1_id}
-          onChange={(e) =>
-            setFormData({ ...formData, entrant1_id: e.target.value })
-          }
-        />
-
-        <label htmlFor="entrant2_id">Entrant 2 ID</label>
-        <input
-          id="entrant2_id"
-          value={formData.entrant2_id}
-          onChange={(e) =>
-            setFormData({ ...formData, entrant2_id: e.target.value })
-          }
-        />
-
-        <label htmlFor="scores">Scores</label>
-        <input
-          id="scores"
-          value={formData.scores}
-          onChange={(e) =>
-            setFormData({ ...formData, scores: e.target.value })
-          }
-        />
-
-        <label htmlFor="winner">Winner</label>
-        <input
-          id="winner"
-          value={formData.winner}
-          onChange={(e) =>
-            setFormData({ ...formData, winner: e.target.value })
-          }
-        />
-
+        <div>
+          <label htmlFor="round">Round</label>
+          <input
+            id="round"
+            value={formData.round}
+            onChange={(e) => setFormData({ ...formData, round: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="entrant1_id">Entrant 1 ID</label>
+          <input
+            id="entrant1_id"
+            value={formData.entrant1_id}
+            onChange={(e) =>
+              setFormData({ ...formData, entrant1_id: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="entrant2_id">Entrant 2 ID</label>
+          <input
+            id="entrant2_id"
+            value={formData.entrant2_id}
+            onChange={(e) =>
+              setFormData({ ...formData, entrant2_id: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="scores">Scores</label>
+          <input
+            id="scores"
+            value={formData.scores}
+            onChange={(e) =>
+              setFormData({ ...formData, scores: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="winner">Winner</label>
+          <input
+            id="winner"
+            value={formData.winner}
+            onChange={(e) =>
+              setFormData({ ...formData, winner: e.target.value })
+            }
+          />
+        </div>
         <button type="submit">Add Match</button>
       </form>
+
+      {loading ? (
+        <p>Loading...</p>
+      ) : matches.length > 0 ? (
+        <ul>
+          {matches.map((m) => (
+            <li key={m.id}>
+              Round {m.round}: {m.scores} — Winner: {m.winner || "TBD"}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No matches</p>
+      )}
     </div>
   );
 }
