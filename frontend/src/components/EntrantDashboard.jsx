@@ -1,34 +1,13 @@
 // File: frontend/src/components/EntrantDashboard.jsx
-// Purpose: Displays and manages Entrants for a specific Event.
+// Purpose: Form for adding entrants to an event.
 // Notes:
-// - Fetches entrants for a given eventId.
-// - Provides form to add entrants.
-// - Calls onEntrantAdded if provided (so EventDetail can re-fetch event).
+// - No local list; EventDetail owns entrant list.
+// - Calls onEntrantAdded after POST.
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function EntrantDashboard({ eventId, onEntrantAdded }) {
-  const [entrants, setEntrants] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ name: "", alias: "" });
-
-  async function fetchEntrants() {
-    try {
-      const response = await fetch(`/entrants?event_id=${eventId}`);
-      if (!response.ok) throw new Error("Failed to fetch entrants");
-      const data = await response.json();
-      setEntrants(data);
-    } catch (err) {
-      console.error(err);
-      setEntrants([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchEntrants();
-  }, [eventId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -39,17 +18,8 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
       if (!response.ok) throw new Error("Failed to add entrant");
-
-      // Refresh local entrants list
-      await fetchEntrants();
-
-      // Reset form fields
       setFormData({ name: "", alias: "" });
-
-      // Notify parent (EventDetail) so it re-fetches the full event
-      if (typeof onEntrantAdded === "function") {
-        onEntrantAdded();
-      }
+      if (typeof onEntrantAdded === "function") onEntrantAdded();
     } catch (err) {
       console.error(err);
     }
@@ -57,47 +27,26 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
 
   return (
     <div data-testid="entrant-dashboard">
-      <h2>Entrants</h2>
-
-      {/* Add Entrant form */}
+      <h3>Add Entrant</h3>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="name">Name</label>
-          <input
-            id="name"
-            value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label htmlFor="alias">Alias</label>
-          <input
-            id="alias"
-            value={formData.alias}
-            onChange={(e) =>
-              setFormData({ ...formData, alias: e.target.value })
-            }
-          />
-        </div>
+        <label htmlFor="name">Name</label>
+        <input
+          id="name"
+          value={formData.name}
+          onChange={(e) =>
+            setFormData({ ...formData, name: e.target.value })
+          }
+        />
+        <label htmlFor="alias">Alias</label>
+        <input
+          id="alias"
+          value={formData.alias}
+          onChange={(e) =>
+            setFormData({ ...formData, alias: e.target.value })
+          }
+        />
         <button type="submit">Add Entrant</button>
       </form>
-
-      {/* Entrant list */}
-      {loading ? (
-        <p>Loading...</p>
-      ) : entrants.length > 0 ? (
-        <ul>
-          {entrants.map((e) => (
-            <li key={e.id}>
-              {e.name} ({e.alias})
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No entrants</p>
-      )}
     </div>
   );
 }

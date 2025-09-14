@@ -1,75 +1,47 @@
-// File: frontend/src/__tests__/EntrantDashboard.test.jsx
-// Purpose: Tests for EntrantDashboard component.
+// File: frontend/src/__tests__/EventDashboard.test.jsx
+// Purpose: Tests for EventDashboard component.
 // Notes:
-// - Uses renderWithRouter so Router context is consistent.
-// - Mocks fetch responses to simulate backend API.
+// - Relies on global fetch mock for /events.
+// - Covers rendering list + form submission.
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
-import EntrantDashboard from "../components/EntrantDashboard";
+import EventDashboard from "../components/EventDashboard";
 
-describe("EntrantDashboard", () => {
-  test("renders Entrants heading", () => {
-    global.fetch = jest.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
-
-    renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(screen.getByText(/entrants/i)).toBeInTheDocument();
+describe("EventDashboard", () => {
+  test("renders events heading", async () => {
+    renderWithRouter(<EventDashboard />);
+    expect(await screen.findByRole("heading", { name: /events/i })).toBeInTheDocument();
   });
 
-  test("displays entrants returned from API", async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => [
-        { id: 1, name: "Spiderman", alias: "Webslinger" },
-        { id: 2, name: "Batman", alias: "Dark Knight" },
-      ],
-    });
-
-    renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(await screen.findByText(/Spiderman/)).toBeInTheDocument();
-    expect(await screen.findByText(/Batman/)).toBeInTheDocument();
+  test("displays events returned from API", async () => {
+    renderWithRouter(<EventDashboard />);
+    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Villain Showdown/i)).toBeInTheDocument();
   });
 
-  test("shows empty state when no entrants exist", async () => {
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    });
-
-    renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(await screen.findByText(/no entrants/i)).toBeInTheDocument();
-  });
-
-  test("adds new entrant after form submission", async () => {
-    // GET empty → POST → GET with new entrant
+  test("submits new event and refreshes list", async () => {
     global.fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => [] })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({
-          id: 3,
-          name: "Ironman",
-          alias: "Tony",
-          event_id: 1,
-        }),
+        json: async () => [], // initial GET
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => [
-          { id: 3, name: "Ironman", alias: "Tony", event_id: 1 },
-        ],
-      });
+        json: async () => ({ id: 3, name: "Test Event", date: "2025-09-20", status: "open" }),
+      }) // POST
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ id: 3, name: "Test Event", date: "2025-09-20", status: "open" }],
+      }); // GET after POST
 
-    renderWithRouter(<EntrantDashboard eventId={1} />);
+    renderWithRouter(<EventDashboard />);
 
-    await userEvent.type(screen.getByLabelText(/name/i), "Ironman");
-    await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
-    await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
+    await userEvent.type(screen.getByLabelText(/name/i), "Test Event");
+    await userEvent.type(screen.getByLabelText(/date/i), "2025-09-20");
+    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
 
-    expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
+    expect(await screen.findByText(/Test Event/)).toBeInTheDocument();
   });
 });
