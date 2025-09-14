@@ -17,8 +17,6 @@ function EventDashboard() {
     status: "open",
   });
 
-  const API_URL = process.env.REACT_APP_API_URL || "";
-
   async function fetchEvents() {
     try {
       const response = await fetch(`${API_BASE_URL}/events`);
@@ -40,7 +38,7 @@ function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/events`, {
+      const response = await fetch(`${API_BASE_URL}/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
