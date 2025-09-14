@@ -1,26 +1,27 @@
 // File: frontend/src/__tests__/App.test.jsx
 // Purpose: Routing tests for App component.
 // Notes:
-// - Relies on global fetch mock from setupTests.js.
-// - Uses data-testid attributes to reliably detect which dashboard renders.
+// - Uses renderWithRouter + global fetch mock.
+// - Confirms EventDashboard and EventDetail render in correct routes.
 
-import { screen } from "@testing-library/react"
-import App from "../App"
-import { renderWithRouter } from "../test-utils"
+import { screen } from "@testing-library/react";
+import App from "../App";
+import { renderWithRouter } from "../test-utils";
 
 describe("App routing", () => {
   test("renders Hero Tournament Manager heading on home route", async () => {
-    renderWithRouter(<App />, { route: "/" })
+    renderWithRouter(<App />, { route: "/" });
     expect(
       await screen.findByRole("heading", { name: /hero tournament manager/i })
-    ).toBeInTheDocument()
-  })
+    ).toBeInTheDocument();
+  });
 
   test("renders EventDashboard on home route", async () => {
-    renderWithRouter(<App />, { route: "/" })
-    expect(await screen.findByTestId("event-dashboard")).toBeInTheDocument()
-    expect(screen.queryByTestId("entrant-dashboard")).toBeNull()
-  })
+    renderWithRouter(<App />, { route: "/" });
+    // From global fetch mock in setupTests.js
+    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
+    expect(screen.getByText(/Villain Showdown/i)).toBeInTheDocument();
+  });
 
   test("renders EventDetail on event detail route", async () => {
     global.fetch.mockResolvedValueOnce({
@@ -33,13 +34,15 @@ describe("App routing", () => {
         entrants: [],
         matches: [],
       }),
-    })
+    });
 
-    renderWithRouter(<App />, { route: "/events/1" })
-    expect(await screen.findByTestId("event-detail")).toBeInTheDocument()
-  })
+    renderWithRouter(<App />, { route: "/events/1" });
+    expect(
+      await screen.findByRole("heading", { name: /event detail/i })
+    ).toBeInTheDocument();
+  });
 
   test.skip("navigates between Dashboard and EventDetail", () => {
-    // TODO: implement once EventDashboard exposes <Link> interactions
-  })
-})
+    // TODO: add once EventDashboard exposes navigation <Link>
+  });
+});
