@@ -4,7 +4,7 @@
 // - Only tests form submission since EventDetail owns match list.
 // - Ensures callback is called after POST.
 
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
 import MatchDashboard from "../components/MatchDashboard";
@@ -46,6 +46,8 @@ describe("MatchDashboard", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
-    expect(mockOnAdded).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockOnAdded).toHaveBeenCalled();
+    });
   });
 });
