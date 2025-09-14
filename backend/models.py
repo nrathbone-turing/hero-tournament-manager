@@ -4,6 +4,9 @@
 # - Event: Tournament event (name, date, rules, status)
 # - Entrant: Player/character registered in an event
 # - Match: A match within an event, with entrants, round, scores, winner
+# Notes:
+# - Includes to_dict() methods with optional related info.
+# - Match.to_dict(include_names=True) returns entrant + winner details.
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -84,8 +87,8 @@ class Match(db.Model):
     def __repr__(self):
         return f"<Match Event {self.event_id} Round {self.round}>"
 
-    def to_dict(self):
-        return {
+    def to_dict(self, include_names=False):
+        data = {
             "id": self.id,
             "event_id": self.event_id,
             "round": self.round,
@@ -94,3 +97,24 @@ class Match(db.Model):
             "scores": self.scores,
             "winner_id": self.winner_id,
         }
+
+        if include_names:
+            from backend.models import Entrant  # local import to avoid circular
+
+            data["entrant1"] = (
+                Entrant.query.get(self.entrant1_id).to_dict()
+                if self.entrant1_id
+                else None
+            )
+            data["entrant2"] = (
+                Entrant.query.get(self.entrant2_id).to_dict()
+                if self.entrant2_id
+                else None
+            )
+            data["winner"] = (
+                Entrant.query.get(self.winner_id).to_dict()
+                if self.winner_id
+                else None
+            )
+
+        return data
