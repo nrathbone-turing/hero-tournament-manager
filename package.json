@@ -9,6 +9,7 @@
     "fix:backend": "black backend && flake8 backend",
     "test:backend": "pytest -q --disable-warnings",
 
+    "seed": "node backend/scripts/seed.js",
     
     "lint:frontend": "cd frontend && npm run lint",
     "format:frontend": "cd frontend && npm run format",
