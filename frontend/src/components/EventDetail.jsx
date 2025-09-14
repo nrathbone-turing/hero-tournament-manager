@@ -5,11 +5,13 @@
 // - Integrates EntrantDashboard + MatchDashboard for CRUD operations.
 
 import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
 import { API_BASE_URL } from "../api";
 
 export default function EventDetail({ eventId }) {
+  const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
