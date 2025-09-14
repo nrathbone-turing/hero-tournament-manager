@@ -1,34 +1,13 @@
 // File: frontend/src/components/EntrantDashboard.jsx
-// Purpose: Displays and manages Entrants for a specific Event.
+// Purpose: Renders entrants form + list for a specific Event.
 // Notes:
-// - Fetches entrants for a given eventId.
-// - Provides form to add entrants.
-// - Calls onEntrantAdded if provided (so EventDetail can re-fetch event).
+// - Stateless: entrants come from props.
+// - Calls onAddEntrant after POST to notify parent (EventDetail).
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function EntrantDashboard({ eventId, onEntrantAdded }) {
-  const [entrants, setEntrants] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function EntrantDashboard({ eventId, entrants = [], onAddEntrant }) {
   const [formData, setFormData] = useState({ name: "", alias: "" });
-
-  async function fetchEntrants() {
-    try {
-      const response = await fetch(`/entrants?event_id=${eventId}`);
-      if (!response.ok) throw new Error("Failed to fetch entrants");
-      const data = await response.json();
-      setEntrants(data);
-    } catch (err) {
-      console.error(err);
-      setEntrants([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    fetchEntrants();
-  }, [eventId]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -40,15 +19,10 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
       });
       if (!response.ok) throw new Error("Failed to add entrant");
 
-      // Refresh local entrants list
-      await fetchEntrants();
-
-      // Reset form fields
       setFormData({ name: "", alias: "" });
 
-      // Notify parent (EventDetail) so it re-fetches the full event
-      if (typeof onEntrantAdded === "function") {
-        onEntrantAdded();
+      if (typeof onAddEntrant === "function") {
+        onAddEntrant(); // tell EventDetail to re-fetch
       }
     } catch (err) {
       console.error(err);
@@ -85,9 +59,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
       </form>
 
       {/* Entrant list */}
-      {loading ? (
-        <p>Loading...</p>
-      ) : entrants.length > 0 ? (
+      {entrants.length > 0 ? (
         <ul>
           {entrants.map((e) => (
             <li key={e.id}>
