@@ -22,26 +22,27 @@ describe("EntrantDashboard", () => {
   test("submits new entrant and triggers callback", async () => {
     const mockOnAdded = jest.fn();
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        id: 3,
-        name: "Wonder Woman",
-        alias: "Amazon Princess",
-      }),
-    });
-
     renderWithRouter(
       <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
     );
 
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
-
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
     await waitFor(() => {
       expect(mockOnAdded).toHaveBeenCalled();
     });
+  });
+
+  test("shows error when API fails", async () => {
+    global.fetch.mockRejectedValueOnce(new Error("API Error"));
+    renderWithRouter(<EntrantDashboard eventId={1} />);
+    await userEvent.type(screen.getByLabelText(/name/i), "Fail Hero");
+    await userEvent.type(screen.getByLabelText(/alias/i), "Oops");
+    await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
+    expect(
+      await screen.findByText(/failed to add entrant/i),
+    ).toBeInTheDocument();
   });
 });
