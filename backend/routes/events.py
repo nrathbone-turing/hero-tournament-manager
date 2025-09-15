@@ -2,11 +2,12 @@
 # Purpose: Defines Flask Blueprint for Event CRUD routes.
 # Notes:
 # - Supports create, read (list), update, and delete.
-# - Uses Event.to_dict() for consistent serialization.
+# - Adds entrant_count in event list response.
 # - Enriches matches with entrant names when returning a single event.
 
 from flask import Blueprint, request, jsonify
-from backend.models import db, Event
+from sqlalchemy import func
+from backend.models import db, Event, Entrant
 
 bp = Blueprint("events", __name__, url_prefix="/events")
 
@@ -28,9 +29,32 @@ def create_event():
 
 @bp.route("", methods=["GET"])
 def get_events():
-    """Retrieve all Events."""
-    events = Event.query.all()
-    return jsonify([e.to_dict() for e in events]), 200
+    """Retrieve all Events with entrant counts."""
+    events = (
+        db.session.query(
+            Event.id,
+            Event.name,
+            Event.date,
+            Event.rules,
+            Event.status,
+            func.count(Entrant.id).label("entrant_count"),
+        )
+        .outerjoin(Entrant, Entrant.event_id == Event.id)
+        .group_by(Event.id)
+        .all()
+    )
+
+    return jsonify([
+        {
+            "id": e.id,
+            "name": e.name,
+            "date": e.date.isoformat() if hasattr(e.date, "isoformat") else e.date,
+            "rules": e.rules,
+            "status": e.status,
+            "entrant_count": e.entrant_count,
+        }
+        for e in events
+    ]), 200
 
 
 @bp.route("/<int:event_id>", methods=["GET"])
