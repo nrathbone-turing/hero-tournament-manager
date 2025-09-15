@@ -29,11 +29,11 @@ describe("EventDashboard", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ id: 3, name: "Test Event", date: "2025-09-20", status: "open" }),
+        json: async () => ({ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting" }),
       }) // POST
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => [{ id: 3, name: "Test Event", date: "2025-09-20", status: "open" }],
+        json: async () => [{ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting" }],
       }); // GET after POST
 
     renderWithRouter(<EventDashboard />);

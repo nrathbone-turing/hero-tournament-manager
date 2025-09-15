@@ -159,35 +159,38 @@ describe("EventDetail", () => {
 describe("EventDetail - status updates", () => {
   test("updates event status via dropdown", async () => {
     global.fetch
+      // Initial GET
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           id: 1,
           name: "Hero Cup",
           date: "2025-09-12",
-          status: "open",
+          status: "drafting",
           entrants: [],
           matches: [],
         }),
       })
+      // PUT → published
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           id: 1,
           name: "Hero Cup",
           date: "2025-09-12",
-          status: "closed",
+          status: "published",
           entrants: [],
           matches: [],
         }),
       })
+      // Re-fetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
           id: 1,
           name: "Hero Cup",
           date: "2025-09-12",
-          status: "closed",
+          status: "published",
           entrants: [],
           matches: [],
         }),
@@ -196,11 +199,11 @@ describe("EventDetail - status updates", () => {
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
-    expect(screen.getByText(/open/i)).toBeInTheDocument();
+    expect(screen.getByText(/drafting/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByLabelText(/status/i));
-    await userEvent.click(screen.getByRole("option", { name: /closed/i }));
+    await userEvent.click(screen.getByRole("option", { name: /published/i }));
 
-    expect(await screen.findByDisplayValue(/closed/i)).toBeInTheDocument();
+    expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
   });
 });
