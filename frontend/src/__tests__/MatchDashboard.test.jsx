@@ -42,16 +42,16 @@ describe("MatchDashboard", () => {
     mockFetchFailure();
 
     renderWithRouter(<MatchDashboard eventId={1} />);
+    
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
     await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
     await userEvent.type(screen.getByLabelText(/winner id/i), "1");
+    
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
-    // Either expect UI error OR console.error
-    await waitFor(() => {
-      expect(console.error).toHaveBeenCalled();
-    });
+    // Expect the UI error message
+  expect(await screen.findByText(/failed to add match/i)).toBeInTheDocument();
   });
 });
