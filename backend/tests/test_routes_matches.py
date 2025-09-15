@@ -87,3 +87,58 @@ def test_delete_match(client):
         db.session.execute(select(Match).filter_by(id=match.id)).scalar_one_or_none()
         is None
     )
+
+import pytest
+from backend.models import Match, db
+
+class TestMatchEdgeCases:
+    def test_create_match_same_entrants(self, client):
+        event, e1, _ = seed_event_and_entrants()
+        res = client.post(
+            "/matches",
+            json={
+                "event_id": event.id,
+                "round": 1,
+                "entrant1_id": e1.id,
+                "entrant2_id": e1.id,
+                "scores": "2-0",
+                "winner_id": e1.id,
+            },
+        )
+        assert res.status_code in (400, 422)
+
+    def test_create_match_invalid_entrant(self, client):
+        event, _, _ = seed_event_and_entrants()
+        res = client.post(
+            "/matches",
+            json={
+                "event_id": event.id,
+                "round": 1,
+                "entrant1_id": 9999,
+                "entrant2_id": 8888,
+                "scores": "1-0",
+                "winner_id": 9999,
+            },
+        )
+        assert res.status_code == 404
+
+    def test_create_match_missing_scores(self, client):
+        event, e1, e2 = seed_event_and_entrants()
+        res = client.post(
+            "/matches",
+            json={
+                "event_id": event.id,
+                "round": 1,
+                "entrant1_id": e1.id,
+                "entrant2_id": e2.id,
+            },
+        )
+        assert res.status_code == 400
+
+    def test_update_nonexistent_match(self, client):
+        res = client.put("/matches/9999", json={"scores": "2-0"})
+        assert res.status_code == 404
+
+    def test_delete_nonexistent_match(self, client):
+        res = client.delete("/matches/9999")
+        assert res.status_code == 404

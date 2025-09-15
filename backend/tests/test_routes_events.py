@@ -68,3 +68,24 @@ def test_delete_event(client):
         db.session.execute(select(Event).filter_by(id=event.id)).scalar_one_or_none()
         is None
     )
+
+class TestEventEdgeCases:
+    def test_create_event_missing_name(self, client):
+        res = client.post("/events", json={"date": "2025-09-12", "status": "drafting"})
+        assert res.status_code == 400  # expecting validation error
+
+    def test_update_event_invalid_status(self, client):
+        event = Event(name="Edge Event", status="drafting")
+        db.session.add(event)
+        db.session.commit()
+
+        res = client.put(f"/events/{event.id}", json={"status": "invalid"})
+        assert res.status_code in (400, 422)
+
+    def test_get_nonexistent_event(self, client):
+        res = client.get("/events/9999")
+        assert res.status_code == 404
+
+    def test_delete_nonexistent_event(self, client):
+        res = client.delete("/events/9999")
+        assert res.status_code == 404

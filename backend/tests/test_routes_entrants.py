@@ -71,3 +71,24 @@ def test_delete_entrant(client):
         ).scalar_one_or_none()
         is None
     )
+
+class TestEntrantEdgeCases:
+    def test_create_entrant_missing_name(self, client):
+        event = create_event_for_testing()
+        res = client.post("/entrants", json={"alias": "Nameless", "event_id": event.id})
+        assert res.status_code == 400
+
+    def test_create_entrant_with_invalid_event(self, client):
+        res = client.post(
+            "/entrants",
+            json={"name": "Ghost", "alias": "NoEvent", "event_id": 9999},
+        )
+        assert res.status_code == 404
+
+    def test_update_nonexistent_entrant(self, client):
+        res = client.put("/entrants/9999", json={"alias": "DoesNotExist"})
+        assert res.status_code == 404
+
+    def test_delete_nonexistent_entrant(self, client):
+        res = client.delete("/entrants/9999")
+        assert res.status_code == 404
