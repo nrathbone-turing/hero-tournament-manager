@@ -19,8 +19,8 @@ describe("EventDashboard", () => {
 
   test("shows entrant counts", async () => {
     mockFetchSuccess([
-      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting", entrant_count: 3 },
-      { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "published", entrant_count: 5 },
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting", entrants: Array(3).fill({ id: 1, name: "Hero" }) },
+      { id: 2, name: "Villain Showdown", date: "2025-09-13", entrants: Array(5).fill({ id: 2, name: "Villain" }) }
     ]);
     renderWithRouter(<EventDashboard />);
     expect(await screen.findByText(/3 entrants/i)).toBeInTheDocument();
@@ -55,10 +55,15 @@ describe("EventDashboard - edge cases", () => {
   });
 
   test("shows error message when create event fails", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false });
+    global.fetch
+      .mockResolvedValueOnce({ ok: false }) // fetch events
+      .mockResolvedValueOnce({ ok: false }); // create event
+
     renderWithRouter(<EventDashboard />);
-    await userEvent.type(screen.getByLabelText(/name/i), "Broken Event");
+    await userEvent.type(screen.getByLabelText(/event name/i), "Broken Event");
     await userEvent.click(screen.getByRole("button", { name: /create event/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to create event/i);
+
+    const alerts = await screen.findAllByRole("alert");
+    expect(alerts.some((el) => /failed to create event/i.test(el.textContent))).toBe(true);
   });
 });
