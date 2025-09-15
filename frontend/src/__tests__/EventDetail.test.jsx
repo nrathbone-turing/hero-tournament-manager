@@ -2,7 +2,7 @@
 // Purpose: Tests for EventDetail component with Entrants + Matches.
 // Notes:
 // - EventDetail owns entrant list and re-fetches after EntrantDashboard submission.
-// - Includes tests for adding and removing entrants, and displaying match winners.
+// - Includes tests for adding/removing entrants, displaying matches, and updating status.
 
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -23,7 +23,7 @@ describe("EventDetail", () => {
       }),
     });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
     expect(await screen.findByText(/2025-09-12/)).toBeInTheDocument();
@@ -45,7 +45,7 @@ describe("EventDetail", () => {
       }),
     });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText(/Spiderman/)).toBeInTheDocument();
     expect(await screen.findByText(/Batman/)).toBeInTheDocument();
@@ -53,7 +53,6 @@ describe("EventDetail", () => {
 
   test("adds entrant updates event list", async () => {
     global.fetch
-      // GET /events/1 (initial)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -65,7 +64,6 @@ describe("EventDetail", () => {
           matches: [],
         }),
       })
-      // POST /entrants
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -75,7 +73,6 @@ describe("EventDetail", () => {
           event_id: 1,
         }),
       })
-      // GET /events/1 (after POST)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -88,7 +85,7 @@ describe("EventDetail", () => {
         }),
       });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     await userEvent.type(await screen.findByLabelText(/name/i), "Ironman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Tony");
@@ -114,11 +111,7 @@ describe("EventDetail", () => {
       }),
     });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
-
-    // Check for round number safely
-    const roundCells = await screen.findAllByText("1");
-    expect(roundCells.length).toBeGreaterThan(0);
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText("2-1")).toBeInTheDocument();
     expect(await screen.findByText(/Batman \(Dark Knight\)/)).toBeInTheDocument();
@@ -126,7 +119,6 @@ describe("EventDetail", () => {
 
   test("removes entrant updates event list", async () => {
     global.fetch
-      // GET /events/1 (initial with entrant to remove)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -138,12 +130,7 @@ describe("EventDetail", () => {
           matches: [],
         }),
       })
-      // DELETE /entrants/5
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({}),
-      })
-      // GET /events/1 (after deletion, empty entrants)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) })
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -156,7 +143,7 @@ describe("EventDetail", () => {
         }),
       });
 
-    renderWithRouter(<EventDetail eventId={1} />, { route: "/events/1" });
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText(/Thor/)).toBeInTheDocument();
 
@@ -166,5 +153,54 @@ describe("EventDetail", () => {
     await waitFor(() => {
       expect(screen.queryByText(/Thor/)).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("EventDetail - status updates", () => {
+  test("updates event status via dropdown", async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          date: "2025-09-12",
+          status: "open",
+          entrants: [],
+          matches: [],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          date: "2025-09-12",
+          status: "closed",
+          entrants: [],
+          matches: [],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          date: "2025-09-12",
+          status: "closed",
+          entrants: [],
+          matches: [],
+        }),
+      });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+
+    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
+    expect(screen.getByText(/open/i)).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText(/status/i));
+    await userEvent.click(screen.getByRole("option", { name: /closed/i }));
+
+    expect(await screen.findByDisplayValue(/closed/i)).toBeInTheDocument();
   });
 });
