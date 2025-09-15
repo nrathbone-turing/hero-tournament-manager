@@ -24,6 +24,8 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     winner_id: "",
   });
 
+  const [error, setError] = useState(null);
+
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -41,9 +43,10 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         scores: "",
         winner_id: "",
       });
+      setError(null); // clear errors on success
       if (typeof onMatchAdded === "function") onMatchAdded();
     } catch (err) {
-      console.error(err);
+      setError("Failed to add match");
     }
   }
 
@@ -101,6 +104,13 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
             Add Match
           </Button>
         </Box>
+
+        {/*show error feedback */}
+        {error && (
+          <Typography color="error" role="alert" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );

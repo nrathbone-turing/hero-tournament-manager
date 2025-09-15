@@ -8,40 +8,23 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
 import EntrantDashboard from "../components/EntrantDashboard";
+import { mockFetchSuccess } from "../setupTests";
 
 describe("EntrantDashboard", () => {
-  test("renders Add Entrant form", () => {
+  test("renders form", () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(
-      screen.getByRole("heading", { name: /add entrant/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/alias/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /add entrant/i })).toBeInTheDocument();
   });
 
   test("submits new entrant and triggers callback", async () => {
     const mockOnAdded = jest.fn();
+    mockFetchSuccess({ id: 3, name: "Wonder Woman", alias: "Amazon Princess", event_id: 1 });
 
-    global.fetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        id: 3,
-        name: "Wonder Woman",
-        alias: "Amazon Princess",
-      }),
-    });
-
-    renderWithRouter(
-      <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
-    );
-
+    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
-
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
-    await waitFor(() => {
-      expect(mockOnAdded).toHaveBeenCalled();
-    });
+    await waitFor(() => expect(mockOnAdded).toHaveBeenCalled());
   });
 });
