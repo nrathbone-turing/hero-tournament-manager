@@ -65,7 +65,7 @@ export default function EventDetail() {
   async function handleRemoveEntrant(e) {
     e.preventDefault();
     try {
-      await deleteEntrant(id, Number(removeId)); // ensure numeric
+      await deleteEntrant(removeId);
       setRemoveId("");
       fetchEvent();
     } catch (err) {
