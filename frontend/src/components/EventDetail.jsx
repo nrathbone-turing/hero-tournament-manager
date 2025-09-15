@@ -59,9 +59,7 @@ export default function EventDetail() {
       if (!res.ok) throw new Error("Failed to remove entrant");
       fetchEvent();
     } catch (err) {
-      console.error(err);
-      // Keep entrant in list on error
-    }
+      setError("Failed to remove entrant");    }
   }
 
   async function handleStatusChange(newStatus) {
@@ -76,7 +74,7 @@ export default function EventDetail() {
       if (!res.ok) throw new Error("Failed to update status");
       await fetchEvent();
     } catch (err) {
-      console.error(err);
+      setError("Failed to update status");
       setEvent({ ...event, status: prevStatus }); // revert
     }
   }
@@ -185,7 +183,7 @@ export default function EventDetail() {
           <InputLabel id="event-status-label">Status</InputLabel>
           <Select
             labelId="event-status-label"
-            value={event.status}
+            value={event?.status ?? ""}
             label="Status"
             onChange={(e) => handleStatusChange(e.target.value)}
             role="combobox"
