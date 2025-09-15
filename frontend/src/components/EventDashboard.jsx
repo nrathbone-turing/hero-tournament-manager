@@ -1,8 +1,10 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Displays a list of Events and allows creation of new Events.
 // Notes:
-// - Styled with MUI components for consistency with the rest of the app.
-// - Uses REACT_APP_API_URL env var for backend requests.
+// - Includes placeholder hero images on each side of the form.
+// - Status dropdown fixed for proper label alignment.
+// - Event list scrollable if >5 items, sized to show 5.
+// - Displays entrant count in event details.
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -20,6 +22,7 @@ import {
   ListItem,
   ListItemText,
   CircularProgress,
+  Paper,
 } from "@mui/material";
 import { API_BASE_URL } from "../api";
 
@@ -70,55 +73,91 @@ function EventDashboard() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 6 }}>
+    <Container maxWidth="lg" sx={{ mt: 6 }}>
       <Typography variant="h4" gutterBottom align="center">
         Events
       </Typography>
 
-      {/* Create Event Form */}
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}
-      >
-        <TextField
-          id="name"
-          label="Event Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-        />
+      {/* Hero images + form */}
+      <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+        <Paper
+          data-testid="hero-image-placeholder"
+          sx={{
+            flex: 1,
+            height: 200,
+            bgcolor: "grey.200",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Hero Image Placeholder
+        </Paper>
 
-        <TextField
-          id="date"
-          label="Date"
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          InputLabelProps={{ shrink: true }}
-          required
-        />
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{
+            flex: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <TextField
+            id="name"
+            label="Event Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
 
-        <FormControl>
-          <InputLabel id="status-label">Status</InputLabel>
-          <Select
-            labelId="status-label"
-            id="status"
-            value={formData.status}
-            onChange={(e) =>
-              setFormData({ ...formData, status: e.target.value })
-            }
-          >
-            <MenuItem value="drafting">Drafting</MenuItem>
-            <MenuItem value="published">Published</MenuItem>
-            <MenuItem value="cancelled">Cancelled</MenuItem>
-            <MenuItem value="completed">Completed</MenuItem>
-          </Select>
-        </FormControl>
+          <TextField
+            id="date"
+            label="Date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            required
+          />
 
-        <Button type="submit" variant="contained" color="primary">
-          Create Event
-        </Button>
+          <FormControl fullWidth>
+            <InputLabel id="status-label">Status</InputLabel>
+            <Select
+              labelId="status-label"
+              id="status"
+              value={formData.status}
+              label="Status"
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
+            >
+              <MenuItem value="drafting">Drafting</MenuItem>
+              <MenuItem value="published">Published</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button type="submit" variant="contained" color="primary">
+            Create Event
+          </Button>
+        </Box>
+
+        <Paper
+          data-testid="hero-image-placeholder"
+          sx={{
+            flex: 1,
+            height: 200,
+            bgcolor: "grey.200",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Hero Image Placeholder
+        </Paper>
       </Box>
 
       {/* Event List */}
@@ -127,22 +166,33 @@ function EventDashboard() {
           <CircularProgress />
         </Box>
       ) : events.length > 0 ? (
-        <List>
-          {events.map((e) => (
-            <ListItem
-              key={e.id}
-              component={Link}
-              to={`/events/${e.id}`}
-              sx={{
-                textDecoration: "none",
-                color: "inherit",
-                "&:hover": { bgcolor: "action.hover" },
-              }}
-            >
-              <ListItemText primary={e.name} secondary={`${e.date} (${e.status})`} />
-            </ListItem>
-          ))}
-        </List>
+        <Paper
+          data-testid="event-list"
+          sx={{
+            maxHeight: 300, // about 5 items tall
+            overflowY: "auto",
+          }}
+        >
+          <List>
+            {events.map((e) => (
+              <ListItem
+                key={e.id}
+                component={Link}
+                to={`/events/${e.id}`}
+                sx={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <ListItemText
+                  primary={e.name}
+                  secondary={`${e.date} (${e.status}) — ${e.entrant_count || 0} entrants`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       ) : (
         <Typography align="center" color="text.secondary">
           No events available
