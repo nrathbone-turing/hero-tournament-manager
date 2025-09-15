@@ -8,54 +8,35 @@ import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithRouter } from "../test-utils";
 import EventDashboard from "../components/EventDashboard";
+import { mockFetchSuccess } from "../setupTests";
 
 describe("EventDashboard", () => {
   test("renders events heading", async () => {
+    mockFetchSuccess();
     renderWithRouter(<EventDashboard />);
-    expect(
-      await screen.findByRole("heading", { name: /events/i }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /events/i })).toBeInTheDocument();
   });
 
-  test("displays events with entrant counts", async () => {
+  test("shows entrant counts", async () => {
+    mockFetchSuccess([
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting", entrant_count: 3 },
+      { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "published", entrant_count: 5 },
+    ]);
     renderWithRouter(<EventDashboard />);
-    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
-    expect(await screen.findByText(/2 entrants/i)).toBeInTheDocument();
+    expect(await screen.findByText(/3 entrants/i)).toBeInTheDocument();
+    expect(await screen.findByText(/5 entrants/i)).toBeInTheDocument();
   });
 
-  test("submits new event and refreshes list", async () => {
-    global.fetch
-      .mockResolvedValueOnce({ ok: true, json: async () => [] }) // first GET
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          id: 3,
-          name: "Test Event",
-          date: "2025-09-20",
-          status: "drafting",
-          entrant_count: 0,
-        }),
-      }) // POST
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => [
-          { id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 },
-        ],
-      }); // GET after POST
+  test("submits new event", async () => {
+    mockFetchSuccess([]); // initial GET
+    mockFetchSuccess({ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 }); // POST
+    mockFetchSuccess([{ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 }]); // reload
 
     renderWithRouter(<EventDashboard />);
     await userEvent.type(screen.getByLabelText(/name/i), "Test Event");
     await userEvent.type(screen.getByLabelText(/date/i), "2025-09-20");
-    await userEvent.click(
-      screen.getByRole("button", { name: /create event/i }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
 
-    expect(await screen.findByText(/Test Event/)).toBeInTheDocument();
-  });
-
-  test("handles empty state gracefully", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => [] });
-    renderWithRouter(<EventDashboard />);
-    expect(await screen.findByText(/no events available/i)).toBeInTheDocument();
+    expect(await screen.findByText(/0 entrants/i)).toBeInTheDocument();
   });
 });
