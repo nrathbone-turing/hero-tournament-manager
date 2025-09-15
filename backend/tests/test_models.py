@@ -74,3 +74,27 @@ def test_match_cannot_have_same_entrant_for_both_slots(session):
     with pytest.raises(IntegrityError):
         session.flush()  # fail on constraint
     session.rollback()
+
+def test_event_to_dict_with_no_entrants_or_matches(session):
+    event = Event(name="Empty Cup", status="drafting")
+    session.add(event)
+    session.commit()
+    data = event.to_dict()
+    assert data["entrant_count"] == 0
+
+def test_entrant_repr_with_no_alias(session):
+    event = Event(name="Alias Cup", status="drafting")
+    entrant = Entrant(name="Nameless", event=event, alias=None)
+    session.add_all([event, entrant])
+    session.commit()
+    assert "Nameless" in repr(entrant)
+
+def test_match_to_dict_with_missing_winner(session):
+    event = Event(name="Mystery Cup", status="drafting")
+    e1 = Entrant(name="Hero", event=event)
+    e2 = Entrant(name="Villain", event=event)
+    match = Match(event=event, round=1, entrant1_id=1, entrant2_id=2, scores="0-0")
+    session.add_all([event, e1, e2, match])
+    session.commit()
+    data = match.to_dict()
+    assert data["winner_id"] is None
