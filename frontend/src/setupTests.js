@@ -12,24 +12,53 @@ process.env.REACT_APP_API_URL = "http://localhost:3001";
 
 // Default fetch mock
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () =>
-        Promise.resolve([
-          { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+  global.fetch = jest.fn((url) => {
+    if (url.endsWith("/events")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => [
+          {
+            id: 1,
+            name: "Hero Cup",
+            date: "2025-09-12",
+            status: "drafting",
+            entrant_count: 2,
+          },
           {
             id: 2,
             name: "Villain Showdown",
             date: "2025-09-13",
-            status: "closed",
+            status: "published",
+            entrant_count: 3,
           },
-        ]),
-    }),
-  );
+        ],
+      });
+    }
+
+    if (url.includes("/events/1")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          date: "2025-09-12",
+          status: "drafting",
+          entrants: [
+            { id: 1, name: "Spiderman", alias: "Webslinger" },
+            { id: 2, name: "Batman", alias: "Dark Knight" },
+          ],
+          matches: [],
+        }),
+      });
+    }
+
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({}), // fallback
+    });
+  });
 });
 
-// Reset mocks between tests
 afterEach(() => {
   jest.clearAllMocks();
 });
