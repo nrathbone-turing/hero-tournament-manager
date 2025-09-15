@@ -41,7 +41,8 @@ class Event(db.Model):
             "date": self.date,
             "rules": self.rules,
             "status": self.status,
-        }
+            "entrant_count": len(self.entrants) if self.entrants else 0,
+            }
         if include_related:
             data["entrants"] = [e.to_dict() for e in self.entrants]
             data["matches"] = [m.to_dict() for m in self.matches]

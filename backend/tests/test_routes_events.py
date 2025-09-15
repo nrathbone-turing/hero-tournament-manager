@@ -5,7 +5,7 @@
 # - Covers create, read, update, delete operations for Event.
 # - Runs against an in-memory SQLite database for isolation.
 
-from backend.models import Event, db
+from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
 def test_create_event(client):
@@ -21,16 +21,27 @@ def test_create_event(client):
     assert response.status_code == 201
     data = response.get_json()
     assert data["status"] == "drafting"
+    assert "id" in data
 
-def test_get_events(client):
+
+def test_get_events_with_counts(client):
     event = Event(name="Seed Event", date="2025-01-01", rules="Bo1", status="published")
     db.session.add(event)
+    db.session.commit()
+
+    # Add 2 entrants for the event
+    e1 = Entrant(name="Alpha", alias="A", event=event)
+    e2 = Entrant(name="Beta", alias="B", event=event)
+    db.session.add_all([e1, e2])
     db.session.commit()
 
     response = client.get("/events")
     assert response.status_code == 200
     data = response.get_json()
-    assert any(ev["name"] == "Seed Event" for ev in data)
+
+    seed_event = next(ev for ev in data if ev["name"] == "Seed Event")
+    assert seed_event["entrant_count"] == 2  # dynamic count works
+
 
 def test_update_event(client):
     event = Event(name="Temp Event", status="drafting")
@@ -43,6 +54,7 @@ def test_update_event(client):
 
     result = db.session.execute(select(Event).filter_by(id=event.id)).scalar_one()
     assert result.status == "cancelled"
+
 
 def test_delete_event(client):
     event = Event(name="Delete Me", status="drafting")
