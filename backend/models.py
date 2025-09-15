@@ -21,7 +21,7 @@ class Event(db.Model):
     date = db.Column(db.String, nullable=True)
     rules = db.Column(db.String, nullable=True)
     status = db.Column(
-        Enum(*EVENT_STATUSES, name="event_status"), nullable=False, default="drafting"
+        Enum(*EVENT_STATUSES, name="event_status", validate_strings=True), nullable=False, default="drafting"
     )
 
     entrants = db.relationship(
