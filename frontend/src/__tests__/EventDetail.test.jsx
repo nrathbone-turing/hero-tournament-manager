@@ -207,3 +207,52 @@ describe("EventDetail - status updates", () => {
     expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
   });
 });
+
+describe("EventDetail - scrollable lists", () => {
+  test("entrants list has scroll styling", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        name: "Scroll Test Event",
+        date: "2025-09-12",
+        status: "drafting",
+        entrants: Array.from({ length: 20 }, (_, i) => ({
+          id: i + 1,
+          name: `Hero ${i + 1}`,
+          alias: `Alias${i + 1}`,
+        })),
+        matches: [],
+      }),
+    });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+
+    expect(await screen.findByTestId("entrants-scroll")).toHaveStyle("overflow-y: auto");
+  });
+
+  test("matches list has scroll styling", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        name: "Scroll Test Event",
+        date: "2025-09-12",
+        status: "drafting",
+        entrants: [{ id: 1, name: "Hero 1", alias: "Alias1" }],
+        matches: Array.from({ length: 20 }, (_, i) => ({
+          id: i + 1,
+          round: 1,
+          entrant1_id: 1,
+          entrant2_id: null,
+          scores: "2-0",
+          winner_id: 1,
+        })),
+      }),
+    });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+
+    expect(await screen.findByTestId("matches-scroll")).toHaveStyle("overflow-y: auto");
+  });
+});

@@ -180,7 +180,28 @@ export default function EventDetail() {
             <Typography variant="h6" gutterBottom>
               Entrants
             </Typography>
-            <Box sx={{ flex: 1, overflow: "auto" }}>
+                        <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                maxHeight: 500,
+                "&::-webkit-scrollbar": {
+                  width: "10px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#555",
+                },
+              }}
+              data-testid="entrants-scroll"
+            >
               <Table size="small">
                 <TableHead>
                   <TableRow>
@@ -209,7 +230,28 @@ export default function EventDetail() {
             <Typography variant="h6" gutterBottom>
               Matches
             </Typography>
-            <Box sx={{ flex: 1, overflow: "auto" }}>
+                        <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                maxHeight: 500,
+                "&::-webkit-scrollbar": {
+                  width: "10px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#555",
+                },
+              }}
+              data-testid="matches-scroll"
+            >
               <Table size="small">
                 <TableHead>
                   <TableRow>
