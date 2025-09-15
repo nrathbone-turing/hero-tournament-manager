@@ -13,7 +13,7 @@ describe("App routing", () => {
   test("renders Hero Tournament Manager heading on home route", async () => {
     renderWithRouter(<App />, { route: "/" });
     expect(
-      await screen.findByRole("heading", { name: /hero tournament manager/i })
+      await screen.findByRole("heading", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("App routing", () => {
 
     renderWithRouter(<App />, { route: "/events/1" });
     expect(
-      await screen.findByRole("heading", { name: /event detail/i })
+      await screen.findByRole("heading", { name: /event detail/i }),
     ).toBeInTheDocument();
   });
 
@@ -69,18 +69,27 @@ describe("App routing", () => {
     });
 
     await userEvent.click(screen.getByRole("link", { name: /hero cup/i }));
-    expect(await screen.findByRole("heading", { name: /event detail/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /event detail/i }),
+    ).toBeInTheDocument();
 
     // Step 3: mock list again for navigation back
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [
         { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
-        { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
+        {
+          id: 2,
+          name: "Villain Showdown",
+          date: "2025-09-13",
+          status: "closed",
+        },
       ],
     });
 
-    await userEvent.click(screen.getByRole("link", { name: /back to events/i }));
+    await userEvent.click(
+      screen.getByRole("link", { name: /back to events/i }),
+    );
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
   });
 });

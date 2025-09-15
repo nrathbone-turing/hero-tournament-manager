@@ -8,6 +8,7 @@
 from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
+
 def test_create_event(client):
     response = client.post(
         "/events",
@@ -63,6 +64,7 @@ def test_delete_event(client):
 
     response = client.delete(f"/events/{event.id}")
     assert response.status_code == 204
-    assert db.session.execute(
-        select(Event).filter_by(id=event.id)
-    ).scalar_one_or_none() is None
+    assert (
+        db.session.execute(select(Event).filter_by(id=event.id)).scalar_one_or_none()
+        is None
+    )

@@ -44,17 +44,24 @@ def get_events():
         .all()
     )
 
-    return jsonify([
-        {
-            "id": e.id,
-            "name": e.name,
-            "date": e.date.isoformat() if hasattr(e.date, "isoformat") else e.date,
-            "rules": e.rules,
-            "status": e.status,
-            "entrant_count": e.entrant_count,
-        }
-        for e in events
-    ]), 200
+    return (
+        jsonify(
+            [
+                {
+                    "id": e.id,
+                    "name": e.name,
+                    "date": (
+                        e.date.isoformat() if hasattr(e.date, "isoformat") else e.date
+                    ),
+                    "rules": e.rules,
+                    "status": e.status,
+                    "entrant_count": e.entrant_count,
+                }
+                for e in events
+            ]
+        ),
+        200,
+    )
 
 
 @bp.route("/<int:event_id>", methods=["GET"])

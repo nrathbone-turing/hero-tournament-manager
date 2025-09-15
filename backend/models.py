@@ -21,7 +21,9 @@ class Event(db.Model):
     date = db.Column(db.String, nullable=True)
     rules = db.Column(db.String, nullable=True)
     status = db.Column(
-        Enum(*EVENT_STATUSES, name="event_status", validate_strings=True), nullable=False, default="drafting"
+        Enum(*EVENT_STATUSES, name="event_status", validate_strings=True),
+        nullable=False,
+        default="drafting",
     )
 
     entrants = db.relationship(
@@ -42,7 +44,7 @@ class Event(db.Model):
             "rules": self.rules,
             "status": self.status,
             "entrant_count": len(self.entrants) if self.entrants else 0,
-            }
+        }
         if include_related:
             data["entrants"] = [e.to_dict() for e in self.entrants]
             data["matches"] = [m.to_dict() for m in self.matches]
@@ -119,9 +121,7 @@ class Match(db.Model):
                 else None
             )
             data["winner"] = (
-                Entrant.query.get(self.winner_id).to_dict()
-                if self.winner_id
-                else None
+                Entrant.query.get(self.winner_id).to_dict() if self.winner_id else None
             )
 
         return data

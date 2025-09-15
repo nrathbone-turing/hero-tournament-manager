@@ -12,15 +12,29 @@ import EventDashboard from "../components/EventDashboard";
 describe("EventDashboard", () => {
   test("renders events heading", async () => {
     renderWithRouter(<EventDashboard />);
-    expect(await screen.findByRole("heading", { name: /events/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /events/i }),
+    ).toBeInTheDocument();
   });
 
   test("displays events with entrant counts", async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => [
-        { id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting", entrant_count: 3 },
-        { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "published", entrant_count: 5 },
+        {
+          id: 1,
+          name: "Hero Cup",
+          date: "2025-09-12",
+          status: "drafting",
+          entrant_count: 3,
+        },
+        {
+          id: 2,
+          name: "Villain Showdown",
+          date: "2025-09-13",
+          status: "published",
+          entrant_count: 5,
+        },
       ],
     });
 
@@ -51,7 +65,13 @@ describe("EventDashboard", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => [
-          { id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 },
+          {
+            id: 3,
+            name: "Test Event",
+            date: "2025-09-20",
+            status: "drafting",
+            entrant_count: 0,
+          },
         ],
       }); // GET after POST
 
@@ -59,7 +79,9 @@ describe("EventDashboard", () => {
 
     await userEvent.type(screen.getByLabelText(/name/i), "Test Event");
     await userEvent.type(screen.getByLabelText(/date/i), "2025-09-20");
-    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /create event/i }),
+    );
 
     expect(await screen.findByText(/Test Event/)).toBeInTheDocument();
     expect(await screen.findByText(/0 entrants/i)).toBeInTheDocument();

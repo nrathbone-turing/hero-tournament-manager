@@ -114,7 +114,9 @@ describe("EventDetail", () => {
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     expect(await screen.findByText("2-1")).toBeInTheDocument();
-    expect(await screen.findByText(/Batman \(Dark Knight\)/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Batman \(Dark Knight\)/),
+    ).toBeInTheDocument();
   });
 
   test("removes entrant updates event list", async () => {
@@ -148,7 +150,9 @@ describe("EventDetail", () => {
     expect(await screen.findByText(/Thor/)).toBeInTheDocument();
 
     await userEvent.type(screen.getByLabelText(/Entrant ID/i), "5");
-    await userEvent.click(screen.getByRole("button", { name: /remove entrant/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /remove entrant/i }),
+    );
 
     await waitFor(() => {
       expect(screen.queryByText(/Thor/)).not.toBeInTheDocument();
@@ -228,7 +232,9 @@ describe("EventDetail - scrollable lists", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    expect(await screen.findByTestId("entrants-scroll")).toHaveStyle("overflow-y: auto");
+    expect(await screen.findByTestId("entrants-scroll")).toHaveStyle(
+      "overflow-y: auto",
+    );
   });
 
   test("matches list has scroll styling", async () => {
@@ -253,6 +259,8 @@ describe("EventDetail - scrollable lists", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    expect(await screen.findByTestId("matches-scroll")).toHaveStyle("overflow-y: auto");
+    expect(await screen.findByTestId("matches-scroll")).toHaveStyle(
+      "overflow-y: auto",
+    );
   });
 });
