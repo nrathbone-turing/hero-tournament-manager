@@ -40,3 +40,25 @@ describe("EventDashboard", () => {
     expect(await screen.findByText(/0 entrants/i)).toBeInTheDocument();
   });
 });
+
+describe("EventDashboard - edge cases", () => {
+  test("shows placeholder when no events exist", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: true, json: async () => [] });
+    renderWithRouter(<EventDashboard />);
+    expect(await screen.findByText(/no events yet/i)).toBeInTheDocument();
+  });
+
+  test("prevents event creation with missing fields", async () => {
+    renderWithRouter(<EventDashboard />);
+    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    expect(screen.getByRole("form")).toBeInTheDocument();
+  });
+
+  test("shows error message when create event fails", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false });
+    renderWithRouter(<EventDashboard />);
+    await userEvent.type(screen.getByLabelText(/name/i), "Broken Event");
+    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to create event/i);
+  });
+});

@@ -28,3 +28,35 @@ describe("EntrantDashboard", () => {
     await waitFor(() => expect(mockOnAdded).toHaveBeenCalled());
   });
 });
+
+describe("EntrantDashboard - edge cases", () => {
+  test("blocks submission when fields are empty", async () => {
+    renderWithRouter(<EntrantDashboard eventId={1} />);
+    await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
+    expect(await screen.findByRole("form")).toBeInTheDocument();
+  });
+
+  test("shows error when API call fails", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false });
+    renderWithRouter(<EntrantDashboard eventId={1} />);
+    await userEvent.type(screen.getByLabelText(/name/i), "ErrorHero");
+    await userEvent.type(screen.getByLabelText(/alias/i), "Oops");
+    await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to add entrant/i);
+  });
+
+  test("ignores duplicate submission (double click)", async () => {
+    const mockOnAdded = jest.fn();
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 10, name: "Flash", alias: "Barry" }),
+    });
+
+    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
+    await userEvent.type(screen.getByLabelText(/name/i), "Flash");
+    await userEvent.type(screen.getByLabelText(/alias/i), "Barry");
+    const button = screen.getByRole("button", { name: /add entrant/i });
+    await userEvent.dblClick(button);
+    expect(mockOnAdded).toHaveBeenCalledTimes(1);
+  });
+});

@@ -188,3 +188,59 @@ describe("EventDetail", () => {
     });
   });
 });
+
+describe("EventDetail - edge cases", () => {
+  test("shows error when event not found", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false });
+    renderWithRouter(<EventDetail />, { route: "/events/404" });
+    expect(await screen.findByText(/event not found/i)).toBeInTheDocument();
+  });
+
+  test("removal failure keeps entrant in list", async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          entrants: [{ id: 5, name: "Thor", alias: "Odinson" }],
+          matches: [],
+        }),
+      })
+      .mockResolvedValueOnce({ ok: false });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+    await userEvent.type(await screen.findByLabelText(/Entrant ID/i), "5");
+    await userEvent.click(screen.getByRole("button", { name: /remove entrant/i }));
+    expect(await screen.findByText(/Thor/)).toBeInTheDocument();
+  });
+
+  test("status update failure reverts dropdown", async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ id: 1, name: "Hero Cup", status: "drafting", entrants: [], matches: [] }),
+      })
+      .mockResolvedValueOnce({ ok: false });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+    await userEvent.click(await screen.findByLabelText(/status/i));
+    await userEvent.click(screen.getByRole("option", { name: /published/i }));
+    expect(await screen.findByDisplayValue(/drafting/i)).toBeInTheDocument();
+  });
+
+  test("renders match with TBD winner when winner_id missing", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        name: "Hero Cup",
+        entrants: [{ id: 1, name: "Spidey", alias: "Webhead" }],
+        matches: [{ id: 101, round: 1, scores: "1-1", winner_id: null }],
+      }),
+    });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+    expect(await screen.findByText(/tbd/i)).toBeInTheDocument();
+  });
+});

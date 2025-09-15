@@ -55,3 +55,40 @@ describe("MatchDashboard", () => {
   expect(await screen.findByText(/failed to add match/i)).toBeInTheDocument();
   });
 });
+
+describe("MatchDashboard - edge cases", () => {
+  test("prevents submit when fields are empty", async () => {
+    renderWithRouter(<MatchDashboard eventId={1} />);
+    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
+    expect(await screen.findByRole("form")).toBeInTheDocument();
+  });
+
+  test("shows error when winner ID does not match entrants", async () => {
+    renderWithRouter(<MatchDashboard eventId={1} />);
+    await userEvent.type(screen.getByLabelText(/round/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
+    await userEvent.type(screen.getByLabelText(/scores/i), "2-1");
+    await userEvent.type(screen.getByLabelText(/winner id/i), "99");
+    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(/winner must be one of the entrants/i);
+  });
+
+  test("clears form after successful submission", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 1, round: 1, entrant1_id: 1, entrant2_id: 2, scores: "2-0", winner_id: 1 }),
+    });
+
+    renderWithRouter(<MatchDashboard eventId={1} />);
+    await userEvent.type(screen.getByLabelText(/round/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
+    await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
+    await userEvent.type(screen.getByLabelText(/winner id/i), "1");
+    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
+
+    expect(screen.getByLabelText(/round/i)).toHaveValue("");
+    expect(screen.getByLabelText(/scores/i)).toHaveValue("");
+  });
+});

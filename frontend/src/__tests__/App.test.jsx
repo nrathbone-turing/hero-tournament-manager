@@ -53,3 +53,16 @@ describe("App routing", () => {
     expect(await screen.findByText(/Villain Showdown/i)).toBeInTheDocument();
   });
 });
+
+describe("App - edge cases", () => {
+  test("shows loading and error state on failed event fetch", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false });
+    renderWithRouter(<App />, { route: "/events/999" });
+    expect(await screen.findByText(/loading event/i)).toBeInTheDocument();
+  });
+
+  test("renders Not Found on unknown route", async () => {
+    renderWithRouter(<App />, { route: "/random" });
+    expect(await screen.findByText(/not found/i)).toBeInTheDocument();
+  });
+});
