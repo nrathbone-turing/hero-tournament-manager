@@ -29,7 +29,7 @@ function EventDashboard() {
   const [formData, setFormData] = useState({
     name: "",
     date: "",
-    status: "open",
+    status: "drafting",
   });
 
   async function fetchEvents() {
@@ -63,7 +63,7 @@ function EventDashboard() {
         throw new Error(`Failed to create event: ${errorText}`);
       }
       await fetchEvents();
-      setFormData({ name: "", date: "", status: "open" });
+      setFormData({ name: "", date: "", status: "drafting" });
     } catch (err) {
       console.error(err);
     }
@@ -109,8 +109,10 @@ function EventDashboard() {
               setFormData({ ...formData, status: e.target.value })
             }
           >
-            <MenuItem value="open">Open</MenuItem>
-            <MenuItem value="closed">Closed</MenuItem>
+            <MenuItem value="drafting">Drafting</MenuItem>
+            <MenuItem value="published">Published</MenuItem>
+            <MenuItem value="cancelled">Cancelled</MenuItem>
+            <MenuItem value="completed">Completed</MenuItem>
           </Select>
         </FormControl>
 
