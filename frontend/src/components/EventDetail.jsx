@@ -112,8 +112,10 @@ export default function EventDetail() {
             value={event.status || ""}
             onChange={handleStatusChange}
           >
-            <MenuItem value="open">Open</MenuItem>
-            <MenuItem value="closed">Closed</MenuItem>
+            <MenuItem value="drafting">Drafting</MenuItem>
+            <MenuItem value="published">Published</MenuItem>
+            <MenuItem value="cancelled">Cancelled</MenuItem>
+            <MenuItem value="completed">Completed</MenuItem>
           </Select>
         </FormControl>
       </Box>
