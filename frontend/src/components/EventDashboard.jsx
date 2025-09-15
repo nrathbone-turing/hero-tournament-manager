@@ -169,8 +169,22 @@ function EventDashboard() {
         <Paper
           data-testid="event-list"
           sx={{
-            maxHeight: 300, // about 5 items tall
+            maxHeight: 300, // ~5 rows visible
             overflowY: "auto",
+            "&::-webkit-scrollbar": {
+              width: "10px",
+            },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "#f1f1f1",
+              borderRadius: "10px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#888",
+              borderRadius: "10px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              backgroundColor: "#555",
+            },
           }}
         >
           <List>
@@ -187,7 +201,7 @@ function EventDashboard() {
               >
                 <ListItemText
                   primary={e.name}
-                  secondary={`${e.date} (${e.status}) — ${e.entrant_count || 0} entrants`}
+                  secondary={`${e.date} (${e.status}) — ${e.entrant_count} entrants`}
                 />
               </ListItem>
             ))}
