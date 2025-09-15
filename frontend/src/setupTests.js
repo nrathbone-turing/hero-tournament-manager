@@ -18,9 +18,14 @@ beforeEach(() => {
       json: () =>
         Promise.resolve([
           { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
-          { id: 2, name: "Villain Showdown", date: "2025-09-13", status: "closed" },
+          {
+            id: 2,
+            name: "Villain Showdown",
+            date: "2025-09-13",
+            status: "closed",
+          },
         ]),
-    })
+    }),
   );
 });
 

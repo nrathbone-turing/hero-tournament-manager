@@ -128,7 +128,15 @@ export default function EventDetail() {
       >
         {/* Left */}
         <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
-          <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Tabs value={tab} onChange={(e, val) => setTab(val)} centered>
               <Tab label="Add Entrant" />
               <Tab label="Add Match" />
@@ -149,7 +157,12 @@ export default function EventDetail() {
                   <Box
                     component="form"
                     onSubmit={handleRemoveEntrant}
-                    sx={{ display: "flex", flexDirection: "column", gap: 2, mt: "auto" }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      mt: "auto",
+                    }}
                   >
                     <Typography variant="h6" gutterBottom>
                       Remove Entrant
@@ -176,11 +189,19 @@ export default function EventDetail() {
 
         {/* Middle */}
         <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
-          <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Typography variant="h6" gutterBottom>
               Entrants
             </Typography>
-                        <Box
+            <Box
               sx={{
                 flex: 1,
                 overflowY: "auto",
@@ -226,11 +247,19 @@ export default function EventDetail() {
 
         {/* Right */}
         <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
-          <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Typography variant="h6" gutterBottom>
               Matches
             </Typography>
-                        <Box
+            <Box
               sx={{
                 flex: 1,
                 overflowY: "auto",
@@ -265,7 +294,9 @@ export default function EventDetail() {
                 </TableHead>
                 <TableBody>
                   {event.matches?.map((m) => {
-                    const winner = event.entrants?.find((e) => e.id === m.winner_id);
+                    const winner = event.entrants?.find(
+                      (e) => e.id === m.winner_id,
+                    );
                     return (
                       <TableRow key={m.id}>
                         <TableCell>{m.id}</TableCell>

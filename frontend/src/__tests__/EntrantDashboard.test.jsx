@@ -12,7 +12,9 @@ import EntrantDashboard from "../components/EntrantDashboard";
 describe("EntrantDashboard", () => {
   test("renders Add Entrant form", () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(screen.getByRole("heading", { name: /add entrant/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /add entrant/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/alias/i)).toBeInTheDocument();
   });
@@ -22,14 +24,20 @@ describe("EntrantDashboard", () => {
 
     global.fetch.mockResolvedValueOnce({
       ok: true,
-      json: async () => ({ id: 3, name: "Wonder Woman", alias: "Amazon Princess" }),
+      json: async () => ({
+        id: 3,
+        name: "Wonder Woman",
+        alias: "Amazon Princess",
+      }),
     });
 
-    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
+    renderWithRouter(
+      <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
+    );
 
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
-    
+
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
 
     await waitFor(() => {

@@ -11,7 +11,9 @@ import MatchDashboard from "../components/MatchDashboard";
 describe("MatchDashboard", () => {
   test("renders Add Match form", () => {
     renderWithRouter(<MatchDashboard eventId={1} />);
-    expect(screen.getByRole("heading", { name: /add match/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /add match/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/round/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/entrant 1 id/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/entrant 2 id/i)).toBeInTheDocument();

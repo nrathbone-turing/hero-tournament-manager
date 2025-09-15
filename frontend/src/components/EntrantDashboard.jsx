@@ -49,9 +49,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
           <TextField
             label="Name"
             value={formData.name}
-            onChange={(e) =>
-              setFormData({ ...formData, name: e.target.value })
-            }
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
           <TextField
