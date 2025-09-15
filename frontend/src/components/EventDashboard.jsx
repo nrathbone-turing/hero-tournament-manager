@@ -201,7 +201,7 @@ function EventDashboard() {
               >
                 <ListItemText
                   primary={e.name}
-                  secondary={`${e.date} (${e.status}) — ${e.entrant_count} entrants`}
+                  secondary={`${e.date} (${e.status}) — ${e.entrant_count ?? 0} entrants`}
                 />
               </ListItem>
             ))}
