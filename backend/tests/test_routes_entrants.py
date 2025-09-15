@@ -9,14 +9,12 @@
 from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
-
 def create_event_for_testing():
     """Helper function to create a seed Event for Entrant tests."""
-    event = Event(name="Test Cup", date="2025-09-12", rules="Bo3", status="open")
+    event = Event(name="Test Cup", date="2025-09-12", rules="Bo3", status="drafting")
     db.session.add(event)
     db.session.commit()
     return event
-
 
 def test_create_entrant(client):
     event = create_event_for_testing()
@@ -30,7 +28,6 @@ def test_create_entrant(client):
     assert data["alias"] == "Webslinger"
     assert data["event_id"] == event.id
 
-
 def test_get_entrants(client):
     event = create_event_for_testing()
     entrant = Entrant(name="Batman", alias="Dark Knight", event_id=event.id)
@@ -40,9 +37,7 @@ def test_get_entrants(client):
     response = client.get("/entrants")
     assert response.status_code == 200
     data = response.get_json()
-    assert isinstance(data, list)
     assert any(ent["name"] == "Batman" for ent in data)
-
 
 def test_update_entrant(client):
     event = create_event_for_testing()
@@ -52,12 +47,10 @@ def test_update_entrant(client):
 
     response = client.put(f"/entrants/{entrant.id}", json={"alias": "Updated Alias"})
     assert response.status_code == 200
-    data = response.get_json()
-    assert data["alias"] == "Updated Alias"
+    assert response.get_json()["alias"] == "Updated Alias"
 
     result = db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one()
     assert result.alias == "Updated Alias"
-
 
 def test_delete_entrant(client):
     event = create_event_for_testing()
@@ -66,9 +59,7 @@ def test_delete_entrant(client):
     db.session.commit()
 
     response = client.delete(f"/entrants/{entrant.id}")
-
     assert response.status_code == 204
-    result = db.session.execute(
+    assert db.session.execute(
         select(Entrant).filter_by(id=entrant.id)
-    ).scalar_one_or_none()
-    assert result is None
+    ).scalar_one_or_none() is None
