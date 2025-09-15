@@ -22,7 +22,11 @@ import {
   TableCell,
   TableBody,
   Button,
-  TextField
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
@@ -35,10 +39,6 @@ export default function EventDetail() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState(0);
   const [removeId, setRemoveId] = useState("");
-
-  // sort states
-  const [entrantOrder, setEntrantOrder] = useState({ orderBy: "id", direction: "asc" });
-  const [matchOrder, setMatchOrder] = useState({ orderBy: "round", direction: "asc" });
 
   async function fetchEvent() {
     try {
@@ -62,27 +62,32 @@ export default function EventDetail() {
   if (error) return <p>Error: {error}</p>;
   if (!event) return <p>No event found</p>;
 
-  function sortData(data, orderState) {
-    return [...data].sort((a, b) => {
-      const { orderBy, direction } = orderState;
-      if (a[orderBy] < b[orderBy]) return direction === "asc" ? -1 : 1;
-      if (a[orderBy] > b[orderBy]) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }
-
-  const sortedEntrants = event.entrants ? sortData(event.entrants, entrantOrder) : [];
-  const sortedMatches = event.matches ? sortData(event.matches, matchOrder) : [];
-
   async function handleRemoveEntrant(e) {
     e.preventDefault();
     try {
       await deleteEntrant(id, Number(removeId)); // ensure numeric
       setRemoveId("");
-      fetchEvent(); // refresh the list
+      fetchEvent();
     } catch (err) {
       console.error(err);
       alert("Failed to remove entrant");
+    }
+  }
+
+  async function handleStatusChange(e) {
+    const newStatus = e.target.value;
+    try {
+      const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) throw new Error("Failed to update status");
+      await response.json();
+      fetchEvent(); // refresh
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status");
     }
   }
 
@@ -97,24 +102,45 @@ export default function EventDetail() {
           Event Detail
         </Typography>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-          {event.name} — {event.date} ({event.status})
+          {event.name} — {event.date}
         </Typography>
+        <FormControl size="small">
+          <InputLabel id="status-label">Status</InputLabel>
+          <Select
+            labelId="status-label"
+            label="Status"
+            value={event.status || ""}
+            onChange={handleStatusChange}
+          >
+            <MenuItem value="open">Open</MenuItem>
+            <MenuItem value="closed">Closed</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
-      {/* 3-column layout, single row, uniform height */}
+      {/* 3-column layout */}
       <Grid
         container
         spacing={2}
         sx={{ alignItems: "stretch", flexWrap: { xs: "wrap", md: "nowrap" } }}
       >
-        {/* Left: Dashboards (1/4 width) */}
-        <Grid item xs={12} md={3} sx={{ display: "flex" }}>
+        {/* Left */}
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
             <Tabs value={tab} onChange={(e, val) => setTab(val)} centered>
               <Tab label="Add Entrant" />
               <Tab label="Add Match" />
             </Tabs>
-            <Box sx={{ mt: 2, flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box
+              sx={{
+                mt: 2,
+                flex: 1,
+                overflow: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
               {tab === 0 ? (
                 <>
                   <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
@@ -146,14 +172,14 @@ export default function EventDetail() {
           </Paper>
         </Grid>
 
-        {/* Middle: Entrants Table (1/4 width, aligned height) */}
-        <Grid item xs={12} md={3} sx={{ display: "flex" }}>
+        {/* Middle */}
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" gutterBottom>
               Entrants
             </Typography>
             <Box sx={{ flex: 1, overflow: "auto" }}>
-              <Table size="small" sx={{ width: "100%" }}>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>ID</TableCell>
@@ -162,7 +188,7 @@ export default function EventDetail() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sortedEntrants.map((entrant) => (
+                  {event.entrants?.map((entrant) => (
                     <TableRow key={entrant.id}>
                       <TableCell>{entrant.id}</TableCell>
                       <TableCell>{entrant.name}</TableCell>
@@ -175,14 +201,14 @@ export default function EventDetail() {
           </Paper>
         </Grid>
 
-        {/* Right: Matches Table (wider, fills remaining space) */}
-        <Grid item xs={12} md={6} sx={{ display: "flex" }}>
+        {/* Right */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
           <Paper sx={{ flex: 1, p: 2, height: 575, display: "flex", flexDirection: "column" }}>
             <Typography variant="h6" gutterBottom>
               Matches
             </Typography>
             <Box sx={{ flex: 1, overflow: "auto" }}>
-              <Table size="small" sx={{ width: "100%" }}>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>ID</TableCell>
@@ -194,7 +220,7 @@ export default function EventDetail() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sortedMatches.map((m) => {
+                  {event.matches?.map((m) => {
                     const winner = event.entrants?.find((e) => e.id === m.winner_id);
                     return (
                       <TableRow key={m.id}>
