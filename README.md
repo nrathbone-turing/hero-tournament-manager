@@ -212,5 +212,6 @@ This project is part of the Flatiron School Capstone course.
 **Notes:**
 - AI features are stretch goals; core CRUD MVP first
 - Deployment target undecided
+- Refactor entrant model to be global (or tied to users) with an event_entrants join table, so entrants can participate in multiple events
 
 **License:** MIT — feel free to use or remix!
