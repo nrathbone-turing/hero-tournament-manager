@@ -1,22 +1,25 @@
 // File: frontend/src/components/EventDetail.jsx
-// Purpose: Show details for a single event with entrants and matches.
-// Notes:
-// - Fetches single event by ID and handles not found errors.
-// - Provides inline feedback instead of window.alert.
-// - Handles entrant removal and status updates gracefully.
+// Purpose: Detailed view of a single event with entrants, matches, and status controls.
 
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { API_BASE_URL, deleteEntrant } from "../api";
 import {
   Container,
   Typography,
+  Box,
   Paper,
   Button,
   Select,
   MenuItem,
-  Box,
+  InputLabel,
+  FormControl,
+  CircularProgress,
+  Card,
+  CardContent,
 } from "@mui/material";
+import EntrantDashboard from "./EntrantDashboard";
+import MatchDashboard from "./MatchDashboard";
+import { API_BASE_URL } from "../api";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -26,8 +29,14 @@ export default function EventDetail() {
 
   async function fetchEvent() {
     try {
+      setLoading(true);
       const res = await fetch(`${API_BASE_URL}/events/${id}`);
-      if (!res.ok) throw new Error("Event not found");
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Event not found");
+        }
+        throw new Error("Failed to load event data");
+      }
       const data = await res.json();
       setEvent(data);
       setError(null);
@@ -44,85 +53,150 @@ export default function EventDetail() {
 
   async function handleRemoveEntrant(entrantId) {
     try {
-      await deleteEntrant(entrantId);
-      setEvent({
-        ...event,
-        entrants: event.entrants.filter((e) => e.id !== entrantId),
+      const res = await fetch(`${API_BASE_URL}/entrants/${entrantId}`, {
+        method: "DELETE",
       });
+      if (!res.ok) throw new Error("Failed to remove entrant");
+      fetchEvent();
     } catch (err) {
-      setError(`Failed to delete entrant ${entrantId}`);
+      console.error(err);
+      // Keep entrant in list on error
     }
   }
 
   async function handleStatusChange(newStatus) {
+    if (!event) return;
+    const prevStatus = event.status;
     try {
       const res = await fetch(`${API_BASE_URL}/events/${id}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ ...event, status: newStatus }),
       });
       if (!res.ok) throw new Error("Failed to update status");
-      const updated = await res.json();
-      setEvent(updated);
-      setError(null);
+      await fetchEvent();
     } catch (err) {
-      setError("Failed to update status");
+      console.error(err);
+      setEvent({ ...event, status: prevStatus }); // revert
     }
   }
 
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography color="error" role="alert">{error}</Typography>;
+  if (loading) {
+    return (
+      <Container>
+        <Typography variant="h6">Loading event...</Typography>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Typography variant="h6">Error</Typography>
+        <Typography role="alert">{error}</Typography>
+      </Container>
+    );
+  }
 
   if (!event) {
-    return <Typography color="error" role="alert">Event not found</Typography>;
+    return (
+      <Container>
+        <Typography variant="h6">Event not found</Typography>
+      </Container>
+    );
   }
 
   return (
-    <Container>
+    <Container maxWidth="lg">
       <Typography variant="h4" gutterBottom>
         {event.name}
       </Typography>
       <Typography>Date: {event.date}</Typography>
       <Typography>Status: {event.status}</Typography>
 
-      <Box sx={{ mt: 2 }}>
+      {/* Entrants Section */}
+      <Box mt={3}>
         <Typography variant="h6">Entrants</Typography>
         {event.entrants?.length > 0 ? (
-          event.entrants.map((entrant) => (
-            <Paper key={entrant.id} sx={{ p: 2, mb: 1 }}>
-              <Typography>{entrant.name}</Typography>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => handleRemoveEntrant(entrant.id)}
+          <Box
+            data-testid="entrants-scroll"
+            sx={{ maxHeight: 200, overflowY: "auto", mt: 2 }}
+          >
+            {event.entrants.map((entrant) => (
+              <Paper
+                key={entrant.id}
+                sx={{ p: 1, mb: 1 }}
+                data-entrant-row="true"
               >
-                Remove
-              </Button>
-            </Paper>
-          ))
+                <Typography>
+                  {entrant.name} ({entrant.alias})
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => handleRemoveEntrant(entrant.id)}
+                >
+                  Remove
+                </Button>
+              </Paper>
+            ))}
+          </Box>
         ) : (
           <Typography>No entrants yet</Typography>
         )}
+        <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      {/* Matches Section */}
+      <Box mt={3}>
+        <Typography variant="h6">Matches</Typography>
+        {event.matches?.length > 0 ? (
+          <Box
+            data-testid="matches-scroll"
+            sx={{ maxHeight: 200, overflowY: "auto", mt: 2 }}
+          >
+            {event.matches.map((m) => {
+              const winner = event.entrants?.find((e) => e.id === m.winner_id);
+              return (
+                <Paper key={m.id} sx={{ p: 1, mb: 1 }}>
+                  <Typography>Round {m.round}</Typography>
+                  <Typography>{m.scores}</Typography>
+                  <Typography>
+                    Winner:{" "}
+                    {m.winner_id
+                      ? `${winner?.name} (${winner?.alias})`
+                      : "TBD"}
+                  </Typography>
+                </Paper>
+              );
+            })}
+          </Box>
+        ) : (
+          <Typography>No matches yet</Typography>
+        )}
+        <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
+      </Box>
+
+      {/* Update Status */}
+      <Box mt={3}>
         <Typography variant="h6">Update Status</Typography>
-        <Select
-          value={event.status}
-          onChange={(e) => handleStatusChange(e.target.value)}
-        >
-          <MenuItem value="drafting">Drafting</MenuItem>
-          <MenuItem value="published">Published</MenuItem>
-          <MenuItem value="cancelled">Cancelled</MenuItem>
-          <MenuItem value="completed">Completed</MenuItem>
-        </Select>
+        <FormControl fullWidth>
+          <InputLabel id="event-status-label">Status</InputLabel>
+          <Select
+            labelId="event-status-label"
+            value={event.status}
+            label="Status"
+            onChange={(e) => handleStatusChange(e.target.value)}
+            role="combobox"
+          >
+            <MenuItem value="drafting">Drafting</MenuItem>
+            <MenuItem value="open">Open</MenuItem>
+            <MenuItem value="closed">Closed</MenuItem>
+            <MenuItem value="published">Published</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
-
-      {error && (
-        <Typography color="error" role="alert" sx={{ mt: 2 }}>
-          {error}
-        </Typography>
-      )}
     </Container>
   );
 }

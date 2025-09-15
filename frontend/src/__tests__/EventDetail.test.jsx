@@ -1,8 +1,8 @@
 // File: frontend/src/__tests__/EventDetail.test.jsx
 // Purpose: Tests for EventDetail component with Entrants + Matches.
 // Notes:
-// - EventDetail owns entrant list and re-fetches after EntrantDashboard submission.
-// - Includes tests for adding/removing entrants, displaying matches, and updating status.
+// - Updated to match component changes (no Entrant ID input, status handled via combobox).
+// - Covers happy path and edge cases.
 
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -85,10 +85,11 @@ describe("EventDetail", () => {
 
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
 
-    await userEvent.type(screen.getByLabelText(/Entrant ID/i), "3");
-    await userEvent.click(screen.getByRole("button", { name: /remove entrant/i }));
-
-    await waitFor(() => expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument());
+    // Remove by row-level button
+    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    await waitFor(() =>
+      expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument(),
+    );
   });
 
   test("renders match winner by entrant name", async () => {
@@ -141,8 +142,12 @@ describe("EventDetail", () => {
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByLabelText(/status/i));
-    await userEvent.click(screen.getByRole("option", { name: /published/i }));
+    await userEvent.click(
+      screen.getByRole("combobox", { name: /status/i }),
+    );
+    await userEvent.click(
+      screen.getByRole("option", { name: /published/i }),
+    );
 
     expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
   });
@@ -163,7 +168,9 @@ describe("EventDetail", () => {
       });
 
       renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(await screen.findByTestId("entrants-scroll")).toHaveStyle("overflow-y: auto");
+      expect(
+        await screen.findByTestId("entrants-scroll"),
+      ).toHaveStyle("overflow-y: auto");
     });
 
     test("matches list has scroll styling", async () => {
@@ -184,14 +191,16 @@ describe("EventDetail", () => {
       });
 
       renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(await screen.findByTestId("matches-scroll")).toHaveStyle("overflow-y: auto");
+      expect(
+        await screen.findByTestId("matches-scroll"),
+      ).toHaveStyle("overflow-y: auto");
     });
   });
 });
 
 describe("EventDetail - edge cases", () => {
   test("shows error when event not found", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false });
+    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
     renderWithRouter(<EventDetail />, { route: "/events/404" });
     expect(await screen.findByText(/event not found/i)).toBeInTheDocument();
   });
@@ -210,8 +219,7 @@ describe("EventDetail - edge cases", () => {
       .mockResolvedValueOnce({ ok: false });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
-    await userEvent.type(await screen.findByLabelText(/Entrant ID/i), "5");
-    await userEvent.click(screen.getByRole("button", { name: /remove entrant/i }));
+    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
     expect(await screen.findByText(/Thor/)).toBeInTheDocument();
   });
 
@@ -219,12 +227,20 @@ describe("EventDetail - edge cases", () => {
     global.fetch
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ id: 1, name: "Hero Cup", status: "drafting", entrants: [], matches: [] }),
+        json: async () => ({
+          id: 1,
+          name: "Hero Cup",
+          status: "drafting",
+          entrants: [],
+          matches: [],
+        }),
       })
       .mockResolvedValueOnce({ ok: false });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
-    await userEvent.click(await screen.findByLabelText(/status/i));
+    await userEvent.click(
+      await screen.findByRole("combobox", { name: /status/i }),
+    );
     await userEvent.click(screen.getByRole("option", { name: /published/i }));
     expect(await screen.findByDisplayValue(/drafting/i)).toBeInTheDocument();
   });
