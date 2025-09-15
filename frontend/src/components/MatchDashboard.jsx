@@ -1,8 +1,9 @@
 // File: frontend/src/components/MatchDashboard.jsx
 // Purpose: MUI-styled form for creating matches.
 // Notes:
-// - Uses API_BASE_URL env var for backend requests.
-// - Calls onMatchAdded callback after successful POST.
+// - Prevents duplicate submissions.
+// - Inline error feedback with role="alert".
+// - Clears errors after success.
 
 import { useState } from "react";
 import { API_BASE_URL } from "../api";
@@ -23,18 +24,21 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     scores: "",
     winner_id: "",
   });
-
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+
     try {
-      const response = await fetch(`${API_BASE_URL}/matches`, {
+      const res = await fetch(`${API_BASE_URL}/matches`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
-      if (!response.ok) throw new Error("Failed to add match");
+      if (!res.ok) throw new Error("Failed to add match");
 
       setFormData({
         round: "",
@@ -43,10 +47,12 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
         scores: "",
         winner_id: "",
       });
-      setError(null); // clear errors on success
+      setError(null);
       if (typeof onMatchAdded === "function") onMatchAdded();
     } catch (err) {
       setError("Failed to add match");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -100,12 +106,15 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
               setFormData({ ...formData, winner_id: e.target.value })
             }
           />
-          <Button type="submit" variant="contained" color="secondary">
-            Add Match
+          <Button
+            type="submit"
+            variant="contained"
+            color="secondary"
+            disabled={submitting}
+          >
+            {submitting ? "Adding..." : "Add Match"}
           </Button>
         </Box>
-
-        {/*show error feedback */}
         {error && (
           <Typography color="error" role="alert" sx={{ mt: 2 }}>
             {error}

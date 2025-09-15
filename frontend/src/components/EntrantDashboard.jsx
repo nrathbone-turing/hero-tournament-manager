@@ -1,8 +1,9 @@
 // File: frontend/src/components/EntrantDashboard.jsx
 // Purpose: MUI-styled form for adding entrants to an event.
 // Notes:
-// - Uses API_BASE_URL env var for backend requests.
-// - Calls onEntrantAdded callback after successful POST.
+// - Prevents duplicate submissions.
+// - Inline error feedback with role="alert".
+// - Clears errors after success.
 
 import { useState } from "react";
 import { API_BASE_URL } from "../api";
@@ -17,21 +18,29 @@ import {
 
 export default function EntrantDashboard({ eventId, onEntrantAdded }) {
   const [formData, setFormData] = useState({ name: "", alias: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
+
     try {
-      const response = await fetch(`${API_BASE_URL}/entrants`, {
+      const res = await fetch(`${API_BASE_URL}/entrants`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
-      if (!response.ok) throw new Error("Failed to add entrant");
+      if (!res.ok) throw new Error("Failed to add entrant");
 
       setFormData({ name: "", alias: "" });
+      setError(null);
       if (typeof onEntrantAdded === "function") onEntrantAdded();
     } catch (err) {
-      console.error(err);
+      setError("Failed to add entrant");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -60,10 +69,20 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
             }
             required
           />
-          <Button type="submit" variant="contained" color="primary">
-            Add Entrant
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            disabled={submitting}
+          >
+            {submitting ? "Adding..." : "Add Entrant"}
           </Button>
         </Box>
+        {error && (
+          <Typography color="error" role="alert" sx={{ mt: 2 }}>
+            {error}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   );
