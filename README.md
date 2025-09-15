@@ -9,19 +9,36 @@ Following [Hero vs Villain Showdown](https://github.com/nrathbone-turing/hero-vs
 This keeps the hero/villain theme while addressing a distinct problem: managing group play efficiently.
 
 Technologies introduced:
-- Flask + PostgreSQL backend
-- Relational data models + migrations
-- React frontend with CRUD integration
+- Flask + SQLAlchemy + PostgreSQL backend
+- Relational data models + migrations + seed scripts
+- React frontend with CRUD integration + routing
+- Dynamic entrant counts & match winner resolution
+- Scrollable UI components for long lists
 - (Stretch) AI for roster suggestions and tournament summaries
 
 ---
 
 ## Features
-- Create and manage tournaments (Events)
-- Register entrants and aliases
-- Log match results and winners
-- View live standings and leaderboards
-- Stretch Goals:
+- **Events**
+  - Create, update, delete tournaments
+  - Statuses: Drafting, Published, Cancelled, Completed
+- **Entrants**
+  - Register with name + alias
+  - Remove entrants dynamically
+  - Entrant counts shown on the dashboard
+- **Matches**
+  - Log results with scores and winners
+  - Winner display dynamically resolves to entrant names
+  - Support for incremental rounds seeded via JSON
+- **UI Enhancements**
+  - Scrollable lists (events, entrants, matches)
+  - Placeholder hero images for flair (planned to wire to Project 1 API)
+- **Authentication & Authorization**
+  - Users can register/login
+  - Session or JWT-based auth
+  - Ownership enforcement (users can only update/delete their own data)
+  - (In progress — core requirement of Project 2)
+- **Stretch Goals**
   - AI seeding and roster completion
   - AI-generated event recaps
   - Analytics dashboards (win rates, meta trends)
@@ -29,7 +46,10 @@ Technologies introduced:
 ---
 
 ## Screenshots
-Screenshots will be added once frontend components are built
+*(latest examples)*  
+
+- **Event Dashboard (with entrant counts & scroll)**  
+- **Event Detail (Entrants + Matches in sortable tables)**  
 
 ---
 
@@ -41,26 +61,32 @@ Screenshots will be added once frontend components are built
   - `Event`: name, date, rules, status
   - `Entrant`: player name, alias, event_id (FK)
   - `Match`: event_id (FK), round, entrants, scores, winner
-  - (Stretch) `Feedback`: notes, match_id (FK), AI summarization target
+- Seed scripts: `events.json`, `entrants.json`, `matches.json` with incremental rounds + scores
+- Routes: CRUD for events, entrants, matches
 
 ### Frontend
-- React (CRA) with React Router
+- React + React Router
 - Components:
-  - Event Dashboard
-  - Event Detail (Entrants + Matches tabs)
-  - Match Entry Form
-  - Standings/Leaderboard View
-- Styling: Semantic UI or Tailwind
+  - `EventDashboard` (event creation + list with entrant counts)
+  - `EventDetail` (entrants + matches, tabs for add/remove)
+  - `EntrantDashboard` (sub-form for entrants)
+  - `MatchDashboard` (sub-form for matches)
+- UI:
+  - Material UI (MUI) with custom scrollbar styling
+  - Responsive 3-column layout for event detail view
 
 ---
 
 ## Tech Stack
 - **Backend:** Flask, SQLAlchemy, PostgreSQL, Flask-Migrate
-- **Frontend:** React, React Router, fetch API, Semantic UI/Tailwind
-- **DevOps:** GitHub for version control, deployment targets (Render/Heroku/GitHub Pages/Google Cloud)
-  - Flake8 (linting)
-  - Black (auto-formatting)
-- **Testing:** pytest (backend), React Testing Library (frontend)
+- **Frontend:** React, React Router, fetch API, Material UI
+- **DevOps:** GitHub for version control  
+  - Flake8 (linting, backend)  
+  - Black (auto-formatting, backend)  
+  - ESLint + Prettier (frontend)  
+- **Testing:**  
+  - `pytest` (backend)  
+  - React Testing Library (frontend)
 
 ---
 
@@ -71,7 +97,7 @@ cd backend
 source ../venv/bin/activate   # activate virtual env
 pip install -r requirements.txt
 flask db upgrade               # run migrations
-flask run
+flask run --port=5500
 ```
 
 ### 2. Frontend Setup
@@ -116,8 +142,8 @@ npm run fix:frontend
 These commands use [ESLint](https://eslint.org/) for linting and [Prettier](https://prettier.io/) for formatting.
 
 ### Requirements
-- Standard dependencies are in `backend/requirements.txt`
-- Dev-only dependencies (linting, formatting, pytest) are in `requirements-dev.txt`
+- Runtime dependencies: `backend/requirements.txt`
+- Dev dependencies (linting, formatting, pytest): `requirements-dev.txt`
 
 Install both when working locally:
 ```
@@ -146,61 +172,97 @@ npm test
 --- 
 
 ## API Endpoints
-- CRUD for Events
-- CRUD for Matches (linked to Events/Entrants)
-- Read-only endpoint for aggregated standings
-- (Stretch) AI endpoints (roster suggestions, recap summaries)
+- **Events**: Create, list (with entrant counts), update, delete
+- **Entrants**: Add, remove per event
+- **Matches**: Add, update scores + winner
+- **Future**: read-only standings, AI endpoints
 
 ---
 
 ## Project Structure
 ```
-## Project Structure
-
-hero-tournament-manager/
-├── backend/                # Flask backend (API + models + routes + tests)
-│   ├── app.py
-│   ├── config.py
-│   ├── models.py
-│   ├── requirements.txt
-│   ├── routes/
-│   │   ├── events.py
+.
+├── backend                        # Flask backend (API, models, routes, seeds, tests)
+│   ├── __init__.py                # Marks backend as a Python package
+│   ├── app.py                     # Flask app factory / entry point
+│   ├── config.py                  # Configuration (DB URI, env settings)
+│   ├── migrations                 # Alembic migration history
+│   │   ├── alembic.ini
+│   │   ├── env.py
+│   │   ├── README
+│   │   ├── script.py.mako
+│   │   └── versions               # Individual migration scripts
+│   ├── models.py                  # SQLAlchemy models (Event, Entrant, Match)
+│   ├── requirements.txt           # Backend runtime dependencies
+│   ├── routes                     # Flask Blueprints (API endpoints)
+│   │   ├── __init__.py
 │   │   ├── entrants.py
+│   │   ├── events.py
 │   │   └── matches.py
-│   └── tests/
+│   ├── scripts                    # Utility scripts
+│   │   ├── clear_db.py            # Reset database
+│   │   ├── seed_db.py             # Seed database with sample data
+│   │   └── seed.js                # (Optional/legacy) JS-based seeding
+│   ├── seeds                      # JSON seed files
+│   │   ├── entrants.json
+│   │   ├── events.json
+│   │   └── matches.json
+│   ├── server.js                  # (Scratch/utility) Node backend test file
+│   └── tests                      # Backend tests (pytest + API smoke tests)
+│       ├── api.test.js            # Node-based API test (legacy/supplemental)
+│       ├── conftest.py            # pytest fixtures
 │       ├── test_models.py
-│       ├── test_routes_events.py
 │       ├── test_routes_entrants.py
+│       ├── test_routes_events.py
 │       └── test_routes_matches.py
 │
-├── frontend/               # React frontend
+├── frontend                       # React frontend
+│   ├── package-lock.json
 │   ├── package.json
-│   ├── public/
-│   └── src/
-│       ├── App.jsx
+│   ├── public                     # Static assets
+│   │   ├── favicon.ico
+│   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
+│   │   ├── manifest.json
+│   │   └── robots.txt
+│   ├── README.md                  # CRA default README (frontend only)
+│   └── src                        # React source code
+│       ├── __tests__              # Frontend Jest/RTL tests
+│       │   ├── App.test.jsx
+│       │   ├── EntrantDashboard.test.jsx
+│       │   ├── EventDashboard.test.jsx
+│       │   ├── EventDetail.test.jsx
+│       │   └── MatchDashboard.test.jsx
+│       ├── api.js                 # Fetch API helper functions
 │       ├── App.css
-│       ├── index.js
+│       ├── App.jsx                # Root component
+│       ├── components             # Core feature components
+│       │   ├── EntrantDashboard.jsx
+│       │   ├── EventDashboard.jsx
+│       │   ├── EventDetail.jsx
+│       │   └── MatchDashboard.jsx
 │       ├── index.css
-│       ├── components/
-│       │   └── EventDashboard.jsx
-│       └── __tests__/
-│           ├── App.test.jsx
-│           └── EventDashboard.test.jsx
+│       ├── index.js               # React entry point
+│       ├── setupTests.js          # Jest setup
+│       └── test-utils.js          # Custom RTL helpers
 │
-├── venv/                   # Python virtual environment (ignored in Git)
-├── requirements-dev.txt    # Dev-only Python deps (pytest, flake8, black)
-├── package.json            # Root-level scripts (lint/test orchestration)
-├── pyproject.toml          # Config for tools like Black
-├── pytest.ini              # Pytest config
-├── README.md               # Project docs
-└── LICENSE                 # License file
+├── instance                       # Flask instance folder
+│   └── tournaments.db             # SQLite DB (local dev)
+│
+├── LICENSE                        # MIT License
+├── package.json                   # Root-level scripts (lint/test orchestration)
+├── pyproject.toml                  # Config for Black + tooling
+├── pytest.ini                      # pytest config
+├── README.md                       # Project README (this file)
+└── requirements-dev.txt            # Dev-only Python deps (pytest, flake8, black)
 ```
 
 ## Future Improvements
-- Authentication + user accounts (planned for Project 3)
 - Bracket auto-generation algorithms
 - Expanded analytics (deck matchups, trend graphs)
 - Multiplayer support
+- Global entrants model (via join table) so same hero can appear in multiple events
 
 ---
 
@@ -210,8 +272,7 @@ hero-tournament-manager/
 This project is part of the Flatiron School Capstone course.
 
 **Notes:**
-- AI features are stretch goals; core CRUD MVP first
-- Deployment target undecided
-- Refactor entrant model to be global (or tied to users) with an event_entrants join table, so entrants can participate in multiple events
+- Current MVP: full CRUD for events, entrants, and matches with dynamic counts + winners
+- Deployment target TBD
 
 **License:** MIT — feel free to use or remix!
