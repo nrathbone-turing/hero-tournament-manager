@@ -110,18 +110,20 @@ class Match(db.Model):
         if include_names:
             from backend.models import Entrant  # avoid circular imports
 
-            data["entrant1"] = (
-                Entrant.query.get(self.entrant1_id).to_dict()
-                if self.entrant1_id
-                else None
-            )
-            data["entrant2"] = (
-                Entrant.query.get(self.entrant2_id).to_dict()
-                if self.entrant2_id
-                else None
-            )
-            data["winner"] = (
-                Entrant.query.get(self.winner_id).to_dict() if self.winner_id else None
-            )
+        data["entrant1"] = (
+            Entrant.query.get(self.entrant1_id).to_dict()
+            if self.entrant1_id and Entrant.query.get(self.entrant1_id)
+            else None
+        )
+        data["entrant2"] = (
+            Entrant.query.get(self.entrant2_id).to_dict()
+            if self.entrant2_id and Entrant.query.get(self.entrant2_id)
+            else None
+        )
+        data["winner"] = (
+            Entrant.query.get(self.winner_id).to_dict()
+            if self.winner_id and Entrant.query.get(self.winner_id)
+            else None
+        )
 
         return data
