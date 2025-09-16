@@ -1,11 +1,10 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Manage list of events and allow event creation.
 // Notes:
-// - Fetches events from backend and shows entrant counts.
-// - Distinguishes between fetch and create errors.
-// - Provides inline error messages with role="alert".
-// - Uses <RouterLink> for accessible navigation.
-// - Redirects to /500 on server errors using <Navigate/>.
+// - Keeps updated error handling + 404/500 redirect logic from current version.
+// - Restores UI from old version: hero placeholders, centered form, scrollable event list.
+// - Uses FormControl + InputLabel + Select for cleaner dropdown.
+// - Supports entrant_count or entrants.length for flexibility.
 
 import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate } from "react-router-dom";
@@ -19,6 +18,12 @@ import {
   Button,
   MenuItem,
   CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 
 export default function EventDashboard() {
@@ -79,11 +84,101 @@ export default function EventDashboard() {
   if (redirect500) return <Navigate to="/500" replace />;
 
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" align="center" gutterBottom>
+    <Container maxWidth="lg" sx={{ mt: 6 }}>
+      <Typography variant="h4" gutterBottom align="center">
         Events
       </Typography>
 
+      {/* Hero images + form */}
+      <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+        <Paper
+          data-testid="hero-image-placeholder"
+          sx={{
+            flex: 1,
+            height: 200,
+            bgcolor: "grey.200",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Hero Image Placeholder
+        </Paper>
+
+        <Box
+          component="form"
+          role="form"
+          onSubmit={handleSubmit}
+          sx={{
+            flex: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <TextField
+            id="name"
+            label="Event Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
+          <TextField
+            id="date"
+            label="Date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            InputLabelProps={{ shrink: true }}
+            required
+          />
+
+          <FormControl fullWidth>
+            <InputLabel id="status-label">Status</InputLabel>
+            <Select
+              labelId="status-label"
+              id="status"
+              value={formData.status}
+              label="Status"
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.target.value })
+              }
+              required
+            >
+              <MenuItem value="drafting">Drafting</MenuItem>
+              <MenuItem value="published">Published</MenuItem>
+              <MenuItem value="cancelled">Cancelled</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button type="submit" variant="contained" color="primary">
+            Create Event
+          </Button>
+
+          {createError && (
+            <Typography color="error" role="alert">
+              {createError}
+            </Typography>
+          )}
+        </Box>
+
+        <Paper
+          data-testid="hero-image-placeholder"
+          sx={{
+            flex: 1,
+            height: 200,
+            bgcolor: "grey.200",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          Hero Image Placeholder
+        </Paper>
+      </Box>
+
+      {/* Event list */}
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />
@@ -103,63 +198,45 @@ export default function EventDashboard() {
           <Typography align="center">No events yet</Typography>
         </>
       ) : (
-        <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
-          {events.map((event) => (
-            <Paper key={event.id} sx={{ p: 2, flex: 1 }}>
-              <Typography variant="h6">
-                <RouterLink to={`/events/${event.id}`}>{event.name}</RouterLink>
-              </Typography>
-              <Typography variant="body2">{event.date}</Typography>
-              <Typography variant="body2">Status: {event.status}</Typography>
-              <Typography variant="body2">
-                {event.entrants?.length || 0} entrants
-              </Typography>
-            </Paper>
-          ))}
-        </Box>
-      )}
-
-      <Box
-        component="form"
-        role="form"
-        onSubmit={handleSubmit}
-        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-      >
-        <TextField
-          label="Event Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-        />
-        <TextField
-          label="Date"
-          type="date"
-          value={formData.date}
-          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-          InputLabelProps={{ shrink: true }}
-          required
-        />
-        <TextField
-          select
-          label="Status"
-          value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-          required
+        <Paper
+          data-testid="event-list"
+          sx={{
+            maxHeight: 300, // ~5 rows visible
+            overflowY: "auto",
+            "&::-webkit-scrollbar": { width: "10px" },
+            "&::-webkit-scrollbar-track": {
+              backgroundColor: "#f1f1f1",
+              borderRadius: "10px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "#888",
+              borderRadius: "10px",
+            },
+            "&::-webkit-scrollbar-thumb:hover": { backgroundColor: "#555" },
+          }}
         >
-          <MenuItem value="drafting">Drafting</MenuItem>
-          <MenuItem value="published">Published</MenuItem>
-          <MenuItem value="cancelled">Cancelled</MenuItem>
-          <MenuItem value="completed">Completed</MenuItem>
-        </TextField>
-        <Button type="submit" variant="contained" color="primary">
-          Create Event
-        </Button>
-      </Box>
-
-      {createError && (
-        <Typography color="error" role="alert" sx={{ mt: 2 }}>
-          {createError}
-        </Typography>
+          <List>
+            {events.map((e) => (
+              <ListItem
+                key={e.id}
+                component={RouterLink}
+                to={`/events/${e.id}`}
+                sx={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <ListItemText
+                  primary={e.name}
+                  secondary={`${e.date} (${e.status}) — ${
+                    e.entrant_count ?? e.entrants?.length ?? 0
+                  } entrants`}
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
       )}
     </Container>
   );
