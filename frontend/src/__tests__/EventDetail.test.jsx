@@ -6,6 +6,7 @@
 
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import App from "../App";
 import EventDetail from "../components/EventDetail";
 import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
@@ -199,12 +200,14 @@ describe("EventDetail", () => {
 });
 
 describe("EventDetail - edge cases", () => {
-  test("shows error when event not found", async () => {
+  test("renders NotFoundPage when EventDetail fetch returns 404", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
-    renderWithRouter(<EventDetail />, { route: "/events/404" });
-    expect(await screen.findByText(/event not found/i)).toBeInTheDocument();
-  });
 
+    renderWithRouter(<App />, { route: "/events/404" });
+
+    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
+  });
+  
   test("removal failure keeps entrant in list", async () => {
     // First GET (with Thor present)
     global.fetch
