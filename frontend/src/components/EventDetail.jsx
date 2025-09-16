@@ -6,7 +6,7 @@
 // - Handles entrants, matches, and status updates.
 
 import { useEffect, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, Link as RouterLink } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -18,6 +18,15 @@ import {
   InputLabel,
   FormControl,
   CircularProgress,
+  Grid,
+  Tabs,
+  Tab,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TextField,
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
@@ -30,6 +39,9 @@ export default function EventDetail() {
   const [error, setError] = useState(null);
   const [redirect500, setRedirect500] = useState(false);
   const [redirect404, setRedirect404] = useState(false);
+
+  const [tab, setTab] = useState(0);
+  const [removeId, setRemoveId] = useState("");
 
   async function fetchEvent() {
     try {
@@ -60,17 +72,19 @@ export default function EventDetail() {
     fetchEvent();
   }, [id]);
 
-  async function handleRemoveEntrant(entrantId) {
-    try {
-      const res = await fetch(`${API_BASE_URL}/entrants/${entrantId}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to remove entrant");
-      fetchEvent();
-    } catch {
-      setError("Failed to remove entrant");
-    }
+async function handleRemoveEntrant(e) {
+  e.preventDefault();
+  try {
+    const res = await fetch(`${API_BASE_URL}/entrants/${removeId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to remove entrant");
+    setRemoveId("");
+    fetchEvent();
+  } catch {
+    setError("Failed to remove entrant");
   }
+}
 
   async function handleStatusChange(newStatus) {
     if (!event) return;
@@ -123,91 +137,230 @@ export default function EventDetail() {
   if (!event) return <Navigate to="/404" replace />;
 
   return (
-    <Container maxWidth="lg">
-      <Typography variant="h4" gutterBottom>
-        {event.name}
-      </Typography>
-      <Typography>Date: {event.date}</Typography>
-      <Typography>Status: {event.status}</Typography>
-
-      {/* Entrants Section */}
-      <Box mt={3}>
-        <Typography variant="h6">Entrants</Typography>
-        {event.entrants?.length > 0 ? (
-          <Box
-            data-testid="entrants-scroll"
-            sx={{ maxHeight: 200, overflowY: "auto", mt: 2 }}
-          >
-            {event.entrants.map((entrant) => (
-              <Paper key={entrant.id} sx={{ p: 1, mb: 1 }}>
-                <Typography>
-                  {entrant.name} ({entrant.alias})
-                </Typography>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleRemoveEntrant(entrant.id)}
-                >
-                  Remove
-                </Button>
-              </Paper>
-            ))}
-          </Box>
-        ) : (
-          <Typography>No entrants yet</Typography>
-        )}
-        <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
-      </Box>
-
-      {/* Matches Section */}
-      <Box mt={3}>
-        <Typography variant="h6">Matches</Typography>
-        {event.matches?.length > 0 ? (
-          <Box
-            data-testid="matches-scroll"
-            sx={{ maxHeight: 200, overflowY: "auto", mt: 2 }}
-          >
-            {event.matches.map((m) => {
-              const winner = event.entrants?.find((e) => e.id === m.winner_id);
-              return (
-                <Paper key={m.id} sx={{ p: 1, mb: 1 }}>
-                  <Typography>Round {m.round}</Typography>
-                  <Typography>{m.scores}</Typography>
-                  <Typography>
-                    Winner:{" "}
-                    {m.winner_id
-                      ? `${winner?.name} (${winner?.alias})`
-                      : "TBD"}
-                  </Typography>
-                </Paper>
-              );
-            })}
-          </Box>
-        ) : (
-          <Typography>No matches yet</Typography>
-        )}
-        <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
-      </Box>
-
-      {/* Update Status */}
-      <Box mt={3}>
-        <Typography variant="h6">Update Status</Typography>
-        <FormControl fullWidth>
-          <InputLabel id="event-status-label">Status</InputLabel>
+    <Container maxWidth={false} sx={{ mt: 4, px: 2 }}>
+      {/* Header */}
+      <Box display="flex" alignItems="center" gap={2} sx={{ mb: 3 }}>
+        <Button component={RouterLink} to="/" variant="outlined">
+          Back to Events
+        </Button>
+        <Typography variant="h4" component="h1">
+          Event Detail
+        </Typography>
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          {event.name} — {event.date}
+        </Typography>
+        <FormControl size="small">
+          <InputLabel id="status-label">Status</InputLabel>
           <Select
-            labelId="event-status-label"
-            value={event?.status ?? ""}
+            labelId="status-label"
             label="Status"
-            onChange={(e) => handleStatusChange(e.target.value)}
-            role="combobox"
+            value={event.status || ""}
+            onChange={handleStatusChange}
           >
             <MenuItem value="drafting">Drafting</MenuItem>
-            <MenuItem value="open">Open</MenuItem>
-            <MenuItem value="closed">Closed</MenuItem>
             <MenuItem value="published">Published</MenuItem>
+            <MenuItem value="cancelled">Cancelled</MenuItem>
+            <MenuItem value="completed">Completed</MenuItem>
           </Select>
         </FormControl>
       </Box>
+
+      {/* 3-column layout */}
+      <Grid
+        container
+        spacing={2}
+        sx={{ alignItems: "stretch", flexWrap: { xs: "wrap", md: "nowrap" } }}
+      >
+        {/* Left */}
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Tabs value={tab} onChange={(e, val) => setTab(val)} centered>
+              <Tab label="Add Entrant" />
+              <Tab label="Add Match" />
+            </Tabs>
+            <Box
+              sx={{
+                mt: 2,
+                flex: 1,
+                overflow: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              {tab === 0 ? (
+                <>
+                  <EntrantDashboard eventId={id} onEntrantAdded={fetchEvent} />
+                  <Box
+                    component="form"
+                    onSubmit={handleRemoveEntrant}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      mt: "auto",
+                    }}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      Remove Entrant
+                    </Typography>
+                    <TextField
+                      label="Entrant ID"
+                      type="number"
+                      value={removeId}
+                      onChange={(e) => setRemoveId(e.target.value)}
+                      required
+                      size="small"
+                    />
+                    <Button type="submit" variant="contained" color="error">
+                      Remove Entrant
+                    </Button>
+                  </Box>
+                </>
+              ) : (
+                <MatchDashboard eventId={id} onMatchAdded={fetchEvent} />
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Middle */}
+        <Grid size={{ xs: 12, md: 3 }} sx={{ display: "flex" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Entrants
+            </Typography>
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                maxHeight: 500,
+                "&::-webkit-scrollbar": {
+                  width: "10px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#555",
+                },
+              }}
+              data-testid="entrants-scroll"
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Alias</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {event.entrants?.map((entrant) => (
+                    <TableRow key={entrant.id}>
+                      <TableCell>{entrant.id}</TableCell>
+                      <TableCell>{entrant.name}</TableCell>
+                      <TableCell>{entrant.alias}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Right */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex" }}>
+          <Paper
+            sx={{
+              flex: 1,
+              p: 2,
+              height: 575,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Typography variant="h6" gutterBottom>
+              Matches
+            </Typography>
+            <Box
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                maxHeight: 500,
+                "&::-webkit-scrollbar": {
+                  width: "10px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  backgroundColor: "#f1f1f1",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "10px",
+                },
+                "&::-webkit-scrollbar-thumb:hover": {
+                  backgroundColor: "#555",
+                },
+              }}
+              data-testid="matches-scroll"
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Round</TableCell>
+                    <TableCell>Entrant 1</TableCell>
+                    <TableCell>Entrant 2</TableCell>
+                    <TableCell>Scores</TableCell>
+                    <TableCell>Winner</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {event.matches?.map((m) => {
+                    const winner = event.entrants?.find(
+                      (e) => e.id === m.winner_id,
+                    );
+                    return (
+                      <TableRow key={m.id}>
+                        <TableCell>{m.id}</TableCell>
+                        <TableCell>{m.round}</TableCell>
+                        <TableCell>{m.entrant1_id}</TableCell>
+                        <TableCell>{m.entrant2_id}</TableCell>
+                        <TableCell>{m.scores}</TableCell>
+                        <TableCell>
+                          {winner ? `${winner.name} (${winner.alias})` : "TBD"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
     </Container>
   );
 }
