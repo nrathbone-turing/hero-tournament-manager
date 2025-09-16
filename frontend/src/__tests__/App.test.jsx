@@ -3,6 +3,7 @@
 // Notes:
 // - Relies on global fetch mock from setupTests.js.
 // - Explicitly mocks /events again for navigation back to dashboard.
+// - Updated to align with ErrorPages (404, 500).
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -28,11 +29,13 @@ describe("App routing", () => {
 
   test("navigates Dashboard → EventDetail", async () => {
     // 1) Dashboard list
-    mockFetchSuccess([{ id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" }]);
+    mockFetchSuccess([
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+    ]);
     renderWithRouter(<App />, { route: "/" });
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
 
-    // 2) Queue EventDetail GET BEFORE we click the card title
+    // 2) Queue EventDetail GET BEFORE clicking the link
     mockFetchSuccess({
       id: 1,
       name: "Hero Cup",
@@ -42,10 +45,10 @@ describe("App routing", () => {
       matches: [],
     });
 
-    // 3) Click the event title text (inside the <Link/>)
+    // 3) Click the event title text (inside <RouterLink>)
     await userEvent.click(screen.getByText(/Hero Cup/i));
 
-    // 4) We should be on the detail view (heading "Hero Cup")
+    // 4) We should be on the detail view
     expect(
       await screen.findByRole("heading", { name: /hero cup/i })
     ).toBeInTheDocument();
@@ -53,14 +56,17 @@ describe("App routing", () => {
 });
 
 describe("App - edge cases", () => {
-  test("shows loading and error state on failed event fetch", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false });
+  test("navigates to ServerErrorPage on 500 error", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
     renderWithRouter(<App />, { route: "/events/999" });
-    expect(await screen.findByText(/loading event/i)).toBeInTheDocument();
+    
+    expect(await screen.findByRole("heading", { name: "500" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /something went wrong/i })).toBeInTheDocument();
   });
 
   test.skip("renders Not Found on unknown route", async () => {
     renderWithRouter(<App />, { route: "/random" });
-    expect(await screen.findByText(/not found/i)).toBeInTheDocument();
+    
+    expect(await screen.findByRole("heading", { name: /page not found/i }))
   });
 });
