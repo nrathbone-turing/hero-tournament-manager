@@ -96,34 +96,26 @@ class Match(db.Model):
     def __repr__(self):
         return f"<Match Event {self.event_id} Round {self.round}>"
 
-    def to_dict(self, include_names=False):
-        data = {
-            "id": self.id,
-            "event_id": self.event_id,
-            "round": self.round,
-            "entrant1_id": self.entrant1_id,
-            "entrant2_id": self.entrant2_id,
-            "scores": self.scores,
-            "winner_id": self.winner_id,
-        }
+def to_dict(self, include_names=False):
+    data = {
+        "id": self.id,
+        "event_id": self.event_id,
+        "round": self.round,
+        "entrant1_id": self.entrant1_id,
+        "entrant2_id": self.entrant2_id,
+        "scores": self.scores,
+        "winner_id": self.winner_id,
+    }
 
-        if include_names:
-            from backend.models import Entrant  # avoid circular imports
+    if include_names:
+        from backend.models import Entrant  # avoid circular imports
 
-        data["entrant1"] = (
-            Entrant.query.get(self.entrant1_id).to_dict()
-            if self.entrant1_id and Entrant.query.get(self.entrant1_id)
-            else None
-        )
-        data["entrant2"] = (
-            Entrant.query.get(self.entrant2_id).to_dict()
-            if self.entrant2_id and Entrant.query.get(self.entrant2_id)
-            else None
-        )
-        data["winner"] = (
-            Entrant.query.get(self.winner_id).to_dict()
-            if self.winner_id and Entrant.query.get(self.winner_id)
-            else None
-        )
+        e1 = Entrant.query.get(self.entrant1_id) if self.entrant1_id else None
+        e2 = Entrant.query.get(self.entrant2_id) if self.entrant2_id else None
+        w = Entrant.query.get(self.winner_id) if self.winner_id else None
 
-        return data
+        data["entrant1"] = e1.to_dict() if e1 else None
+        data["entrant2"] = e2.to_dict() if e2 else None
+        data["winner"] = w.to_dict() if w else None
+
+    return data
