@@ -9,7 +9,7 @@ from sqlalchemy import Enum, CheckConstraint, Column, Integer, String
 from werkzeug.security import generate_password_hash, check_password_hash
 from backend.database import Base, db
 
-db = SQLAlchemy()
+# db = SQLAlchemy()
 
 # Allowed event statuses
 EVENT_STATUSES = ("drafting", "published", "cancelled", "completed")
