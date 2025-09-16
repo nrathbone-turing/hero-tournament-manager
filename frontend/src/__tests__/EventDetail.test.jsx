@@ -200,15 +200,14 @@ describe("EventDetail", () => {
 });
 
 describe("EventDetail - edge cases", () => {
-  test.skip("shows NotFoundPage when event not found", async () => {
+  test("renders NotFoundPage when EventDetail fetch returns 404", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
 
     renderWithRouter(<App />, { route: "/events/404" });
 
-    expect(await screen.findByRole("heading", { name: /page not found/i }))
-      .toBeInTheDocument();
+    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
-
+  
   test("removal failure keeps entrant in list", async () => {
     // First GET (with Thor present)
     global.fetch
