@@ -5,21 +5,28 @@
 # - client: Flask test client for API requests
 # - session: SQLAlchemy session scoped to test context
 
+import os
 import pytest
 from backend.app import create_app
 from backend.models import db, Event, Entrant
+from backend.database import db
 
 
 @pytest.fixture(scope="session")
 def app():
     """Create a Flask app instance for testing with in-memory DB."""
     app = create_app()
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["TESTING"] = True
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
+        "JWT_SECRET_KEY": "test-secret",
+    })
 
     with app.app_context():
         db.create_all()
         yield app
+        db.session.remove()
         db.drop_all()
 
 
@@ -35,6 +42,7 @@ def session(app):
     with app.app_context():
         yield db.session
         db.session.rollback()
+
 
 # ------------------------------
 # Global helpers
