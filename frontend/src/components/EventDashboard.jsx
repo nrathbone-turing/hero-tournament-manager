@@ -4,8 +4,10 @@
 // - Fetches events from backend and shows entrant counts.
 // - Distinguishes between fetch and create errors.
 // - Provides inline error messages with role="alert".
+// - Uses MUI Link with React Router for accessible navigation.
 
 import { useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 import {
   Container,
@@ -16,6 +18,7 @@ import {
   Button,
   MenuItem,
   CircularProgress,
+  Link,
 } from "@mui/material";
 
 export default function EventDashboard() {
@@ -93,7 +96,9 @@ export default function EventDashboard() {
         <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
           {events.map((event) => (
             <Paper key={event.id} sx={{ p: 2, flex: 1 }}>
-              <Typography variant="h6">{event.name}</Typography>
+              <Typography variant="h6">
+  <RouterLink to={`/events/${event.id}`}>{event.name}</RouterLink>
+</Typography>
               <Typography variant="body2">{event.date}</Typography>
               <Typography variant="body2">Status: {event.status}</Typography>
               <Typography variant="body2">
