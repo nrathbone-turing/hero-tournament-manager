@@ -33,7 +33,8 @@ describe("EntrantDashboard - edge cases", () => {
   test("blocks submission when fields are empty", async () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
-    expect(await screen.findByRole("form")).toBeInTheDocument();
+    // expect inline error message
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to add entrant/i);
   });
 
   test("shows error when API call fails", async () => {
@@ -55,8 +56,10 @@ describe("EntrantDashboard - edge cases", () => {
     renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
     await userEvent.type(screen.getByLabelText(/name/i), "Flash");
     await userEvent.type(screen.getByLabelText(/alias/i), "Barry");
+    
     const button = screen.getByRole("button", { name: /add entrant/i });
-    await userEvent.dblClick(button);
+    await userEvent.click(button);
+    expect(await screen.findByRole("button", { name: /adding.../i })).toBeDisabled();
     expect(mockOnAdded).toHaveBeenCalledTimes(1);
   });
 });
