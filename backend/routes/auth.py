@@ -46,7 +46,7 @@ def login():
     if not user or not user.check_password(password):
         return jsonify({"error": "Invalid credentials"}), 401
 
-    token = create_access_token(identity=user.id)
+    token = create_access_token(identity=str(user.id))
     return jsonify({"access_token": token}), 200
 
 
@@ -62,5 +62,5 @@ def logout():
 @jwt_required()
 def protected():
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = User.query.get(int(user_id))
     return jsonify({"message": f"Hello {user.username}!"}), 200
