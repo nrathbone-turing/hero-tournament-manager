@@ -6,7 +6,7 @@ import { Link as RouterLink } from "react-router-dom";
 
 export default function NotFoundPage() {
   return (
-    <Container sx={{ textAlign: "center", mt: 8 }}>
+    <Container sx={{ textAlign: "center", mt: 8 }} data-testid="notfound-page">
       <Typography variant="h2" gutterBottom>
         404
       </Typography>

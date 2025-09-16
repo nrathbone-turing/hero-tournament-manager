@@ -64,9 +64,16 @@ describe("App - edge cases", () => {
     expect(screen.getByRole("heading", { name: /something went wrong/i })).toBeInTheDocument();
   });
 
-  test.skip("renders Not Found on unknown route", async () => {
-    renderWithRouter(<App />, { route: "/random" });
+  test("renders NotFoundPage on unknown route", async () => {
+    renderWithRouter(<App />, { route: "/does-not-exist" });
     
-    expect(await screen.findByRole("heading", { name: /page not found/i }))
+    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
+  });
+
+  test("renders NotFoundPage when event not found", async () => {
+    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
+    renderWithRouter(<App />, { route: "/events/999" });
+    
+    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
 });

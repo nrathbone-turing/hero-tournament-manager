@@ -18,7 +18,7 @@ function App() {
         <Route path="/" element={<EventDashboard />} />
         <Route path="/events/:id" element={<EventDetail />} />
         {/* Fallback to dashboard for any unknown route (stabilizes tests) */}
-        <Route path="*" element={<EventDashboard />} />
+        <Route path="/404" element={<NotFoundPage />} />
         <Route path="/500" element={<ServerErrorPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
