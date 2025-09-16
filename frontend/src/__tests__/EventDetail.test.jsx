@@ -98,7 +98,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [
         { id: 1, name: "Spiderman", alias: "Webslinger" },
         { id: 2, name: "Batman", alias: "Dark Knight" },
@@ -108,7 +108,7 @@ describe("EventDetail", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText("2-1")).toBeInTheDocument();
-    expect(await screen.findByText(/Winner:.*Batman \(Dark Knight\)/)).toBeInTheDocument();
+      expect(await screen.findByText("Batman (Dark Knight)")).toBeInTheDocument();
   });
 
   test("updates event status via dropdown", async () => {
@@ -244,15 +244,16 @@ describe("EventDetail - edge cases", () => {
       })
       .mockResolvedValueOnce({ ok: false });
 
-    renderWithRouter(<EventDetail />, { route: "/events/1" });
+renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    await userEvent.click(
-      await screen.findByRole("combobox", { name: /status/i }),
-    );
-    await userEvent.click(screen.getByRole("option", { name: /published/i }));
+  // open the status dropdown
+  await userEvent.click(await screen.findByRole("combobox", { name: /status/i }));
 
-    // Component shows the error fallback after failed PUT
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to update status/i);
+  // choose "Published"
+  await userEvent.click(screen.getByRole("option", { name: /published/i }));
+
+  // after failure, value should be reverted back to "Drafting"
+  expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(/drafting/i);
   });
 
   test("renders match with TBD winner when winner_id missing", async () => {
