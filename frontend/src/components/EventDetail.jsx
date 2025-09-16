@@ -1,8 +1,12 @@
 // File: frontend/src/components/EventDetail.jsx
 // Purpose: Detailed view of a single event with entrants, matches, and status controls.
+// Notes:
+// - Redirects to /404 or /500 with <Navigate /> for test-friendly handling.
+// - Provides inline error feedback with role="alert".
+// - Handles entrants, matches, and status updates.
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Navigate } from "react-router-dom";
 import {
   Container,
   Typography,
@@ -14,8 +18,6 @@ import {
   InputLabel,
   FormControl,
   CircularProgress,
-  Card,
-  CardContent,
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
@@ -26,6 +28,8 @@ export default function EventDetail() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [redirect500, setRedirect500] = useState(false);
+  const [redirect404, setRedirect404] = useState(false);
 
   async function fetchEvent() {
     try {
@@ -33,7 +37,12 @@ export default function EventDetail() {
       const res = await fetch(`${API_BASE_URL}/events/${id}`);
       if (!res.ok) {
         if (res.status === 404) {
-          throw new Error("Event not found");
+          setRedirect404(true);
+          return;
+        }
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
         }
         throw new Error("Failed to load event data");
       }
@@ -58,8 +67,9 @@ export default function EventDetail() {
       });
       if (!res.ok) throw new Error("Failed to remove entrant");
       fetchEvent();
-    } catch (err) {
-      setError("Failed to remove entrant");    }
+    } catch {
+      setError("Failed to remove entrant");
+    }
   }
 
   async function handleStatusChange(newStatus) {
@@ -71,13 +81,26 @@ export default function EventDetail() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...event, status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) {
+        if (res.status === 404) {
+          setRedirect404(true);
+          return;
+        }
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
+        }
+        throw new Error("Failed to update status");
+      }
       await fetchEvent();
-    } catch (err) {
+    } catch {
       setError("Failed to update status");
-      setEvent({ ...event, status: prevStatus }); // revert
+      setEvent({ ...event, status: prevStatus });
     }
   }
+
+  if (redirect404) return <Navigate to="/404" replace />;
+  if (redirect500) return <Navigate to="/500" replace />;
 
   if (loading) {
     return (
@@ -97,13 +120,7 @@ export default function EventDetail() {
     );
   }
 
-  if (!event) {
-    return (
-      <Container>
-        <Typography variant="h6">Event not found</Typography>
-      </Container>
-    );
-  }
+  if (!event) return <Navigate to="/404" replace />;
 
   return (
     <Container maxWidth="lg">
@@ -122,11 +139,7 @@ export default function EventDetail() {
             sx={{ maxHeight: 200, overflowY: "auto", mt: 2 }}
           >
             {event.entrants.map((entrant) => (
-              <Paper
-                key={entrant.id}
-                sx={{ p: 1, mb: 1 }}
-                data-entrant-row="true"
-              >
+              <Paper key={entrant.id} sx={{ p: 1, mb: 1 }}>
                 <Typography>
                   {entrant.name} ({entrant.alias})
                 </Typography>

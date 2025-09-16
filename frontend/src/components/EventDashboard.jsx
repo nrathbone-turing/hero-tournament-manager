@@ -4,10 +4,11 @@
 // - Fetches events from backend and shows entrant counts.
 // - Distinguishes between fetch and create errors.
 // - Provides inline error messages with role="alert".
-// - Uses MUI Link with React Router for accessible navigation.
+// - Uses <RouterLink> for accessible navigation.
+// - Redirects to /500 on server errors using <Navigate/>.
 
 import { useEffect, useState } from "react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, Navigate } from "react-router-dom";
 import { API_BASE_URL } from "../api";
 import {
   Container,
@@ -18,7 +19,6 @@ import {
   Button,
   MenuItem,
   CircularProgress,
-  Link,
 } from "@mui/material";
 
 export default function EventDashboard() {
@@ -26,6 +26,8 @@ export default function EventDashboard() {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [createError, setCreateError] = useState(null);
+  const [redirect500, setRedirect500] = useState(false);
+
   const [formData, setFormData] = useState({
     name: "",
     date: "",
@@ -35,11 +37,17 @@ export default function EventDashboard() {
   async function fetchEvents() {
     try {
       const res = await fetch(`${API_BASE_URL}/events`);
-      if (!res.ok) throw new Error("Failed to fetch events");
+      if (!res.ok) {
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
+        }
+        throw new Error("Failed to fetch events");
+      }
       const data = await res.json();
       setEvents(data);
       setFetchError(null);
-    } catch (err) {
+    } catch {
       setFetchError("Failed to fetch events");
     } finally {
       setLoading(false);
@@ -63,10 +71,12 @@ export default function EventDashboard() {
       setEvents([...events, newEvent]);
       setFormData({ name: "", date: "", status: "drafting" });
       setCreateError(null);
-    } catch (err) {
+    } catch {
       setCreateError("Failed to create event");
     }
   }
+
+  if (redirect500) return <Navigate to="/500" replace />;
 
   return (
     <Container maxWidth="lg">
@@ -97,8 +107,8 @@ export default function EventDashboard() {
           {events.map((event) => (
             <Paper key={event.id} sx={{ p: 2, flex: 1 }}>
               <Typography variant="h6">
-  <RouterLink to={`/events/${event.id}`}>{event.name}</RouterLink>
-</Typography>
+                <RouterLink to={`/events/${event.id}`}>{event.name}</RouterLink>
+              </Typography>
               <Typography variant="body2">{event.date}</Typography>
               <Typography variant="body2">Status: {event.status}</Typography>
               <Typography variant="body2">
