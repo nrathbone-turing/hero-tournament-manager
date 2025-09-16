@@ -5,7 +5,9 @@
 # - Includes to_dict() methods with optional related info.
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Enum, CheckConstraint
+from sqlalchemy import Enum, CheckConstraint, Column, Integer, String
+from werkzeug.security import generate_password_hash, check_password_hash
+from backend.database import Base, db
 
 db = SQLAlchemy()
 
@@ -117,3 +119,25 @@ class Match(db.Model):
             data["winner"] = w.to_dict() if w else None
 
         return data
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email
+        }
