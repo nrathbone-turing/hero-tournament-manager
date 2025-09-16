@@ -1,11 +1,12 @@
 // File: frontend/src/__tests__/Auth.test.jsx
 // Purpose: Tests frontend authentication flow with AuthContext and forms.
 // Notes:
-// - Reuses patterns from summative lab tests (form submission, session checks).
 // - Covers signup, login, protected route access, and logout.
+// - Uses a test harness component to safely access useAuth() inside tests.
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import AuthProvider, { useAuth } from "../context/AuthContext";
 import LoginForm from "../components/LoginForm";
@@ -40,6 +41,15 @@ function ProtectedPage() {
   return <div>Welcome {user?.username || "guest"}</div>;
 }
 
+// Test harness to safely use useAuth in tests
+function AuthTestHarness({ onReady }) {
+  const auth = useAuth();
+  React.useEffect(() => {
+    onReady(auth);
+  }, [auth, onReady]);
+  return null;
+}
+
 test("signup form creates a new user", async () => {
   render(
     <AuthProvider>
@@ -55,7 +65,7 @@ test("signup form creates a new user", async () => {
   fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
   await waitFor(() => {
-    expect(screen.getByText(/testuser/i)).toBeInTheDocument();
+    expect(screen.getByText(/signed up as testuser/i)).toBeInTheDocument();
   });
 });
 
@@ -105,19 +115,24 @@ test("unauthenticated user is redirected from protected route", async () => {
 });
 
 test("authenticated user sees protected content", async () => {
+  let authApi;
   render(
     <AuthProvider>
       <MemoryRouter initialEntries={["/protected"]}>
         <Routes>
           <Route path="/protected" element={<ProtectedPage />} />
         </Routes>
+        <AuthTestHarness onReady={(api) => (authApi = api)} />
       </MemoryRouter>
     </AuthProvider>
   );
 
-  // Simulate user context manually
-  const { setUser } = useAuth();
-  setUser({ username: "authedUser" });
+  await waitFor(() => {
+    expect(authApi).toBeDefined();
+  });
+
+  // simulate user in context
+  authApi.setUser({ username: "authedUser" });
 
   await waitFor(() => {
     expect(screen.getByText(/welcome authedUser/i)).toBeInTheDocument();
@@ -125,20 +140,64 @@ test("authenticated user sees protected content", async () => {
 });
 
 test("logout clears auth state", async () => {
+  let authApi;
   render(
     <AuthProvider>
       <MemoryRouter>
         <ProtectedPage />
+        <AuthTestHarness onReady={(api) => (authApi = api)} />
       </MemoryRouter>
     </AuthProvider>
   );
 
-  const { logout, setUser } = useAuth();
-  setUser({ username: "authedUser" });
-  expect(screen.getByText(/welcome authedUser/i)).toBeInTheDocument();
-
-  logout();
   await waitFor(() => {
+    expect(authApi).toBeDefined();
+  });
+
+  // simulate login via login() helper
+  await act(async () => {
+    await authApi.login("test@example.com", "password123");
+  });
+
+  // just check that token is set
+  expect(authApi.token).toBe("fake-jwt-token");
+
+  // logout clears token + resets user
+  act(() => {
+    authApi.logout();
+  });
+
+  await waitFor(() => {
+    expect(authApi.token).toBe(null);
     expect(screen.getByText(/welcome guest/i)).toBeInTheDocument();
+  });
+});
+
+test("login sets user details in context", async () => {
+  let authApi;
+  render(
+    <AuthProvider>
+      <MemoryRouter>
+        <ProtectedPage />
+        <AuthTestHarness onReady={(api) => (authApi = api)} />
+      </MemoryRouter>
+    </AuthProvider>
+  );
+
+  await waitFor(() => {
+    expect(authApi).toBeDefined();
+  });
+
+  // login
+  await act(async () => {
+    await authApi.login("authedUser@example.com", "password123");
+  });
+
+  // token should be set
+  expect(authApi.token).toBe("fake-jwt-token");
+
+  // if AuthContext sets user, UI should reflect it
+  await waitFor(() => {
+    expect(screen.getByText(/welcome autheduser/i)).toBeInTheDocument();
   });
 });

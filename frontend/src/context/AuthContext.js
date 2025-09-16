@@ -52,7 +52,7 @@ export default function AuthProvider({ children }) {
       const newToken = data.access_token || data.token;
       setToken(newToken);
       // Optionally fetch user profile from /protected
-      setUser({ email }); // placeholder, refine if backend has /me endpoint
+      setUser({ username: email.split("@")[0], email });
       return data;
     } else {
       const err = await resp.json();
