@@ -7,10 +7,10 @@
 // - Verifies navigation works for /, /login, and /signup.
 
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import AuthProvider, { useAuth } from "../context/AuthContext";
-import Navbar from "./Navbar.test";
+import Navbar from "../components/Navbar";
 import LoginForm from "../components/LoginForm";
 import SignupForm from "../components/SignupForm";
 
@@ -20,7 +20,16 @@ function EventsPage() {
   return <div>Events Dashboard {user ? `(user: ${user.username})` : ""}</div>;
 }
 
-function renderWithRouter(initialEntries = ["/"]) {
+// Harness to expose auth API to tests
+function AuthTestHarness({ onReady }) {
+  const auth = useAuth();
+  React.useEffect(() => {
+    onReady(auth);
+  }, [auth, onReady]);
+  return null;
+}
+
+function renderWithRouter(initialEntries = ["/"], onAuthReady = () => {}) {
   return render(
     <AuthProvider>
       <MemoryRouter initialEntries={initialEntries}>
@@ -30,10 +39,36 @@ function renderWithRouter(initialEntries = ["/"]) {
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
         </Routes>
+        <AuthTestHarness onReady={onAuthReady} />
       </MemoryRouter>
     </AuthProvider>,
   );
 }
+
+beforeEach(() => {
+  // Mock fetch for /login
+  global.fetch = jest.fn((url, options) => {
+    if (url.endsWith("/login")) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ access_token: "fake-jwt-token" }),
+      });
+    }
+    if (url.endsWith("/signup")) {
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({ username: "testuser", email: "test@example.com" }),
+      });
+    }
+    return Promise.reject(new Error("Unknown endpoint: " + url));
+  });
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+});
 
 describe("Navbar", () => {
   test("shows login/signup links when logged out", () => {
@@ -50,40 +85,43 @@ describe("Navbar", () => {
     expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: /signup/i }));
-    expect(
-      screen.getByRole("button", { name: /sign up/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /sign up/i })).toBeInTheDocument();
   });
 
   test("shows welcome + logout when logged in", async () => {
-    renderWithRouter();
+    let authApi;
+    renderWithRouter(["/"], (api) => (authApi = api));
 
-    // simulate login via context
-    const { login } = require("../context/AuthContext").useAuth();
-    await login("test@example.com", "password123");
+    await waitFor(() => expect(authApi).toBeDefined());
 
-    expect(
-      screen.getByText(/welcome test/i),
-    ).toBeInTheDocument();
+    await authApi.login("test@example.com", "password123");
+
+    await waitFor(() => {
+      expect(screen.getByText(/welcome test/i)).toBeInTheDocument();
+    });
     expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
   });
 
   test("logout clears token and resets user", async () => {
-    renderWithRouter();
+    let authApi;
+    renderWithRouter(["/"], (api) => (authApi = api));
 
-    // simulate login
-    const { login, logout } = require("../context/AuthContext").useAuth();
-    await login("test@example.com", "password123");
+    await waitFor(() => expect(authApi).toBeDefined());
 
-    // confirm logged in
-    expect(localStorage.getItem("token")).toBe("fake-jwt-token");
+    await authApi.login("test@example.com", "password123");
 
-    // click logout
+    // wait for localStorage to update
+    await waitFor(() => {
+      expect(localStorage.getItem("token")).toBe("fake-jwt-token");
+    });
+
     fireEvent.click(screen.getByRole("button", { name: /logout/i }));
 
-    // check state cleared
-    expect(localStorage.getItem("token")).toBeNull();
-    expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(localStorage.getItem("token")).toBeNull();
+      expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
+    });
+
     expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
   });
 });
