@@ -13,14 +13,23 @@ import { mockFetchSuccess } from "../setupTests";
 describe("EntrantDashboard", () => {
   test("renders form", () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
-    expect(screen.getByRole("heading", { name: /add entrant/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /add entrant/i }),
+    ).toBeInTheDocument();
   });
 
   test("submits new entrant and triggers callback", async () => {
     const mockOnAdded = jest.fn();
-    mockFetchSuccess({ id: 3, name: "Wonder Woman", alias: "Amazon Princess", event_id: 1 });
+    mockFetchSuccess({
+      id: 3,
+      name: "Wonder Woman",
+      alias: "Amazon Princess",
+      event_id: 1,
+    });
 
-    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
+    renderWithRouter(
+      <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
+    );
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
@@ -34,7 +43,9 @@ describe("EntrantDashboard - edge cases", () => {
     renderWithRouter(<EntrantDashboard eventId={1} />);
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
     // expect inline error message
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to add entrant/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /failed to add entrant/i,
+    );
   });
 
   test("shows error when API call fails", async () => {
@@ -43,7 +54,9 @@ describe("EntrantDashboard - edge cases", () => {
     await userEvent.type(screen.getByLabelText(/name/i), "ErrorHero");
     await userEvent.type(screen.getByLabelText(/alias/i), "Oops");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to add entrant/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /failed to add entrant/i,
+    );
   });
 
   test("ignores duplicate submission (double click)", async () => {
@@ -53,13 +66,17 @@ describe("EntrantDashboard - edge cases", () => {
       json: async () => ({ id: 10, name: "Flash", alias: "Barry" }),
     });
 
-    renderWithRouter(<EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />);
+    renderWithRouter(
+      <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
+    );
     await userEvent.type(screen.getByLabelText(/name/i), "Flash");
     await userEvent.type(screen.getByLabelText(/alias/i), "Barry");
-    
+
     const button = screen.getByRole("button", { name: /add entrant/i });
     await userEvent.click(button);
-    expect(await screen.findByRole("button", { name: /adding.../i })).toBeDisabled();
+    expect(
+      await screen.findByRole("button", { name: /adding.../i }),
+    ).toBeDisabled();
     expect(mockOnAdded).toHaveBeenCalledTimes(1);
   });
 });

@@ -12,15 +12,19 @@ import ServerErrorPage from "../components/ServerErrorPage";
 describe("Error Pages", () => {
   test("renders NotFoundPage with link back", () => {
     renderWithRouter(<NotFoundPage />);
-    
+
     expect(screen.getByRole("heading", { name: "404" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /page not found/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /page not found/i }),
+    ).toBeInTheDocument();
   });
 
   test("renders ServerErrorPage with link back", () => {
     renderWithRouter(<ServerErrorPage />);
-    
+
     expect(screen.getByRole("heading", { name: "500" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /something went wrong/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /something went wrong/i }),
+    ).toBeInTheDocument();
   });
 });

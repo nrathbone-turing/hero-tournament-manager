@@ -87,7 +87,9 @@ describe("EventDetail", () => {
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
 
     // Remove by row-level button
-    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: /remove/i }),
+    );
     await waitFor(() =>
       expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument(),
     );
@@ -108,7 +110,7 @@ describe("EventDetail", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText("2-1")).toBeInTheDocument();
-      expect(await screen.findByText("Batman (Dark Knight)")).toBeInTheDocument();
+    expect(await screen.findByText("Batman (Dark Knight)")).toBeInTheDocument();
   });
 
   test("updates event status via dropdown", async () => {
@@ -143,12 +145,8 @@ describe("EventDetail", () => {
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
 
-    await userEvent.click(
-      screen.getByRole("combobox", { name: /status/i }),
-    );
-    await userEvent.click(
-      screen.getByRole("option", { name: /published/i }),
-    );
+    await userEvent.click(screen.getByRole("combobox", { name: /status/i }));
+    await userEvent.click(screen.getByRole("option", { name: /published/i }));
 
     expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
   });
@@ -169,9 +167,9 @@ describe("EventDetail", () => {
       });
 
       renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(
-        await screen.findByTestId("entrants-scroll"),
-      ).toHaveStyle("overflow-y: auto");
+      expect(await screen.findByTestId("entrants-scroll")).toHaveStyle(
+        "overflow-y: auto",
+      );
     });
 
     test("matches list has scroll styling", async () => {
@@ -192,9 +190,9 @@ describe("EventDetail", () => {
       });
 
       renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(
-        await screen.findByTestId("matches-scroll"),
-      ).toHaveStyle("overflow-y: auto");
+      expect(await screen.findByTestId("matches-scroll")).toHaveStyle(
+        "overflow-y: auto",
+      );
     });
   });
 });
@@ -207,7 +205,7 @@ describe("EventDetail - edge cases", () => {
 
     expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
-  
+
   test("removal failure keeps entrant in list", async () => {
     // First GET (with Thor present)
     global.fetch
@@ -223,11 +221,15 @@ describe("EventDetail - edge cases", () => {
       // DELETE fails
       .mockResolvedValueOnce({ ok: false });
 
-      renderWithRouter(<EventDetail />, { route: "/events/1" });
-      await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+    await userEvent.click(
+      await screen.findByRole("button", { name: /remove/i }),
+    );
 
-      // Component shows the error fallback, so assert the alert message rather than the row still existing
-      expect(await screen.findByRole("alert")).toHaveTextContent(/failed to remove entrant/i);
+    // Component shows the error fallback, so assert the alert message rather than the row still existing
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /failed to remove entrant/i,
+    );
   });
 
   test("status update failure reverts dropdown", async () => {
@@ -244,16 +246,20 @@ describe("EventDetail - edge cases", () => {
       })
       .mockResolvedValueOnce({ ok: false });
 
-renderWithRouter(<EventDetail />, { route: "/events/1" });
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-  // open the status dropdown
-  await userEvent.click(await screen.findByRole("combobox", { name: /status/i }));
+    // open the status dropdown
+    await userEvent.click(
+      await screen.findByRole("combobox", { name: /status/i }),
+    );
 
-  // choose "Published"
-  await userEvent.click(screen.getByRole("option", { name: /published/i }));
+    // choose "Published"
+    await userEvent.click(screen.getByRole("option", { name: /published/i }));
 
-  // after failure, value should be reverted back to "Drafting"
-  expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(/drafting/i);
+    // after failure, value should be reverted back to "Drafting"
+    expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
+      /drafting/i,
+    );
   });
 
   test("renders match with TBD winner when winner_id missing", async () => {

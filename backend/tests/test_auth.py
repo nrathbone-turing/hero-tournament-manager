@@ -5,15 +5,16 @@
 # - Ensures protected routes require valid tokens
 # - Confirms logout response is returned (but JWT revocation not enforced yet)
 
-import pytest
-
 
 def test_signup_creates_user(client):
-    resp = client.post("/signup", json={
-        "username": "alice",
-        "email": "alice@example.com",
-        "password": "password123"
-    })
+    resp = client.post(
+        "/signup",
+        json={
+            "username": "alice",
+            "email": "alice@example.com",
+            "password": "password123",
+        },
+    )
     assert resp.status_code == 201
     data = resp.get_json()
     assert data["username"] == "alice"
@@ -22,17 +23,15 @@ def test_signup_creates_user(client):
 
 def test_login_returns_token(client):
     # First signup
-    client.post("/signup", json={
-        "username": "bob",
-        "email": "bob@example.com",
-        "password": "secret"
-    })
+    client.post(
+        "/signup",
+        json={"username": "bob", "email": "bob@example.com", "password": "secret"},
+    )
 
     # Then login
-    resp = client.post("/login", json={
-        "email": "bob@example.com",
-        "password": "secret"
-    })
+    resp = client.post(
+        "/login", json={"email": "bob@example.com", "password": "secret"}
+    )
     assert resp.status_code == 200
     data = resp.get_json()
     token = data.get("access_token") or data.get("token")
@@ -46,15 +45,13 @@ def test_protected_route_requires_auth(client):
 
 def test_protected_route_with_auth(client):
     # signup + login
-    client.post("/signup", json={
-        "username": "cathy",
-        "email": "cathy@example.com",
-        "password": "pass"
-    })
-    login_resp = client.post("/login", json={
-        "email": "cathy@example.com",
-        "password": "pass"
-    })
+    client.post(
+        "/signup",
+        json={"username": "cathy", "email": "cathy@example.com", "password": "pass"},
+    )
+    login_resp = client.post(
+        "/login", json={"email": "cathy@example.com", "password": "pass"}
+    )
     data = login_resp.get_json()
     token = data.get("access_token") or data.get("token")
     assert token, f"Login did not return a token, got {data}"
@@ -67,15 +64,13 @@ def test_protected_route_with_auth(client):
 
 
 def test_logout_returns_ok(client):
-    client.post("/signup", json={
-        "username": "dave",
-        "email": "dave@example.com",
-        "password": "mypw"
-    })
-    login_resp = client.post("/login", json={
-        "email": "dave@example.com",
-        "password": "mypw"
-    })
+    client.post(
+        "/signup",
+        json={"username": "dave", "email": "dave@example.com", "password": "mypw"},
+    )
+    login_resp = client.post(
+        "/login", json={"email": "dave@example.com", "password": "mypw"}
+    )
     data = login_resp.get_json()
     token = data.get("access_token") or data.get("token")
     assert token, f"Login did not return a token, got {data}"

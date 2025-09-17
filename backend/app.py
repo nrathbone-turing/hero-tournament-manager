@@ -25,7 +25,6 @@ def create_app():
     app.config["JWT_HEADER_TYPE"] = "Bearer"
     app.config["JWT_ALGORITHM"] = "HS256"
 
-
     db.init_app(app)
     CORS(app)  # <-- allow frontend on localhost:3000 to call
     Migrate(app, db)
