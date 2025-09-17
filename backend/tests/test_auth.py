@@ -3,7 +3,10 @@
 # Notes:
 # - Validates JWT auth flow using flask-jwt-extended
 # - Ensures protected routes require valid tokens
-# - Confirms logout response is returned (but JWT revocation not enforced yet)
+# - Confirms logout response is returned (and revoked tokens are rejected)
+
+import time
+
 
 def test_signup_creates_user(client):
     resp = client.post(
@@ -136,3 +139,47 @@ def test_signup_missing_fields(client):
     assert resp.status_code == 400
     error = resp.get_json()["error"].lower()
     assert "missing" in error or "required" in error
+
+
+# -------------------------
+# Expiry + revocation tests
+# -------------------------
+
+def test_expired_token_denied(client):
+    client.post(
+        "/signup",
+        json={"username": "expireuser", "email": "expire@example.com", "password": "pw"},
+    )
+    login_resp = client.post(
+        "/login", json={"email": "expire@example.com", "password": "pw"}
+    )
+    token = login_resp.get_json()["access_token"]
+
+    # wait for expiry (config sets very short expiry in test env)
+    time.sleep(2)
+
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = client.get("/protected", headers=headers)
+
+    assert resp.status_code == 401
+    assert "expired" in resp.get_json()["error"].lower()
+
+
+def test_revoked_token_denied(client):
+    client.post(
+        "/signup",
+        json={"username": "revoker", "email": "revoker@example.com", "password": "pw"},
+    )
+    login_resp = client.post(
+        "/login", json={"email": "revoker@example.com", "password": "pw"}
+    )
+    token = login_resp.get_json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # logout → token should be revoked
+    client.delete("/logout", headers=headers)
+
+    # attempt to reuse token
+    resp = client.get("/protected", headers=headers)
+    assert resp.status_code == 401
+    assert "revoked" in resp.get_json()["error"].lower()
