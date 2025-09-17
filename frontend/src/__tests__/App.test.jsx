@@ -2,8 +2,8 @@
 // Purpose: Routing tests for App component.
 // Notes:
 // - Relies on global fetch mock from setupTests.js.
-// - Explicitly mocks /events again for navigation back to dashboard.
-// - Updated to align with ErrorPages (404, 500).
+// - Explicitly mocks /events before navigation.
+// - Covers success, 404, and 500 flows.
 
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -12,11 +12,10 @@ import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
 
 describe("App routing", () => {
-  test("renders Navbar with Hero Tournament Manager brand", async () => {
+  test("renders Navbar brand link", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
 
-    // Navbar brand (Typography with Link)
     expect(
       await screen.findByRole("link", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
@@ -25,19 +24,20 @@ describe("App routing", () => {
   test("renders EventDashboard with events", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
+
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
     expect(screen.getByText(/Villain Showdown/i)).toBeInTheDocument();
   });
 
   test("navigates Dashboard → EventDetail", async () => {
-    // 1) Dashboard list
     mockFetchSuccess([
       { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
     ]);
     renderWithRouter(<App />, { route: "/" });
+
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
 
-    // 2) Queue EventDetail GET BEFORE clicking the link
+    // Queue EventDetail fetch
     mockFetchSuccess({
       id: 1,
       name: "Hero Cup",
@@ -47,36 +47,31 @@ describe("App routing", () => {
       matches: [],
     });
 
-    // 3) Click the event title text (inside <RouterLink>)
     await userEvent.click(screen.getByText(/Hero Cup/i));
 
-    // 4) We should be on the detail view
     expect(
       await screen.findByRole("heading", { name: /hero cup/i }),
     ).toBeInTheDocument();
   });
 });
 
-describe("App - edge cases", () => {
-  test("navigates to ServerErrorPage on 500 error", async () => {
+describe("App - error handling", () => {
+  test("shows ServerErrorPage on 500", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
     renderWithRouter(<App />, { route: "/events/999" });
 
-    expect(
-      await screen.findByRole("heading", { name: "500" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "500" })).toBeInTheDocument();
     expect(
       screen.getByRole("heading", { name: /something went wrong/i }),
     ).toBeInTheDocument();
   });
 
-  test("renders NotFoundPage on unknown route", async () => {
+  test("shows NotFoundPage on unknown route", async () => {
     renderWithRouter(<App />, { route: "/does-not-exist" });
-
     expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
 
-  test("renders NotFoundPage when event not found", async () => {
+  test("shows NotFoundPage on event 404", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
     renderWithRouter(<App />, { route: "/events/999" });
 

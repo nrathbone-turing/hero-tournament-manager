@@ -46,8 +46,8 @@ function renderWithRouter(initialEntries = ["/"], onAuthReady = () => {}) {
 }
 
 beforeEach(() => {
-  // Mock fetch for /login
-  global.fetch = jest.fn((url, options) => {
+  // Mock fetch for /login and /signup
+  global.fetch = jest.fn((url) => {
     if (url.endsWith("/login")) {
       return Promise.resolve({
         ok: true,
@@ -73,7 +73,6 @@ afterEach(() => {
 describe("Navbar", () => {
   test("shows login/signup links when logged out", () => {
     renderWithRouter();
-
     expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /signup/i })).toBeInTheDocument();
   });
@@ -82,10 +81,14 @@ describe("Navbar", () => {
     renderWithRouter();
 
     fireEvent.click(screen.getByRole("link", { name: /login/i }));
-    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /log in/i }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: /signup/i }));
-    expect(screen.getByRole("button", { name: /sign up/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /sign up/i }),
+    ).toBeInTheDocument();
   });
 
   test("shows welcome + logout when logged in", async () => {
@@ -99,7 +102,9 @@ describe("Navbar", () => {
     await waitFor(() => {
       expect(screen.getByText(/welcome test/i)).toBeInTheDocument();
     });
-    expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /logout/i }),
+    ).toBeInTheDocument();
   });
 
   test("logout clears token and resets user", async () => {
@@ -110,7 +115,7 @@ describe("Navbar", () => {
 
     await authApi.login("test@example.com", "password123");
 
-    // wait for localStorage to update
+    // token should persist to localStorage
     await waitFor(() => {
       expect(localStorage.getItem("token")).toBe("fake-jwt-token");
     });
@@ -122,6 +127,7 @@ describe("Navbar", () => {
       expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
     });
 
+    // back to logged-out view
     expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
   });
 });
