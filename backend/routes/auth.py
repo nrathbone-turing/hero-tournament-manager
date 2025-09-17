@@ -3,18 +3,25 @@
 # Notes:
 # - Provides signup, login, logout, and protected routes.
 # - Uses JWT for token-based authentication.
+# - Logout revokes tokens by adding their JTI to a global blocklist.
 
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+    get_jwt,
+)
 from backend.database import db
 from backend.models import User
+from backend.blocklist import jwt_blocklist
 
 auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
@@ -35,7 +42,7 @@ def signup():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    data = request.get_json() or {}
     email = data.get("email")
     password = data.get("password")
 
@@ -50,8 +57,9 @@ def login():
 @auth_bp.route("/logout", methods=["DELETE"])
 @jwt_required()
 def logout():
-    # With JWT there is no true server-side logout unless you add token revocation.
-    # For now, just respond OK so the client can clear its token.
+    # Revoke token by adding its JTI (unique identifier) to the blocklist
+    jti = get_jwt()["jti"]
+    jwt_blocklist.add(jti)
     return jsonify({"message": "Logged out"}), 200
 
 
