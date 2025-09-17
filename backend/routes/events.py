@@ -7,12 +7,14 @@
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func
+from flask_jwt_extended import jwt_required  
 from backend.models import db, Event, Entrant
 
 bp = Blueprint("events", __name__, url_prefix="/events")
 
 
 @bp.route("", methods=["POST"])
+@jwt_required()
 def create_event():
     """Create a new Event."""
     data = request.get_json()
@@ -75,6 +77,7 @@ def get_event(event_id):
 
 
 @bp.route("/<int:event_id>", methods=["PUT"])
+@jwt_required()
 def update_event(event_id):
     """Update an Event by ID."""
     event = Event.query.get_or_404(event_id)
@@ -86,6 +89,7 @@ def update_event(event_id):
 
 
 @bp.route("/<int:event_id>", methods=["DELETE"])
+@jwt_required()
 def delete_event(event_id):
     """Delete an Event by ID."""
     event = Event.query.get_or_404(event_id)
