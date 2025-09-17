@@ -14,7 +14,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 
 // Mock fetch for /signup and /login
 beforeEach(() => {
-  global.fetch = jest.fn((url, options) => {
+  global.fetch = jest.fn((url) => {
     if (url.endsWith("/signup")) {
       return Promise.resolve({
         ok: true,
@@ -167,17 +167,20 @@ test("logout clears auth state (token + UI)", async () => {
   // simulate login
   await authApi.login("test@example.com", "password123");
 
-  expect(authApi.token).toBe("fake-jwt-token");
+  // wait for token set
+  await waitFor(() => {
+    expect(authApi.token).toBe("fake-jwt-token");
+  });
 
   // logout
   authApi.logout();
 
-  // wait for token clear
+  // wait for token cleared
   await waitFor(() => {
     expect(authApi.token).toBe(null);
   });
 
-  // then check UI separately
+  // check UI separately
   expect(screen.getByText(/welcome guest/i)).toBeInTheDocument();
 });
 
@@ -199,7 +202,7 @@ test("login sets user details in context", async () => {
   // login
   await authApi.login("authedUser@example.com", "password123");
 
-  // wait for token
+  // wait for token set
   await waitFor(() => {
     expect(authApi.token).toBe("fake-jwt-token");
   });
