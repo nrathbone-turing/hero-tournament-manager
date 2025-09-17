@@ -5,12 +5,14 @@
 # - Uses Entrant.to_dict() for consistent serialization.
 
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from backend.models import db, Entrant
 
 bp = Blueprint("entrants", __name__, url_prefix="/entrants")
 
 
 @bp.route("", methods=["POST"])
+@jwt_required()
 def create_entrant():
     """Create a new Entrant."""
     data = request.get_json()
@@ -36,6 +38,7 @@ def get_entrants():
 
 
 @bp.route("/<int:entrant_id>", methods=["PUT"])
+@jwt_required()
 def update_entrant(entrant_id):
     """Update an Entrant by ID."""
     entrant = Entrant.query.get_or_404(entrant_id)
@@ -47,6 +50,7 @@ def update_entrant(entrant_id):
 
 
 @bp.route("/<int:entrant_id>", methods=["DELETE"])
+@jwt_required()
 def delete_entrant(entrant_id):
     """Delete an Entrant by ID."""
     entrant = Entrant.query.get_or_404(entrant_id)

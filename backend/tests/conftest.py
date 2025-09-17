@@ -74,3 +74,14 @@ def seed_event_with_entrants(session, create_event):
         return event, e1, e2
 
     return _seed_event_with_entrants
+
+
+from flask_jwt_extended import create_access_token
+
+@pytest.fixture
+def auth_header(app):
+    """Provide Authorization header with a valid test JWT."""
+    with app.app_context():
+        token = create_access_token(identity="testuser")
+        return {"Authorization": f"Bearer {token}"}
+

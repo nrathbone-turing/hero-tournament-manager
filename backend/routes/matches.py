@@ -6,12 +6,14 @@
 # - Always returns matches with entrant names for frontend convenience.
 
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
 from backend.models import db, Match
 
 bp = Blueprint("matches", __name__, url_prefix="/matches")
 
 
 @bp.route("", methods=["POST"])
+@jwt_required()
 def create_match():
     """Create a new Match."""
     data = request.get_json()
@@ -40,6 +42,7 @@ def get_matches():
 
 
 @bp.route("/<int:match_id>", methods=["PUT"])
+@jwt_required()
 def update_match(match_id):
     """Update a Match by ID."""
     match = Match.query.get_or_404(match_id)
@@ -51,6 +54,7 @@ def update_match(match_id):
 
 
 @bp.route("/<int:match_id>", methods=["DELETE"])
+@jwt_required()
 def delete_match(match_id):
     """Delete a Match by ID."""
     match = Match.query.get_or_404(match_id)
