@@ -143,8 +143,8 @@ export default function EventDetail() {
         <Button component={RouterLink} to="/" variant="outlined">
           Back to Events
         </Button>
-        <Typography variant="h4" component="h1">
-          Event Detail
+        <Typography variant="subtitle1" color="text.secondary">
+          Event Details
         </Typography>
         <Typography variant="h5" sx={{ fontWeight: "bold" }}>
           {event.name} — {event.date}

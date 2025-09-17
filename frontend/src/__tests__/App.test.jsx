@@ -12,11 +12,13 @@ import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
 
 describe("App routing", () => {
-  test("renders Hero Tournament Manager heading", async () => {
+  test("renders Navbar with Hero Tournament Manager brand", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
+
+    // Navbar brand (Typography with Link)
     expect(
-      await screen.findByRole("heading", { name: /hero tournament manager/i }),
+      await screen.findByRole("link", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
   });
 
@@ -30,7 +32,7 @@ describe("App routing", () => {
   test("navigates Dashboard → EventDetail", async () => {
     // 1) Dashboard list
     mockFetchSuccess([
-      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
     ]);
     renderWithRouter(<App />, { route: "/" });
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
@@ -40,7 +42,7 @@ describe("App routing", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [],
       matches: [],
     });
