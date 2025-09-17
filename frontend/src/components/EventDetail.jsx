@@ -150,9 +150,12 @@ export default function EventDetail() {
           {event.name} — {event.date}
         </Typography>
         <FormControl size="small">
-          <InputLabel id="status-label">Status</InputLabel>
+          <InputLabel id="status-label"
+          >Status
+          </InputLabel>
           <Select
             labelId="status-label"
+            id="status-select"
             label="Status"
             value={event.status || ""}
             onChange={handleStatusChange}
