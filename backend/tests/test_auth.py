@@ -79,3 +79,52 @@ def test_logout_returns_ok(client):
     logout_resp = client.delete("/logout", headers=headers)
     assert logout_resp.status_code == 200
     assert "message" in logout_resp.get_json()
+
+
+def test_login_with_wrong_password(client, session):
+    # create user
+    from backend.models import User
+    user = User(username="edgeuser", email="edge@example.com")
+    user.set_password("correctpass")
+    session.add(user)
+    session.commit()
+
+    resp = client.post("/login", json={"email": "edge@example.com", "password": "wrongpass"})
+    assert resp.status_code == 401
+    assert "Invalid credentials" in resp.get_json()["error"]
+
+
+def test_signup_with_duplicate_email(client, session):
+    from backend.models import User
+    user = User(username="dup", email="dup@example.com")
+    user.set_password("pass")
+    session.add(user)
+    session.commit()
+
+    resp = client.post("/signup", json={"username": "dup2", "email": "dup@example.com", "password": "pass"})
+    assert resp.status_code == 400
+    assert "Email already registered" in resp.get_json()["error"]
+
+
+def test_protected_route_with_invalid_token(client):
+    headers = {"Authorization": "Bearer not.a.real.token"}
+    resp = client.get("/protected", headers=headers)
+    assert resp.status_code == 401
+    data = resp.get_json()
+    assert "Invalid" in data.get("msg", "") or "Token" in data.get("msg", "")
+
+
+def test_delete_event_requires_auth(client, create_event):
+    event = create_event()
+    resp = client.delete(f"/events/{event.id}")
+    assert resp.status_code == 401
+
+
+def test_create_entrant_with_auth(client, create_event, auth_header):
+    event = create_event()
+    data = {"name": "HeroEdge", "alias": "Edgecase", "event_id": event.id}
+    resp = client.post("/entrants", json=data, headers=auth_header)
+    assert resp.status_code == 201
+    body = resp.get_json()
+    assert body["name"] == "HeroEdge"
+    assert body["alias"] == "Edgecase"
