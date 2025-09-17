@@ -19,6 +19,8 @@ export default function SignupForm() {
     e.preventDefault();
     try {
       await signup(username, email, password);
+      setMessage(`Signed up as ${username}`);
+      setTimeout(() => navigate("/"), 500);
       navigate("/");
     } catch (err) {
       setMessage(err.message);
