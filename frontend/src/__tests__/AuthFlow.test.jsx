@@ -2,26 +2,42 @@
 // Purpose: Tests authentication flow and protected routes.
 // Notes:
 // - Uses renderWithRouter for navigation simulation.
-// - Mocks login/signup responses for consistency.
+// - Mocks login/signup responses with global.fetch.
 
 import { screen, fireEvent, waitFor } from "@testing-library/react";
-import { rest } from "msw";
-import { setupServer } from "msw/node";
-import renderWithRouter from "./test-utils";
+import { renderWithRouter } from "../test-utils.js";
 import App from "../App";
 
-const server = setupServer(
-  rest.post("/login", (req, res, ctx) => {
-    return res(ctx.json({ access_token: "fake-token" }));
-  }),
-  rest.post("/signup", (req, res, ctx) => {
-    return res(ctx.json({ username: "newuser", email: "new@example.com" }));
-  })
-);
+beforeEach(() => {
+  global.fetch = jest.fn((url, options) => {
+    if (url.endsWith("/login")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ access_token: "fake-token" }),
+      });
+    }
+    if (url.endsWith("/signup")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ username: "newuser", email: "new@example.com" }),
+      });
+    }
+    if (url.includes("/events")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => [
+          { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
+        ],
+      });
+    }
+    return Promise.resolve({ ok: false, status: 404 });
+  });
+});
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+});
 
 test("redirects unauthenticated user from / to /login", async () => {
   renderWithRouter(<App />, { route: "/" });
@@ -39,13 +55,13 @@ test("successful login redirects to dashboard", async () => {
   });
   fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
-  expect(await screen.findByText(/event dashboard/i)).toBeInTheDocument();
+  expect(await screen.findByText(/events dashboard/i)).toBeInTheDocument();
 });
 
 test("navbar shows signup/login when logged out", async () => {
   renderWithRouter(<App />, { route: "/" });
   expect(await screen.findByRole("button", { name: /log in/i })).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: /signup/i })).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: /signup/i })).toBeInTheDocument();
 });
 
 test("navbar shows welcome + logout when logged in", async () => {
