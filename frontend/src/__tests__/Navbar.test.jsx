@@ -10,7 +10,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import AuthProvider, { useAuth } from "../context/AuthContext";
-import Navbar from "../components/Navbar";
+import Navbar from "./Navbar.test";
 import LoginForm from "../components/LoginForm";
 import SignupForm from "../components/SignupForm";
 
