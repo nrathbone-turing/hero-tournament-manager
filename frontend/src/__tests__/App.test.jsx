@@ -12,11 +12,13 @@ import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
 
 describe("App routing", () => {
-  test("renders Hero Tournament Manager heading", async () => {
+  test("renders Navbar with Hero Tournament Manager brand", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
+
+    // Navbar brand (Typography with Link)
     expect(
-      await screen.findByRole("heading", { name: /hero tournament manager/i }),
+      await screen.findByRole("link", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
   });
 
