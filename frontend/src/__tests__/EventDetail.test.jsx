@@ -3,12 +3,29 @@
 // Notes:
 // - Covers rendering, CRUD flows, scroll lists, and edge cases.
 
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../App";
 import EventDetail from "../components/EventDetail";
 import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
+import React from "react";
+import { MemoryRouter, useLocation } from "react-router-dom";
+import App from "../App";
+
+function LocationSpy() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}</div>;
+}
+
+beforeEach(() => {
+  localStorage.setItem("token", "fake-jwt-token"); // bypass ProtectedRoute
+  global.fetch = jest.fn();
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+});
 
 describe("EventDetail", () => {
   test("renders event name and date", async () => {
@@ -105,21 +122,14 @@ describe("EventDetail", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    await userEvent.click(screen.getByRole("combobox", { name: /status/i }));
-    await userEvent.click(screen.getByRole("option", { name: /published/i }));
-
-    expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
+    const statusSelect = await screen.findByLabelText(/status/i);
+    await userEvent.click(statusSelect);
+    await userEvent.click(await screen.findByRole("option", { name: /published/i }));
+    await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));  
   });
 });
 
 describe("EventDetail - edge cases", () => {
-  test("404 shows NotFoundPage", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
-    renderWithRouter(<App />, { route: "/events/404" });
-
-    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
-  });
-
   test("remove entrant failure shows alert", async () => {
     global.fetch
       .mockResolvedValueOnce({
@@ -151,10 +161,10 @@ describe("EventDetail - edge cases", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    await userEvent.click(screen.getByRole("combobox", { name: /status/i }));
+    const statusSelect = await screen.findByLabelText(/status/i);
+    await userEvent.click(statusSelect);
     await userEvent.click(screen.getByRole("option", { name: /published/i }));
-
-    expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(/drafting/i);
+    await waitFor(() => expect(statusSelect).toHaveTextContent(/drafting/i));
   });
 
   test("renders TBD when winner_id is null", async () => {
@@ -169,5 +179,45 @@ describe("EventDetail - edge cases", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText(/tbd/i)).toBeInTheDocument();
+  });
+});
+
+describe("EventDetail redirects", () => {
+  test("navigates to /404 on 404 response", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/events/404"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/404"),
+    );
+  });
+
+  test("navigates to /500 on 500 response", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/events/500"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/500"),
+    );
   });
 });
