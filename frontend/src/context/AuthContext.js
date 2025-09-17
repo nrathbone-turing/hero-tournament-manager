@@ -4,6 +4,7 @@
 // - Stores current user and JWT token.
 // - Exposes login, signup, and logout methods.
 // - Persists token in localStorage for reloads.
+// - Provides isAuthenticated flag.
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
@@ -51,7 +52,6 @@ export default function AuthProvider({ children }) {
       const data = await resp.json();
       const newToken = data.access_token || data.token;
       setToken(newToken);
-      // Optionally fetch user profile from /protected
       setUser({ username: email.split("@")[0], email });
       return data;
     } else {
@@ -72,6 +72,7 @@ export default function AuthProvider({ children }) {
     signup,
     login,
     logout,
+    isAuthenticated: !!token,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

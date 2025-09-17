@@ -2,8 +2,7 @@
 // Purpose: Root component for React app.
 // Notes:
 // - Wraps app in AuthProvider for global state.
-// - Navbar provides the global top-level title and auth buttons.
-// - Each route component is responsible for its own page heading.
+// - Protects Event routes with ProtectedRoute.
 
 import { Routes, Route } from "react-router-dom";
 import EventDashboard from "./components/EventDashboard";
@@ -14,18 +13,30 @@ import AuthProvider from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import LoginForm from "./components/LoginForm";
 import SignupForm from "./components/SignupForm";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <AuthProvider>
       <div>
-        {/* Global top header */}
         <Navbar />
-
-        {/* Route-specific content */}
         <Routes>
-          <Route path="/" element={<EventDashboard />} />
-          <Route path="/events/:id" element={<EventDetail />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <EventDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:id"
+            element={
+              <ProtectedRoute>
+                <EventDetail />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<LoginForm />} />
           <Route path="/signup" element={<SignupForm />} />
           <Route path="/404" element={<NotFoundPage />} />
