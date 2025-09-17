@@ -8,7 +8,7 @@ from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
 
-def test_create_event(client):
+def test_create_event(client, auth_header):
     response = client.post(
         "/events",
         json={
@@ -17,6 +17,7 @@ def test_create_event(client):
             "rules": "Bo3",
             "status": "drafting",
         },
+        headers=auth_header
     )
     assert response.status_code == 201
     data = response.get_json()
@@ -38,9 +39,9 @@ def test_get_events_with_counts(client, create_event, session):
     assert seed_event["entrant_count"] == 2
 
 
-def test_update_event(client, create_event):
+def test_update_event(client, create_event, auth_header):
     event = create_event(status="drafting")
-    response = client.put(f"/events/{event.id}", json={"status": "cancelled"})
+    response = client.put(f"/events/{event.id}", json={"status": "cancelled"}, headers=auth_header)
     assert response.status_code == 200
     assert response.get_json()["status"] == "cancelled"
 
@@ -48,11 +49,21 @@ def test_update_event(client, create_event):
     assert result.status == "cancelled"
 
 
-def test_delete_event(client, create_event):
+def test_delete_event(client, create_event, auth_header):
     event = create_event(status="drafting")
-    response = client.delete(f"/events/{event.id}")
+    response = client.delete(f"/events/{event.id}", headers=auth_header)
     assert response.status_code == 204
     assert (
         db.session.execute(select(Event).filter_by(id=event.id)).scalar_one_or_none()
         is None
     )
+
+
+def test_create_event_requires_auth(client):
+    resp = client.post("/events", json={
+        "name": "Fail Cup",
+        "date": "2025-09-21",
+        "rules": "Bo3",
+        "status": "drafting",
+    })
+    assert resp.status_code == 401
