@@ -1,8 +1,7 @@
 // File: frontend/src/__tests__/Auth.test.jsx
-// Purpose: Tests frontend authentication flow with AuthContext and forms.
+// Purpose: Tests frontend authentication with AuthContext + forms.
 // Notes:
-// - Covers signup, login, protected route access, and logout.
-// - Uses a test harness component to safely access useAuth() inside tests.
+// - Covers signup, login, logout, and protected access.
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -12,14 +11,13 @@ import LoginForm from "../components/LoginForm";
 import SignupForm from "../components/SignupForm";
 import ProtectedRoute from "../components/ProtectedRoute";
 
-// Mock fetch for /signup and /login
+// Mock fetch
 beforeEach(() => {
   global.fetch = jest.fn((url) => {
     if (url.endsWith("/signup")) {
       return Promise.resolve({
         ok: true,
-        json: () =>
-          Promise.resolve({ username: "testuser", email: "test@example.com" }),
+        json: () => Promise.resolve({ username: "testuser", email: "test@example.com" }),
       });
     }
     if (url.endsWith("/login")) {
@@ -31,26 +29,14 @@ beforeEach(() => {
     return Promise.reject(new Error("Unknown endpoint"));
   });
 });
-
-afterEach(() => {
-  jest.resetAllMocks();
-});
+afterEach(() => jest.resetAllMocks());
 
 function ProtectedPage() {
   const { user } = useAuth();
   return <div>Welcome {user?.username || "guest"}</div>;
 }
 
-// Test harness to safely use useAuth in tests
-function AuthTestHarness({ onReady }) {
-  const auth = useAuth();
-  React.useEffect(() => {
-    onReady(auth);
-  }, [auth, onReady]);
-  return null;
-}
-
-test("signup form creates a new user", async () => {
+test("signup form creates user", async () => {
   render(
     <AuthProvider>
       <MemoryRouter>
@@ -59,23 +45,15 @@ test("signup form creates a new user", async () => {
     </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/username/i), {
-    target: { value: "testuser" },
-  });
-  fireEvent.change(screen.getByLabelText(/email/i), {
-    target: { value: "test@example.com" },
-  });
-  fireEvent.change(screen.getByLabelText(/password/i), {
-    target: { value: "password123" },
-  });
+  fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "testuser" } });
+  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
+  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
   fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
-  await waitFor(() => {
-    expect(screen.getByText(/signed up as testuser/i)).toBeInTheDocument();
-  });
+  expect(await screen.findByText(/signed up as testuser/i)).toBeInTheDocument();
 });
 
-test("login form logs in and sets token", async () => {
+test("login form logs in", async () => {
   render(
     <AuthProvider>
       <MemoryRouter>
@@ -84,23 +62,19 @@ test("login form logs in and sets token", async () => {
     </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/email/i), {
-    target: { value: "test@example.com" },
-  });
-  fireEvent.change(screen.getByLabelText(/password/i), {
-    target: { value: "password123" },
-  });
+  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
+  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
   fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
-  await waitFor(() => {
+  await waitFor(() =>
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/login"),
       expect.any(Object),
-    );
-  });
+    ),
+  );
 });
 
-test("unauthenticated user is redirected from protected route", async () => {
+test("unauthenticated user redirected from ProtectedRoute", async () => {
   render(
     <AuthProvider>
       <MemoryRouter initialEntries={["/protected"]}>
@@ -119,94 +93,51 @@ test("unauthenticated user is redirected from protected route", async () => {
     </AuthProvider>,
   );
 
-  await waitFor(() => {
-    expect(screen.getByText(/login page/i)).toBeInTheDocument();
-  });
+  expect(await screen.findByText(/login page/i)).toBeInTheDocument();
 });
 
 test("authenticated user sees protected content", async () => {
   let authApi;
-  render(
-    <AuthProvider>
-      <MemoryRouter initialEntries={["/protected"]}>
-        <Routes>
-          <Route path="/protected" element={<ProtectedPage />} />
-        </Routes>
-        <AuthTestHarness onReady={(api) => (authApi = api)} />
-      </MemoryRouter>
-    </AuthProvider>,
-  );
+  function Harness() {
+    authApi = useAuth();
+    return <ProtectedPage />;
+  }
 
-  await waitFor(() => {
-    expect(authApi).toBeDefined();
-  });
-
-  // simulate user in context
-  authApi.setUser({ username: "authedUser" });
-
-  await waitFor(() => {
-    expect(screen.getByText(/welcome authedUser/i)).toBeInTheDocument();
-  });
-});
-
-test("logout clears auth state (token + UI)", async () => {
-  let authApi;
   render(
     <AuthProvider>
       <MemoryRouter>
-        <ProtectedPage />
-        <AuthTestHarness onReady={(api) => (authApi = api)} />
+        <Harness />
       </MemoryRouter>
     </AuthProvider>,
   );
 
-  await waitFor(() => {
-    expect(authApi).toBeDefined();
-  });
+  await waitFor(() => expect(authApi).toBeDefined());
 
-  // simulate login
-  await authApi.login("test@example.com", "password123");
+  await authApi.login("authed@example.com", "pw123");
 
-  // wait for token set
-  await waitFor(() => {
-    expect(authApi.token).toBe("fake-jwt-token");
-  });
+  expect(await screen.findByText(/welcome authed/i)).toBeInTheDocument();
+});
 
-  // logout
+test("logout clears token and user", async () => {
+  let authApi;
+  function Harness() {
+    authApi = useAuth();
+    return <ProtectedPage />;
+  }
+
+  render(
+    <AuthProvider>
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>
+    </AuthProvider>,
+  );
+
+  await authApi.login("test@example.com", "pw123");
+  await waitFor(() => expect(authApi.token).toBe("fake-jwt-token"));
+
   authApi.logout();
 
-  // wait for token cleared
-  await waitFor(() => {
-    expect(authApi.token).toBe(null);
-  });
-
-  // check UI separately
+  await waitFor(() => expect(authApi.token).toBe(null));
   expect(screen.getByText(/welcome guest/i)).toBeInTheDocument();
-});
-
-test("login sets user details in context", async () => {
-  let authApi;
-  render(
-    <AuthProvider>
-      <MemoryRouter>
-        <ProtectedPage />
-        <AuthTestHarness onReady={(api) => (authApi = api)} />
-      </MemoryRouter>
-    </AuthProvider>,
-  );
-
-  await waitFor(() => {
-    expect(authApi).toBeDefined();
-  });
-
-  // login
-  await authApi.login("authedUser@example.com", "password123");
-
-  // wait for token set
-  await waitFor(() => {
-    expect(authApi.token).toBe("fake-jwt-token");
-  });
-
-  // check UI
-  expect(screen.getByText(/welcome autheduser/i)).toBeInTheDocument();
 });

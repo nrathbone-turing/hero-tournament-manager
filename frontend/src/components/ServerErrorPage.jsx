@@ -7,7 +7,7 @@ import { Link as RouterLink } from "react-router-dom";
 export default function ServerErrorPage() {
   return (
     <Container sx={{ textAlign: "center", mt: 8 }}>
-      <Typography variant="h2" gutterBottom>
+      <Typography component="h1" variant="h2" gutterBottom>
         500
       </Typography>
       <Typography variant="h6" gutterBottom>

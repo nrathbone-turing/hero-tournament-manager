@@ -1,19 +1,15 @@
 // File: frontend/src/components/ProtectedRoute.jsx
-// Purpose: Restricts access to authenticated users.
+// Purpose: Higher-order component to guard routes.
 // Notes:
-// - Wraps around child components.
 // - Redirects to /login if user is not authenticated.
 
-import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children }) {
-  const { token } = useAuth();
-
-  if (!token) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
   return children;
 }

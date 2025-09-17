@@ -229,6 +229,7 @@ export default function EventDashboard() {
               >
                 <ListItemText
                   primary={e.name}
+                  primaryTypographyProps={{ component: "span" }}
                   secondary={`${e.date} (${e.status}) — ${
                     e.entrant_count ?? e.entrants?.length ?? 0
                   } entrants`}

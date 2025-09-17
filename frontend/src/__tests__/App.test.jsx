@@ -2,42 +2,65 @@
 // Purpose: Routing tests for App component.
 // Notes:
 // - Relies on global fetch mock from setupTests.js.
-// - Explicitly mocks /events again for navigation back to dashboard.
-// - Updated to align with ErrorPages (404, 500).
+// - Explicitly mocks /events before navigation.
+// - Covers success, 404, and 500 flows.
 
-import { screen } from "@testing-library/react";
+import { screen, waitFor, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App";
 import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
+import { MemoryRouter, useLocation } from "react-router-dom";
+
+function LocationSpy() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}</div>;
+}
 
 describe("App routing", () => {
-  test("renders Navbar with Hero Tournament Manager brand", async () => {
+    test("renders Navbar brand link", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
 
-    // Navbar brand (Typography with Link)
     expect(
       await screen.findByRole("link", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
   });
+});
 
-  test("renders EventDashboard with events", async () => {
-    mockFetchSuccess();
-    renderWithRouter(<App />, { route: "/" });
-    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
-    expect(screen.getByText(/Villain Showdown/i)).toBeInTheDocument();
+describe("App routing (auth happy path)", () => {
+  beforeEach(() => {
+    // bypass ProtectedRoute
+    localStorage.setItem("token", "fake-jwt-token");
   });
 
-  test("navigates Dashboard → EventDetail", async () => {
-    // 1) Dashboard list
+  afterEach(() => {
+    localStorage.clear();
+    jest.resetAllMocks();
+  });
+
+  test("renders EventDashboard with events when authenticated", async () => {
+    // mock /events
     mockFetchSuccess([
       { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
     ]);
+
+    renderWithRouter(<App />, { route: "/" });
+
+    // assert the event appears (we're past the login page now)
+    expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
+  });
+
+  test("navigates Dashboard → EventDetail when authenticated", async () => {
+    // initial dashboard list
+    mockFetchSuccess([
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
+    ]);
+
     renderWithRouter(<App />, { route: "/" });
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
 
-    // 2) Queue EventDetail GET BEFORE clicking the link
+    // queue detail fetch before clicking
     mockFetchSuccess({
       id: 1,
       name: "Hero Cup",
@@ -47,39 +70,72 @@ describe("App routing", () => {
       matches: [],
     });
 
-    // 3) Click the event title text (inside <RouterLink>)
+    // click the visible text in the list item
     await userEvent.click(screen.getByText(/Hero Cup/i));
 
-    // 4) We should be on the detail view
+    // confirm detail heading renders
     expect(
-      await screen.findByRole("heading", { name: /hero cup/i }),
+      await screen.findByText(/Hero Cup — 2025-09-12/i)
     ).toBeInTheDocument();
   });
 });
 
-describe("App - edge cases", () => {
-  test("navigates to ServerErrorPage on 500 error", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
-    renderWithRouter(<App />, { route: "/events/999" });
+describe("App - error handling", () => {
+  beforeEach(() => {
+    localStorage.setItem("token", "fake-jwt-token"); // bypass ProtectedRoute
+    global.fetch = jest.fn();
+  });
 
-    expect(
-      await screen.findByRole("heading", { name: "500" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: /something went wrong/i }),
-    ).toBeInTheDocument();
+  afterEach(() => {
+    jest.resetAllMocks();
+    localStorage.clear();
+  });
+
+  test("redirects to /500 on server error", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/events/999"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/500"),
+    );
   });
 
   test("renders NotFoundPage on unknown route", async () => {
-    renderWithRouter(<App />, { route: "/does-not-exist" });
+    render(
+      <MemoryRouter initialEntries={["/does-not-exist"]}>
+        <App />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
 
-  test("renders NotFoundPage when event not found", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
-    renderWithRouter(<App />, { route: "/events/999" });
+  test("redirects to /404 on event 404", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    });
 
-    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
+    render(
+      <MemoryRouter initialEntries={["/events/999"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/404"),
+    );
   });
 });

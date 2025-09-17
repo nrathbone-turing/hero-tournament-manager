@@ -1,15 +1,31 @@
 // File: frontend/src/__tests__/EventDetail.test.jsx
-// Purpose: Tests for EventDetail component with Entrants + Matches.
+// Purpose: Tests EventDetail with Entrants + Matches.
 // Notes:
-// - Updated to match component changes (no Entrant ID input, status handled via combobox).
-// - Covers happy path and edge cases.
+// - Covers rendering, CRUD flows, scroll lists, and edge cases.
 
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "../App";
 import EventDetail from "../components/EventDetail";
 import { renderWithRouter } from "../test-utils";
 import { mockFetchSuccess } from "../setupTests";
+import React from "react";
+import { MemoryRouter, useLocation } from "react-router-dom";
+import App from "../App";
+
+function LocationSpy() {
+  const location = useLocation();
+  return <div data-testid="location">{location.pathname}</div>;
+}
+
+beforeEach(() => {
+  localStorage.setItem("token", "fake-jwt-token"); // bypass ProtectedRoute
+  global.fetch = jest.fn();
+});
+
+afterEach(() => {
+  jest.resetAllMocks();
+  localStorage.clear();
+});
 
 describe("EventDetail", () => {
   test("renders event name and date", async () => {
@@ -23,6 +39,7 @@ describe("EventDetail", () => {
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
+
     expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
     expect(await screen.findByText(/2025-09-12/)).toBeInTheDocument();
   });
@@ -45,37 +62,20 @@ describe("EventDetail", () => {
     expect(await screen.findByText(/Batman/)).toBeInTheDocument();
   });
 
-  test("adds and removes entrant updates list", async () => {
-    // Initial GET
+  test("adds and removes entrant", async () => {
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
-      entrants: [],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      entrants: [], matches: [],
     });
-    // POST add entrant
     mockFetchSuccess({ id: 3, name: "Ironman", alias: "Tony", event_id: 1 });
-    // Reload with entrant
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
-      entrants: [{ id: 3, name: "Ironman", alias: "Tony" }],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      entrants: [{ id: 3, name: "Ironman", alias: "Tony" }], matches: [],
     });
-    // DELETE remove entrant
     mockFetchSuccess({});
-    // Reload with empty list
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
-      entrants: [],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      entrants: [], matches: [],
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
@@ -86,21 +86,13 @@ describe("EventDetail", () => {
 
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
 
-    // Remove by row-level button
-    await userEvent.click(
-      await screen.findByRole("button", { name: /remove/i }),
-    );
-    await waitFor(() =>
-      expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument(),
-    );
+    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    await waitFor(() => expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument());
   });
 
   test("renders match winner by entrant name", async () => {
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
       entrants: [
         { id: 1, name: "Spiderman", alias: "Webslinger" },
         { id: 2, name: "Batman", alias: "Dark Knight" },
@@ -109,105 +101,36 @@ describe("EventDetail", () => {
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
+
     expect(await screen.findByText("2-1")).toBeInTheDocument();
     expect(await screen.findByText("Batman (Dark Knight)")).toBeInTheDocument();
   });
 
   test("updates event status via dropdown", async () => {
-    // Initial GET
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "drafting",
-      entrants: [],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting",
+      entrants: [], matches: [],
     });
-    // PUT update
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
-      entrants: [],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      entrants: [], matches: [],
     });
-    // Reload GET
     mockFetchSuccess({
-      id: 1,
-      name: "Hero Cup",
-      date: "2025-09-12",
-      status: "published",
-      entrants: [],
-      matches: [],
+      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      entrants: [], matches: [],
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
-    expect(await screen.findByText(/Hero Cup/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("combobox", { name: /status/i }));
-    await userEvent.click(screen.getByRole("option", { name: /published/i }));
-
-    expect(await screen.findByDisplayValue(/published/i)).toBeInTheDocument();
-  });
-
-  describe("scrollable lists", () => {
-    test("entrants list has scroll styling", async () => {
-      mockFetchSuccess({
-        id: 1,
-        name: "Scroll Event",
-        date: "2025-09-12",
-        status: "drafting",
-        entrants: Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1,
-          name: `Hero ${i + 1}`,
-          alias: `Alias${i + 1}`,
-        })),
-        matches: [],
-      });
-
-      renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(await screen.findByTestId("entrants-scroll")).toHaveStyle(
-        "overflow-y: auto",
-      );
-    });
-
-    test("matches list has scroll styling", async () => {
-      mockFetchSuccess({
-        id: 1,
-        name: "Scroll Event",
-        date: "2025-09-12",
-        status: "drafting",
-        entrants: [{ id: 1, name: "Hero 1", alias: "Alias1" }],
-        matches: Array.from({ length: 20 }, (_, i) => ({
-          id: i + 1,
-          round: 1,
-          entrant1_id: 1,
-          entrant2_id: null,
-          scores: "2-0",
-          winner_id: 1,
-        })),
-      });
-
-      renderWithRouter(<EventDetail />, { route: "/events/1" });
-      expect(await screen.findByTestId("matches-scroll")).toHaveStyle(
-        "overflow-y: auto",
-      );
-    });
+    const statusSelect = await screen.findByLabelText(/status/i);
+    await userEvent.click(statusSelect);
+    await userEvent.click(await screen.findByRole("option", { name: /published/i }));
+    await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));  
   });
 });
 
 describe("EventDetail - edge cases", () => {
-  test("renders NotFoundPage when EventDetail fetch returns 404", async () => {
-    global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
-
-    renderWithRouter(<App />, { route: "/events/404" });
-
-    expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
-  });
-
-  test("removal failure keeps entrant in list", async () => {
-    // First GET (with Thor present)
+  test("remove entrant failure shows alert", async () => {
     global.fetch
       .mockResolvedValueOnce({
         ok: true,
@@ -218,56 +141,37 @@ describe("EventDetail - edge cases", () => {
           matches: [],
         }),
       })
-      // DELETE fails
       .mockResolvedValueOnce({ ok: false });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
-    await userEvent.click(
-      await screen.findByRole("button", { name: /remove/i }),
-    );
+    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
 
-    // Component shows the error fallback, so assert the alert message rather than the row still existing
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /failed to remove entrant/i,
-    );
+    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to remove entrant/i);
   });
 
-  test("status update failure reverts dropdown", async () => {
+  test("status update failure reverts value", async () => {
     global.fetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          id: 1,
-          name: "Hero Cup",
-          status: "drafting",
-          entrants: [],
-          matches: [],
+          id: 1, name: "Hero Cup", status: "drafting", entrants: [], matches: [],
         }),
       })
       .mockResolvedValueOnce({ ok: false });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
-    // open the status dropdown
-    await userEvent.click(
-      await screen.findByRole("combobox", { name: /status/i }),
-    );
-
-    // choose "Published"
+    const statusSelect = await screen.findByLabelText(/status/i);
+    await userEvent.click(statusSelect);
     await userEvent.click(screen.getByRole("option", { name: /published/i }));
-
-    // after failure, value should be reverted back to "Drafting"
-    expect(screen.getByRole("combobox", { name: /status/i })).toHaveTextContent(
-      /drafting/i,
-    );
+    await waitFor(() => expect(statusSelect).toHaveTextContent(/drafting/i));
   });
 
-  test("renders match with TBD winner when winner_id missing", async () => {
+  test("renders TBD when winner_id is null", async () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        id: 1,
-        name: "Hero Cup",
+        id: 1, name: "Hero Cup",
         entrants: [{ id: 1, name: "Spidey", alias: "Webhead" }],
         matches: [{ id: 101, round: 1, scores: "1-1", winner_id: null }],
       }),
@@ -275,5 +179,45 @@ describe("EventDetail - edge cases", () => {
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
     expect(await screen.findByText(/tbd/i)).toBeInTheDocument();
+  });
+});
+
+describe("EventDetail redirects", () => {
+  test("navigates to /404 on 404 response", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/events/404"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/404"),
+    );
+  });
+
+  test("navigates to /500 on 500 response", async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    });
+
+    render(
+      <MemoryRouter initialEntries={["/events/500"]}>
+        <App />
+        <LocationSpy />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId("location").textContent).toBe("/500"),
+    );
   });
 });

@@ -1,12 +1,11 @@
 // File: frontend/src/components/SignupForm.jsx
 // Purpose: Signup form for new users.
 // Notes:
-// - Controlled inputs for username, email, and password.
-// - Submits to AuthContext.signup.
-// - On success, displays username confirmation.
+// - Redirects to / after successful signup.
 
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function SignupForm() {
   const { signup } = useAuth();
@@ -14,12 +13,15 @@ export default function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await signup(username, email, password);
-      setMessage(`Signed up as ${user.username}`);
+      await signup(username, email, password);
+      setMessage(`Signed up as ${username}`);
+      setTimeout(() => navigate("/"), 500);
+      navigate("/");
     } catch (err) {
       setMessage(err.message);
     }

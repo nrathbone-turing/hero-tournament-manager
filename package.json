@@ -7,21 +7,20 @@
     "format:backend": "black backend",
     "fix:backend": "black backend && flake8 backend",
     "test:backend": "pytest -q --disable-warnings",
-
     "db:init": "cd backend && flask db init",
     "db:migrate": "cd backend && flask db migrate -m \"Auto migration\"",
     "db:upgrade": "cd backend && flask db upgrade",
     "db:clear": "PYTHONPATH=. python -m backend.scripts.clear_db",
     "db:seed": "PYTHONPATH=. python -m backend.scripts.seed_db",
     "db:reset": "npm run db:clear && npm run db:upgrade && npm run db:seed",
-
     "lint:frontend": "npm --prefix frontend run lint",
     "format:frontend": "npm --prefix frontend run format",
     "fix:frontend": "npm --prefix frontend run fix",
     "test:frontend": "npm --prefix frontend run test",
     "start:frontend": "npm --prefix frontend start",
-
     "test": "npm run test:backend && npm run test:frontend"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "history": "^5.3.0"
+  }
 }

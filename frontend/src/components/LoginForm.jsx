@@ -1,24 +1,24 @@
 // File: frontend/src/components/LoginForm.jsx
 // Purpose: Login form for existing users.
 // Notes:
-// - Controlled inputs for email and password.
-// - Submits to AuthContext.login.
-// - On success, displays a simple confirmation (can be replaced with navigation).
+// - Redirects to / after successful login.
 
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(email, password);
-      setMessage("Login successful!");
+      navigate("/");
     } catch (err) {
       setMessage(err.message);
     }
