@@ -30,7 +30,7 @@ describe("App routing", () => {
   test("navigates Dashboard → EventDetail", async () => {
     // 1) Dashboard list
     mockFetchSuccess([
-      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "open" },
+      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "published" },
     ]);
     renderWithRouter(<App />, { route: "/" });
     expect(await screen.findByText(/Hero Cup/i)).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe("App routing", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [],
       matches: [],
     });

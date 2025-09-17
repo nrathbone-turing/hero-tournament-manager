@@ -17,7 +17,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [],
       matches: [],
     });
@@ -32,7 +32,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [
         { id: 1, name: "Spiderman", alias: "Webslinger" },
         { id: 2, name: "Batman", alias: "Dark Knight" },
@@ -51,7 +51,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [],
       matches: [],
     });
@@ -62,7 +62,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [{ id: 3, name: "Ironman", alias: "Tony" }],
       matches: [],
     });
@@ -73,7 +73,7 @@ describe("EventDetail", () => {
       id: 1,
       name: "Hero Cup",
       date: "2025-09-12",
-      status: "open",
+      status: "published",
       entrants: [],
       matches: [],
     });
