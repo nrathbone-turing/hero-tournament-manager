@@ -156,13 +156,13 @@ def test_expired_token_denied(client):
     token = login_resp.get_json()["access_token"]
 
     # wait for expiry (config sets very short expiry in test env)
+    import time
     time.sleep(2)
 
     headers = {"Authorization": f"Bearer {token}"}
     resp = client.get("/protected", headers=headers)
-
     assert resp.status_code == 401
-    assert "expired" in resp.get_json()["error"].lower()
+    assert resp.get_json()["error"] == "Invalid or expired token"
 
 
 def test_revoked_token_denied(client):
@@ -182,4 +182,5 @@ def test_revoked_token_denied(client):
     # attempt to reuse token
     resp = client.get("/protected", headers=headers)
     assert resp.status_code == 401
-    assert "revoked" in resp.get_json()["error"].lower()
+    # now normalized to one message
+    assert resp.get_json()["error"] == "Invalid or expired token"
