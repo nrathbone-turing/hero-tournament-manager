@@ -3,8 +3,9 @@
 # Notes:
 # - Initializes Flask app and SQLAlchemy.
 # - Registers Blueprints for API routes.
+# - Normalizes JWT errors to return 401 Unauthorized instead of 422.
 
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -26,9 +27,28 @@ def create_app():
     app.config["JWT_ALGORITHM"] = "HS256"
 
     db.init_app(app)
-    CORS(app)  # <-- allow frontend on localhost:3000 to call
+    CORS(app)  # allow frontend on localhost:3000 to call
     Migrate(app, db)
-    JWTManager(app)
+    jwt = JWTManager(app)
+
+    # ------------------------
+    # Custom JWT error handlers (normalize to 401)
+    # ------------------------
+    @jwt.unauthorized_loader
+    def handle_missing_token(err_str):
+        return jsonify(error="Missing Authorization Header"), 401
+
+    @jwt.invalid_token_loader
+    def handle_invalid_token(err_str):
+        return jsonify(error="Invalid or expired token"), 401
+
+    @jwt.expired_token_loader
+    def handle_expired_token(jwt_header, jwt_payload):
+        return jsonify(error="Invalid or expired token"), 401
+
+    @jwt.revoked_token_loader
+    def handle_revoked_token(jwt_header, jwt_payload):
+        return jsonify(error="Invalid or expired token"), 401
 
     # Register Blueprints
     app.register_blueprint(events_bp)
