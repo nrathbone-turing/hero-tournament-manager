@@ -39,9 +39,11 @@ Technologies introduced:
   - Scrollable lists (events, entrants, matches)
   - Placeholder hero images for flair (planned to wire to Project 1 API)
 - **Stretch Goals**
-  - AI seeding and roster completion
-  - AI-generated event recaps
-  - Analytics dashboards (win rates, meta trends)
+  - Replace SQLite with PostgreSQL in production
+  - Wire hero/villain images into frontend (via Project 1’s SuperHero API)
+  - Bracket auto-generation algorithms for events
+  - Analytics dashboards (win rates, deck/alias matchups, trend graphs)
+  - AI-powered seeding and tournament summaries
 
 ---
 
@@ -75,6 +77,8 @@ Technologies introduced:
   - `MatchDashboard` (sub-form for matches)
   - `LoginForm`, `SignupForm` (auth forms)
   - `ProtectedRoute` (enforces JWT)
+  - `Navbar` (global navigation + auth-aware header)
+  - `NotFoundPage` & `ServerErrorPage` (error handling)
 - Context:
   - `AuthContext` (manages auth state + API helpers)
 - UI:
@@ -191,7 +195,7 @@ npm test
 - **Auth:** `/signup`, `/login`, `/logout`, `/protected`
 - **Events**: CRUD + entrant counts
 - **Entrants**: Add/remove per event
-- **Matches**: Add/rupdate scores & winner
+- **Matches**: Add/update scores & winner
 
 ---
 
@@ -199,13 +203,15 @@ npm test
 ```
 .
 ├── backend                        # Flask backend (API, models, routes, seeds, tests)
+│   ├── __init__.py
 │   ├── app.py                     # Flask app factory / entry point
 │   ├── config.py                  # Configuration (DB URI, env settings)
 │   ├── database.py                # DB init + session management
 │   ├── migrations                 # Alembic migration history
-│   │   └── versions/              # Migration scripts
-│   ├── models.py                  # SQLAlchemy models
+│   ├── models.py                  # SQLAlchemy models (User, Event, Entrant, Match)
+│   ├── requirements.txt           # Backend runtime deps
 │   ├── routes                     # Flask Blueprints (API endpoints)
+│   │   ├── __init__.py
 │   │   ├── auth.py                # Signup/login/logout/protected
 │   │   ├── entrants.py            # Entrant CRUD
 │   │   ├── events.py              # Event CRUD
@@ -213,53 +219,64 @@ npm test
 │   ├── scripts                    # Utility scripts
 │   │   ├── clear_db.py            # Drop + recreate tables
 │   │   ├── seed_db.py             # Load JSON seed data into DB
-│   │   └── seed.js                # (Legacy) JS seeding logger
+│   │   └── seed.js                # (Legacy) Node.js seeding logger
 │   ├── seeds                      # JSON seed files
 │   │   ├── entrants.json
 │   │   ├── events.json
 │   │   └── matches.json
+│   ├── server.js                  # (Legacy) dev server 
 │   └── tests                      # Backend tests (pytest + API smoke tests)
-│       ├── conftest.py
-│       ├── test_auth.py
-│       ├── test_models.py
+│       ├── api.test.js            # (Legacy) Node test (placeholder)
+│       ├── conftest.py            # Global pytest fixtures
+│       ├── test_auth.py           # Auth endpoints
+│       ├── test_models.py         # Models + schema behavior
 │       ├── test_routes_entrants.py
 │       ├── test_routes_events.py
 │       └── test_routes_matches.py
 │
 ├── frontend                       # React frontend
+│   ├── package-lock.json
+│   ├── package.json
 │   ├── public                     # Static assets
-│   └── src                        # React source code
-│       ├── __tests__              # Frontend Jest/RTL tests
-│       │   ├── App.test.jsx
-│       │   ├── Auth.test.jsx
-│       │   ├── EntrantDashboard.test.jsx
-│       │   ├── EventDashboard.test.jsx
-│       │   ├── EventDetail.test.jsx
-│       │   └── MatchDashboard.test.jsx
-│       ├── components             # Core feature components
-│       │   ├── EntrantDashboard.jsx
-│       │   ├── EventDashboard.jsx
-│       │   ├── EventDetail.jsx
-│       │   ├── LoginForm.jsx
-│       │   ├── MatchDashboard.jsx
-│       │   ├── ProtectedRoute.jsx
-│       │   ├── SignupForm.jsx
-│       │   └── NotFoundPage.jsx
-│       ├── context/AuthContext.js # Auth provider + hook
-│       ├── api.js                 # Fetch API helper functions
-│       ├── App.jsx / App.css      # Root component + styles
-│       ├── index.js / index.css   # React entry point
-│       ├── setupTests.js          # Jest setup
-│       └── test-utils.js          # Custom RTL helpers
+│   ├── src                        # React source code
+│   │   ├── __tests__              # Frontend Jest/RTL tests
+│   │   │   ├── App.test.jsx
+│   │   │   ├── Auth.test.jsx
+│   │   │   ├── EntrantDashboard.test.jsx
+│   │   │   ├── ErrorPages.test.jsx
+│   │   │   ├── EventDashboard.test.jsx
+│   │   │   ├── EventDetail.test.jsx
+│   │   │   ├── MatchDashboard.test.jsx
+│   │   │   └── Navbar.test.jsx
+│   │   ├── api.js                 # Fetch API helper functions
+│   │   ├── App.css
+│   │   ├── App.jsx                # Root component + routes
+│   │   ├── components             # Core feature components
+│   │   │   ├── EntrantDashboard.jsx
+│   │   │   ├── EventDashboard.jsx
+│   │   │   ├── EventDetail.jsx
+│   │   │   ├── LoginForm.jsx
+│   │   │   ├── MatchDashboard.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── NotFoundPage.jsx
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── ServerErrorPage.jsx
+│   │   │   └── SignupForm.jsx
+│   │   ├── context
+│   │   │   └── AuthContext.js     # Auth provider + hook
+│   │   ├── index.css
+│   │   ├── index.js               # React entry point (with BrowserRouter + AuthProvider)
+│   │   ├── setupTests.js          # Jest setup (global mocks)
+│   │   └── test-utils.js          # Custom RTL helpers
 │
-├── instance                       # Flask instance folder
-│   └── tournaments.db             # SQLite DB (local dev)
-├── requirements-dev.txt           # Dev-only Python deps (pytest, linting)
-├── requirements.txt               # Backend runtime deps
-├── pytest.ini                     # pytest config
-├── pyproject.toml                 # Black + tooling config
+├── instance
+│   └── tournaments.db             # SQLite DB (local dev persistence)
 ├── LICENSE                        # MIT License
-└── README.md                      # Project README (this file)
+├── package.json                   # Root (scripts for lint/test)
+├── pyproject.toml                 # Black + tooling config
+├── pytest.ini                     # pytest config
+├── README.md                      # Project README
+└── requirements-dev.txt           # Dev-only Python deps (pytest, linting)
 ```
 
 ## Future Improvements
@@ -278,5 +295,10 @@ This project is part of the Flatiron School Capstone course.
 **Notes:**
 - Current MVP: full CRUD for events, entrants, matches + auth + protected routes
 - Deployment target TBD
+- Legacy files:
+  - `backend/server.js` - early experiment for running a Node/Express-style server (not used in final Flask backend)
+  - `backend/tests/api.test.js` - placeholder Node test (safe to ignore)
+  - `backend/scripts/seed.js` - early attempt at seeding via Node.js. Superseded by the Python 
+  - `seed_db.py` - script for consistency with the Flask backend
 
 **License:** MIT — feel free to use or remix!
