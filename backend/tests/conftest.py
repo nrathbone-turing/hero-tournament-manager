@@ -8,7 +8,6 @@
 import pytest
 from backend.app import create_app
 from backend.models import db, Event, Entrant
-from backend.database import db
 
 
 @pytest.fixture(scope="session")
