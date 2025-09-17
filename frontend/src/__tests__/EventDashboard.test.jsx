@@ -14,13 +14,26 @@ describe("EventDashboard", () => {
   test("renders events heading", async () => {
     mockFetchSuccess();
     renderWithRouter(<EventDashboard />);
-    expect(await screen.findByRole("heading", { name: /events/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /events/i }),
+    ).toBeInTheDocument();
   });
 
   test("shows entrant counts", async () => {
     mockFetchSuccess([
-      { id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting", entrants: Array(3).fill({ id: 1, name: "Hero" }) },
-      { id: 2, name: "Villain Showdown", date: "2025-09-13", entrants: Array(5).fill({ id: 2, name: "Villain" }) }
+      {
+        id: 1,
+        name: "Hero Cup",
+        date: "2025-09-12",
+        status: "drafting",
+        entrants: Array(3).fill({ id: 1, name: "Hero" }),
+      },
+      {
+        id: 2,
+        name: "Villain Showdown",
+        date: "2025-09-13",
+        entrants: Array(5).fill({ id: 2, name: "Villain" }),
+      },
     ]);
     renderWithRouter(<EventDashboard />);
     expect(await screen.findByText(/3 entrants/i)).toBeInTheDocument();
@@ -29,13 +42,29 @@ describe("EventDashboard", () => {
 
   test("submits new event", async () => {
     mockFetchSuccess([]); // initial GET
-    mockFetchSuccess({ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 }); // POST
-    mockFetchSuccess([{ id: 3, name: "Test Event", date: "2025-09-20", status: "drafting", entrant_count: 0 }]); // reload
+    mockFetchSuccess({
+      id: 3,
+      name: "Test Event",
+      date: "2025-09-20",
+      status: "drafting",
+      entrant_count: 0,
+    }); // POST
+    mockFetchSuccess([
+      {
+        id: 3,
+        name: "Test Event",
+        date: "2025-09-20",
+        status: "drafting",
+        entrant_count: 0,
+      },
+    ]); // reload
 
     renderWithRouter(<EventDashboard />);
     await userEvent.type(screen.getByLabelText(/name/i), "Test Event");
     await userEvent.type(screen.getByLabelText(/date/i), "2025-09-20");
-    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /create event/i }),
+    );
 
     expect(await screen.findByText(/0 entrants/i)).toBeInTheDocument();
   });
@@ -50,7 +79,9 @@ describe("EventDashboard - edge cases", () => {
 
   test("prevents event creation with missing fields", async () => {
     renderWithRouter(<EventDashboard />);
-    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /create event/i }),
+    );
     expect(screen.getByRole("form")).toBeInTheDocument();
   });
 
@@ -61,9 +92,13 @@ describe("EventDashboard - edge cases", () => {
 
     renderWithRouter(<EventDashboard />);
     await userEvent.type(screen.getByLabelText(/event name/i), "Broken Event");
-    await userEvent.click(screen.getByRole("button", { name: /create event/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /create event/i }),
+    );
 
     const alerts = await screen.findAllByRole("alert");
-    expect(alerts.some((el) => /failed to create event/i.test(el.textContent))).toBe(true);
+    expect(
+      alerts.some((el) => /failed to create event/i.test(el.textContent)),
+    ).toBe(true);
   });
 });

@@ -16,7 +16,7 @@ describe("App routing", () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
     expect(
-      await screen.findByRole("heading", { name: /hero tournament manager/i })
+      await screen.findByRole("heading", { name: /hero tournament manager/i }),
     ).toBeInTheDocument();
   });
 
@@ -50,7 +50,7 @@ describe("App routing", () => {
 
     // 4) We should be on the detail view
     expect(
-      await screen.findByRole("heading", { name: /hero cup/i })
+      await screen.findByRole("heading", { name: /hero cup/i }),
     ).toBeInTheDocument();
   });
 });
@@ -59,21 +59,25 @@ describe("App - edge cases", () => {
   test("navigates to ServerErrorPage on 500 error", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 500 });
     renderWithRouter(<App />, { route: "/events/999" });
-    
-    expect(await screen.findByRole("heading", { name: "500" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /something went wrong/i })).toBeInTheDocument();
+
+    expect(
+      await screen.findByRole("heading", { name: "500" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /something went wrong/i }),
+    ).toBeInTheDocument();
   });
 
   test("renders NotFoundPage on unknown route", async () => {
     renderWithRouter(<App />, { route: "/does-not-exist" });
-    
+
     expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
 
   test("renders NotFoundPage when event not found", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false, status: 404 });
     renderWithRouter(<App />, { route: "/events/999" });
-    
+
     expect(await screen.findByTestId("notfound-page")).toBeInTheDocument();
   });
 });

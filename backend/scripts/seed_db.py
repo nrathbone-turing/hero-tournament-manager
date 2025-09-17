@@ -60,7 +60,9 @@ def run():
 
         db.session.commit()
         print(
-            f"✅ Inserted {len(events)} events, {len(entrants)} entrants, {len(matches)} matches"
+            f"✅ Inserted {len(events)} events, "
+            f"{len(entrants)} entrants, "
+            f"{len(matches)} matches"
         )
 
 

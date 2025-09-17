@@ -5,7 +5,6 @@
 # - client: Flask test client for API requests
 # - session: SQLAlchemy session scoped to test context
 
-import os
 import pytest
 from backend.app import create_app
 from backend.models import db, Event, Entrant
@@ -16,12 +15,14 @@ from backend.database import db
 def app():
     """Create a Flask app instance for testing with in-memory DB."""
     app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
-        "JWT_SECRET_KEY": "test-secret",
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+            "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
+            "JWT_SECRET_KEY": "test-secret",
+        }
+    )
 
     with app.app_context():
         db.create_all()
@@ -59,7 +60,9 @@ def create_event(session):
         session.add(event)
         session.commit()
         return event
+
     return _create_event
+
 
 @pytest.fixture
 def seed_event_with_entrants(session, create_event):
@@ -70,4 +73,5 @@ def seed_event_with_entrants(session, create_event):
         session.add_all([e1, e2])
         session.commit()
         return event, e1, e2
+
     return _seed_event_with_entrants

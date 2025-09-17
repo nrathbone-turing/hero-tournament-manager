@@ -6,7 +6,6 @@
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { act } from "react-dom/test-utils";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import AuthProvider, { useAuth } from "../context/AuthContext";
 import LoginForm from "../components/LoginForm";
@@ -19,7 +18,8 @@ beforeEach(() => {
     if (url.endsWith("/signup")) {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ username: "testuser", email: "test@example.com" }),
+        json: () =>
+          Promise.resolve({ username: "testuser", email: "test@example.com" }),
       });
     }
     if (url.endsWith("/login")) {
@@ -56,12 +56,18 @@ test("signup form creates a new user", async () => {
       <MemoryRouter>
         <SignupForm />
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "testuser" } });
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+  fireEvent.change(screen.getByLabelText(/username/i), {
+    target: { value: "testuser" },
+  });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@example.com" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
   fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
   await waitFor(() => {
@@ -75,17 +81,21 @@ test("login form logs in and sets token", async () => {
       <MemoryRouter>
         <LoginForm />
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@example.com" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
   fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
   await waitFor(() => {
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining("/login"),
-      expect.any(Object)
+      expect.any(Object),
     );
   });
 });
@@ -106,7 +116,7 @@ test("unauthenticated user is redirected from protected route", async () => {
           />
         </Routes>
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
   await waitFor(() => {
@@ -124,7 +134,7 @@ test("authenticated user sees protected content", async () => {
         </Routes>
         <AuthTestHarness onReady={(api) => (authApi = api)} />
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
   await waitFor(() => {
@@ -139,7 +149,7 @@ test("authenticated user sees protected content", async () => {
   });
 });
 
-test("logout clears auth state", async () => {
+test("logout clears auth state (token + UI)", async () => {
   let authApi;
   render(
     <AuthProvider>
@@ -147,30 +157,28 @@ test("logout clears auth state", async () => {
         <ProtectedPage />
         <AuthTestHarness onReady={(api) => (authApi = api)} />
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
   await waitFor(() => {
     expect(authApi).toBeDefined();
   });
 
-  // simulate login via login() helper
-  await act(async () => {
-    await authApi.login("test@example.com", "password123");
-  });
+  // simulate login
+  await authApi.login("test@example.com", "password123");
 
-  // just check that token is set
   expect(authApi.token).toBe("fake-jwt-token");
 
-  // logout clears token + resets user
-  act(() => {
-    authApi.logout();
-  });
+  // logout
+  authApi.logout();
 
+  // wait for token clear
   await waitFor(() => {
     expect(authApi.token).toBe(null);
-    expect(screen.getByText(/welcome guest/i)).toBeInTheDocument();
   });
+
+  // then check UI separately
+  expect(screen.getByText(/welcome guest/i)).toBeInTheDocument();
 });
 
 test("login sets user details in context", async () => {
@@ -181,7 +189,7 @@ test("login sets user details in context", async () => {
         <ProtectedPage />
         <AuthTestHarness onReady={(api) => (authApi = api)} />
       </MemoryRouter>
-    </AuthProvider>
+    </AuthProvider>,
   );
 
   await waitFor(() => {
@@ -189,15 +197,13 @@ test("login sets user details in context", async () => {
   });
 
   // login
-  await act(async () => {
-    await authApi.login("authedUser@example.com", "password123");
-  });
+  await authApi.login("authedUser@example.com", "password123");
 
-  // token should be set
-  expect(authApi.token).toBe("fake-jwt-token");
-
-  // if AuthContext sets user, UI should reflect it
+  // wait for token
   await waitFor(() => {
-    expect(screen.getByText(/welcome autheduser/i)).toBeInTheDocument();
+    expect(authApi.token).toBe("fake-jwt-token");
   });
+
+  // check UI
+  expect(screen.getByText(/welcome autheduser/i)).toBeInTheDocument();
 });

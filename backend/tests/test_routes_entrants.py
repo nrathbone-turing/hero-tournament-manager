@@ -55,6 +55,8 @@ def test_delete_entrant(client, create_event, session):
     response = client.delete(f"/entrants/{entrant.id}")
     assert response.status_code == 204
     assert (
-        db.session.execute(select(Entrant).filter_by(id=entrant.id)).scalar_one_or_none()
+        db.session.execute(
+            select(Entrant).filter_by(id=entrant.id)
+        ).scalar_one_or_none()
         is None
     )

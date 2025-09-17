@@ -5,7 +5,7 @@
 // - Provides inline error feedback with role="alert".
 // - Handles entrants, matches, and status updates.
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, Navigate, Link as RouterLink } from "react-router-dom";
 import {
   Container,
@@ -43,7 +43,7 @@ export default function EventDetail() {
   const [tab, setTab] = useState(0);
   const [removeId, setRemoveId] = useState("");
 
-  async function fetchEvent() {
+  const fetchEvent = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}/events/${id}`);
@@ -66,25 +66,25 @@ export default function EventDetail() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
     fetchEvent();
-  }, [id]);
+  }, [fetchEvent]);
 
-async function handleRemoveEntrant(e) {
-  e.preventDefault();
-  try {
-    const res = await fetch(`${API_BASE_URL}/entrants/${removeId}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error("Failed to remove entrant");
-    setRemoveId("");
-    fetchEvent();
-  } catch {
-    setError("Failed to remove entrant");
+  async function handleRemoveEntrant(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_BASE_URL}/entrants/${removeId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove entrant");
+      setRemoveId("");
+      fetchEvent();
+    } catch {
+      setError("Failed to remove entrant");
+    }
   }
-}
 
   async function handleStatusChange(newStatus) {
     if (!event) return;

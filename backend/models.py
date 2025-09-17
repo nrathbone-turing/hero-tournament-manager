@@ -4,12 +4,9 @@
 # - Enforces DB-level constraints: non-null names, valid statuses, sane match setup.
 # - Includes to_dict() methods with optional related info.
 
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Enum, CheckConstraint, Column, Integer, String
 from werkzeug.security import generate_password_hash, check_password_hash
 from backend.database import Base, db
-
-# db = SQLAlchemy()
 
 # Allowed event statuses
 EVENT_STATUSES = ("drafting", "published", "cancelled", "completed")
@@ -136,8 +133,4 @@ class User(Base):
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
-        return {
-            "id": self.id,
-            "username": self.username,
-            "email": self.email
-        }
+        return {"id": self.id, "username": self.username, "email": self.email}
