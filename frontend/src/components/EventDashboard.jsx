@@ -86,7 +86,7 @@ export default function EventDashboard() {
   return (
     <Container maxWidth="lg" sx={{ mt: 6 }}>
       <Typography variant="h4" gutterBottom align="center">
-        Events
+        Events Dashboard
       </Typography>
 
       {/* Hero images + form */}
