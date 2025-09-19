@@ -1,11 +1,20 @@
 // File: frontend/src/components/SignupForm.jsx
-// Purpose: Signup form for new users.
+// Purpose: Signup form for new users with Material UI styling.
 // Notes:
 // - Redirects to / after successful signup.
+// - Uses MUI Container, Paper, TextField, and Button for consistent design.
 
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import {
+  Container,
+  Paper,
+  Box,
+  TextField,
+  Button,
+  Typography,
+} from "@mui/material";
 
 export default function SignupForm() {
   const { signup } = useAuth();
@@ -20,50 +29,59 @@ export default function SignupForm() {
     try {
       await signup(username, email, password);
       setMessage(`Signed up as ${username}`);
-      setTimeout(() => navigate("/"), 500);
-      navigate("/");
+      setTimeout(() => navigate("/"), 800);
     } catch (err) {
       setMessage(err.message);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="username">Username</label>
-        <input
-          id="username"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
-
-      <div>
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-
-      <button type="submit">Sign Up</button>
-      {message && <p>{message}</p>}
-    </form>
+    <Container maxWidth="sm" sx={{ mt: 6 }}>
+      <Paper sx={{ p: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Sign Up
+        </Typography>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+        >
+          <TextField
+            id="username"
+            label="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+            fullWidth
+          />
+          <TextField
+            id="email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            fullWidth
+          />
+          <TextField
+            id="password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            fullWidth
+          />
+          <Button type="submit" variant="contained" fullWidth>
+            Sign Up
+          </Button>
+          {message && (
+            <Typography color="error" role="alert">
+              {message}
+            </Typography>
+          )}
+        </Box>
+      </Paper>
+    </Container>
   );
 }
