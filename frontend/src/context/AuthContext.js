@@ -7,6 +7,7 @@
 // - Provides isAuthenticated flag.
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE_URL } from "../api";
 
 const AuthContext = createContext();
 
@@ -27,7 +28,7 @@ export default function AuthProvider({ children }) {
   }, [token]);
 
   const signup = async (username, email, password) => {
-    const resp = await fetch("/signup", {
+    const resp = await fetch(`${API_BASE_URL}/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
@@ -43,7 +44,7 @@ export default function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const resp = await fetch("/login", {
+    const resp = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
