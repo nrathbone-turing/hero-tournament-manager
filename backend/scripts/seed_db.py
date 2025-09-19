@@ -3,12 +3,13 @@
 # Notes:
 # - Reads from backend/seeds/events.json, entrants.json, matches.json
 # - Inserts into SQLAlchemy models via Flask app context.
+# - Seeds exactly one admin user (no logins for BYE or entrants).
 # - Run with: npm run db:clear && npm run db:seed
 
 import os
 import json
 from backend.app import create_app
-from backend.models import db, Event, Entrant, Match
+from backend.models import db, Event, Entrant, Match, User
 
 SEED_DIR = os.path.join(os.path.dirname(__file__), "..", "seeds")
 
@@ -33,7 +34,7 @@ def run():
                 Event(id=e["id"], name=e["name"], date=e["date"], status=e["status"])
             )
 
-        # Insert Entrants
+        # Insert Entrants (skip creating logins for entrants)
         for en in entrants:
             db.session.add(
                 Entrant(
@@ -58,11 +59,18 @@ def run():
                 )
             )
 
+        # Create admin user if not exists
+        if not User.query.filter_by(email="admin@example.com").first():
+            admin = User(username="admin", email="admin@example.com")
+            admin.set_password("password123")
+            db.session.add(admin)
+
         db.session.commit()
         print(
             f"✅ Inserted {len(events)} events, "
             f"{len(entrants)} entrants, "
-            f"{len(matches)} matches"
+            f"{len(matches)} matches, "
+            f"+ admin user"
         )
 
 
