@@ -1,13 +1,11 @@
 // File: frontend/src/components/LoginForm.jsx
 // Purpose: Login form for existing users with Material UI styling.
 // Notes:
-// - Redirects to / after successful login.
+// - Redirect handled by ProtectedRoute after successful login.
 // - Stores access_token via useAuth (which persists to localStorage).
-// - If already authenticated, redirects to / immediately.
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -18,24 +16,15 @@ import {
 } from "@mui/material";
 
 export default function LoginForm() {
-  const { login, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
-  const navigate = useNavigate();
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
-    }
-  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await login(email, password); // handled in AuthContext
-      navigate("/");
     } catch (err) {
       setMessage(err.message || "Login failed");
     }
