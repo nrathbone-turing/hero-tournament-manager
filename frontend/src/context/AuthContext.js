@@ -32,7 +32,9 @@ export default function AuthProvider({ children }) {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
     });
-    setUser(data);
+    const newToken = data.access_token || data.token;
+    if (newToken) setToken(newToken);
+    setUser({ username, email });
     return data;
   };
 
@@ -42,7 +44,7 @@ export default function AuthProvider({ children }) {
       body: JSON.stringify({ email, password }),
     });
     const newToken = data.access_token || data.token;
-    setToken(newToken);
+    if (newToken) setToken(newToken);
     setUser({ username: email.split("@")[0], email });
     return data;
   };
