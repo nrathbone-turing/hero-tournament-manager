@@ -34,14 +34,15 @@ def run():
                 Event(id=e["id"], name=e["name"], date=e["date"], status=e["status"])
             )
 
-        # Insert Entrants (skip creating logins for entrants)
+        # Insert Entrants (read dropped flag if present)
         for en in entrants:
             db.session.add(
                 Entrant(
                     id=en["id"],
                     name=en["name"],
-                    alias=en["alias"],
+                    alias=en.get("alias"),
                     event_id=en["event_id"],
+                    dropped=en.get("dropped", False),
                 )
             )
 
