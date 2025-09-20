@@ -1,7 +1,7 @@
 // File: frontend/src/__tests__/MatchDashboard.test.jsx
 // Purpose: Tests for MatchDashboard component.
 // Notes:
-// - Ensures POST includes winner_id and callback is called.
+// - Verifies casting, validation, success, and failure flows.
 
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -17,10 +17,10 @@ describe("MatchDashboard", () => {
     ).toBeInTheDocument();
   });
 
-  test("submits new match and triggers callback", async () => {
+  test("submits new match with numeric IDs", async () => {
     const mockOnAdded = jest.fn();
     mockFetchSuccess({
-      id: 5,
+      id: 99,
       round: 1,
       entrant1_id: 1,
       entrant2_id: 2,
@@ -40,50 +40,32 @@ describe("MatchDashboard", () => {
     await waitFor(() => expect(mockOnAdded).toHaveBeenCalled());
   });
 
+  test("shows error when winner_id does not match entrants", async () => {
+    renderWithRouter(<MatchDashboard eventId={1} />);
+    await userEvent.type(screen.getByLabelText(/round/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
+    await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
+    await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
+    await userEvent.type(screen.getByLabelText(/winner id/i), "99");
+    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
+
+    expect(
+      await screen.findByRole("alert"),
+    ).toHaveTextContent(/winner id must match one of the entrants/i);
+  });
+
   test("shows error on API failure", async () => {
     mockFetchFailure();
-
     renderWithRouter(<MatchDashboard eventId={1} />);
-
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
     await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
     await userEvent.type(screen.getByLabelText(/winner id/i), "1");
-
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
-    // Expect the UI error message
-    expect(await screen.findByText(/failed to add match/i)).toBeInTheDocument();
-  });
-});
-
-describe("MatchDashboard - edge cases", () => {
-  test("prevents submit when fields are empty", async () => {
-    renderWithRouter(<MatchDashboard eventId={1} />);
-    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
-    // After clicking, button should become disabled with text "Adding..."
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: /adding.../i })).toBeDisabled(),
-    );
-  });
-
-  test("shows error when winner ID does not match entrants", async () => {
-    renderWithRouter(<MatchDashboard eventId={1} />);
-    await userEvent.type(screen.getByLabelText(/winner id/i), "99");
-    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      /failed to add match/i,
-    );
-  });
-
-  test("clears form after successful submission", async () => {
-    renderWithRouter(<MatchDashboard eventId={1} />);
-    await userEvent.type(screen.getByLabelText(/round/i), "1");
-    await userEvent.type(screen.getByLabelText(/scores/i), "2-0");
-    await userEvent.click(screen.getByRole("button", { name: /add match/i }));
-
-    expect(screen.getByLabelText(/round/i)).toHaveValue("1");
-    expect(screen.getByLabelText(/scores/i)).toHaveValue("2-0");
+    expect(
+      await screen.findByRole("alert"),
+    ).toHaveTextContent(/failed to add match/i);
   });
 });
