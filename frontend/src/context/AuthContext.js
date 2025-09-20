@@ -7,7 +7,7 @@
 // - Provides isAuthenticated flag.
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { API_BASE_URL } from "../api";
+import { apiFetch } from "../api";
 
 const AuthContext = createContext();
 
@@ -28,37 +28,23 @@ export default function AuthProvider({ children }) {
   }, [token]);
 
   const signup = async (username, email, password) => {
-    const resp = await fetch(`${API_BASE_URL}/signup`, {
+    const data = await apiFetch("/signup", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });
-    if (resp.ok) {
-      const data = await resp.json();
-      setUser(data);
-      return data;
-    } else {
-      const err = await resp.json();
-      throw new Error(err.error || "Signup failed");
-    }
+    setUser(data);
+    return data;
   };
 
   const login = async (email, password) => {
-    const resp = await fetch(`${API_BASE_URL}/login`, {
+    const data = await apiFetch("/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    if (resp.ok) {
-      const data = await resp.json();
-      const newToken = data.access_token || data.token;
-      setToken(newToken);
-      setUser({ username: email.split("@")[0], email });
-      return data;
-    } else {
-      const err = await resp.json();
-      throw new Error(err.error || "Login failed");
-    }
+    const newToken = data.access_token || data.token;
+    setToken(newToken);
+    setUser({ username: email.split("@")[0], email });
+    return data;
   };
 
   const logout = () => {
