@@ -2,6 +2,7 @@
 // Purpose: Centralize API base URL and inject JWT auth headers into fetch calls.
 // Notes:
 // - Wraps fetch calls with Authorization header if token exists.
+// - On 401 Unauthorized, clears token and redirects to /login.
 // - Exports helper for DELETE entrant (others can reuse apiFetch).
 
 export const API_BASE_URL =
@@ -27,6 +28,14 @@ export async function apiFetch(endpoint, options = {}) {
       ...(options.headers || {}),
     },
   });
+
+  // Handle 401 → clear token + redirect
+  if (res.status === 401) {
+    localStorage.removeItem("token");
+    // force reload to login page
+    window.location.href = "/login";
+    throw new Error("Unauthorized: Please log in again");
+  }
 
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
