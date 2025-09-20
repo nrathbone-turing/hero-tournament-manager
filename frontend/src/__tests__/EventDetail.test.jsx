@@ -64,18 +64,30 @@ describe("EventDetail", () => {
 
   test("adds and removes entrant", async () => {
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
-      entrants: [], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [],
+      matches: [],
     });
     mockFetchSuccess({ id: 3, name: "Ironman", alias: "Tony", event_id: 1 });
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
-      entrants: [{ id: 3, name: "Ironman", alias: "Tony" }], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [{ id: 3, name: "Ironman", alias: "Tony" }],
+      matches: [],
     });
     mockFetchSuccess({});
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
-      entrants: [], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [],
+      matches: [],
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
@@ -86,13 +98,20 @@ describe("EventDetail", () => {
 
     expect(await screen.findByText(/Ironman/)).toBeInTheDocument();
 
-    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
-    await waitFor(() => expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument());
+    await userEvent.click(
+      await screen.findByRole("button", { name: /remove/i }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByText(/Ironman/)).not.toBeInTheDocument(),
+    );
   });
 
   test("renders match winner by entrant name", async () => {
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
       entrants: [
         { id: 1, name: "Spiderman", alias: "Webslinger" },
         { id: 2, name: "Batman", alias: "Dark Knight" },
@@ -108,24 +127,38 @@ describe("EventDetail", () => {
 
   test("updates event status via dropdown", async () => {
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "drafting",
-      entrants: [], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "drafting",
+      entrants: [],
+      matches: [],
     });
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
-      entrants: [], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [],
+      matches: [],
     });
     mockFetchSuccess({
-      id: 1, name: "Hero Cup", date: "2025-09-12", status: "published",
-      entrants: [], matches: [],
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [],
+      matches: [],
     });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
 
     const statusSelect = await screen.findByLabelText(/status/i);
     await userEvent.click(statusSelect);
-    await userEvent.click(await screen.findByRole("option", { name: /published/i }));
-    await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));  
+    await userEvent.click(
+      await screen.findByRole("option", { name: /published/i }),
+    );
+    await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));
   });
 
   test("renders dropped entrant as placeholder", async () => {
@@ -162,9 +195,13 @@ describe("EventDetail - edge cases", () => {
       .mockResolvedValueOnce({ ok: false });
 
     renderWithRouter(<EventDetail />, { route: "/events/1" });
-    await userEvent.click(await screen.findByRole("button", { name: /remove/i }));
+    await userEvent.click(
+      await screen.findByRole("button", { name: /remove/i }),
+    );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/failed to remove entrant/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /failed to remove entrant/i,
+    );
   });
 
   test("status update failure reverts value", async () => {
@@ -172,7 +209,11 @@ describe("EventDetail - edge cases", () => {
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          id: 1, name: "Hero Cup", status: "drafting", entrants: [], matches: [],
+          id: 1,
+          name: "Hero Cup",
+          status: "drafting",
+          entrants: [],
+          matches: [],
         }),
       })
       .mockResolvedValueOnce({ ok: false });
@@ -189,7 +230,8 @@ describe("EventDetail - edge cases", () => {
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({
-        id: 1, name: "Hero Cup",
+        id: 1,
+        name: "Hero Cup",
         entrants: [{ id: 1, name: "Spidey", alias: "Webhead" }],
         matches: [{ id: 101, round: 1, scores: "1-1", winner_id: null }],
       }),

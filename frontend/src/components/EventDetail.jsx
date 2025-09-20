@@ -308,15 +308,23 @@ export default function EventDetail() {
                 </TableHead>
                 <TableBody>
                   {event.matches?.map((m) => {
-                    const e1 = event.entrants?.find((e) => e.id === m.entrant1_id);
-                    const e2 = event.entrants?.find((e) => e.id === m.entrant2_id);
+                    const e1 = event.entrants?.find(
+                      (e) => e.id === m.entrant1_id,
+                    );
+                    const e2 = event.entrants?.find(
+                      (e) => e.id === m.entrant2_id,
+                    );
                     const w = event.entrants?.find((e) => e.id === m.winner_id);
                     return (
                       <TableRow key={m.id}>
                         <TableCell>{m.id}</TableCell>
                         <TableCell>{m.round}</TableCell>
-                        <TableCell>{e1?.dropped ? "Dropped" : e1?.name || "-"}</TableCell>
-                        <TableCell>{e2?.dropped ? "Dropped" : e2?.name || "-"}</TableCell>
+                        <TableCell>
+                          {e1?.dropped ? "Dropped" : e1?.name || "-"}
+                        </TableCell>
+                        <TableCell>
+                          {e2?.dropped ? "Dropped" : e2?.name || "-"}
+                        </TableCell>
                         <TableCell>{m.scores}</TableCell>
                         <TableCell>
                           {w

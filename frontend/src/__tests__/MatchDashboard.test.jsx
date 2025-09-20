@@ -29,9 +29,12 @@ describe("MatchDashboard", () => {
       event_id: 1,
     });
 
-    renderWithRouter(<MatchDashboard eventId={1} onMatchAdded={mockOnAdded} />, {
-      route: "/",
-    });
+    renderWithRouter(
+      <MatchDashboard eventId={1} onMatchAdded={mockOnAdded} />,
+      {
+        route: "/",
+      },
+    );
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
@@ -51,9 +54,9 @@ describe("MatchDashboard", () => {
     await userEvent.type(screen.getByLabelText(/winner id/i), "99");
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent(/winner id must match one of the entrants/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /winner id must match one of the entrants/i,
+    );
   });
 
   test("shows error on API failure", async () => {
@@ -66,8 +69,8 @@ describe("MatchDashboard", () => {
     await userEvent.type(screen.getByLabelText(/winner id/i), "1");
     await userEvent.click(screen.getByRole("button", { name: /add match/i }));
 
-    expect(
-      await screen.findByRole("alert"),
-    ).toHaveTextContent(/failed to add match/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /failed to add match/i,
+    );
   });
 });

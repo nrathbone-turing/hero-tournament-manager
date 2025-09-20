@@ -14,8 +14,7 @@ load_dotenv()
 class Config:
     # Database
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///tournaments.db"  # fallback if .env missing
+        "DATABASE_URL", "sqlite:///tournaments.db"  # fallback if .env missing
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

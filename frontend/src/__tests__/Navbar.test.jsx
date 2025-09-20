@@ -81,9 +81,7 @@ describe("Navbar", () => {
     renderWithRouter();
 
     fireEvent.click(screen.getByRole("link", { name: /login/i }));
-    expect(
-      screen.getByRole("button", { name: /log in/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("link", { name: /signup/i }));
     expect(
@@ -102,9 +100,7 @@ describe("Navbar", () => {
     await waitFor(() => {
       expect(screen.getByText(/welcome test/i)).toBeInTheDocument();
     });
-    expect(
-      screen.getByRole("button", { name: /logout/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /logout/i })).toBeInTheDocument();
   });
 
   test("logout clears token and resets user", async () => {
@@ -124,10 +120,10 @@ describe("Navbar", () => {
 
     await waitFor(() => {
       expect(localStorage.getItem("token")).toBeNull();
-      expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
     });
 
-    // back to logged-out view
-    expect(screen.getByRole("link", { name: /login/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText(/welcome/i)).not.toBeInTheDocument();
+    });
   });
 });

@@ -30,7 +30,9 @@ def test_create_match(client, seed_event_with_entrants, auth_header):
     assert data["entrant2_id"] == e2.id
 
 
-def test_create_match_rejects_invalid_winner(client, seed_event_with_entrants, auth_header):
+def test_create_match_rejects_invalid_winner(
+    client, seed_event_with_entrants, auth_header
+):
     event, e1, e2 = seed_event_with_entrants()
     resp = client.post(
         "/matches",

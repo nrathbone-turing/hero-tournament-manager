@@ -60,9 +60,9 @@ def get_events():
             .outerjoin(Entrant, Entrant.event_id == Event.id)
             .group_by(Event.id)
             .order_by(
-                desc(Event.date),   # newest first
-                STATUS_ORDER,       # published → drafting → completed → cancelled
-                asc(Event.name),    # alphabetical
+                desc(Event.date),  # newest first
+                STATUS_ORDER,  # published → drafting → completed → cancelled
+                asc(Event.name),  # alphabetical
             )
             .all()
         )
@@ -73,7 +73,9 @@ def get_events():
                         "id": e.id,
                         "name": e.name,
                         "date": (
-                            e.date.isoformat() if hasattr(e.date, "isoformat") else e.date
+                            e.date.isoformat()
+                            if hasattr(e.date, "isoformat")
+                            else e.date
                         ),
                         "rules": e.rules,
                         "status": e.status,

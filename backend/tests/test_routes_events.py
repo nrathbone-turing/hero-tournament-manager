@@ -5,7 +5,6 @@
 # - Covers create, read (with entrant counts), update, and delete.
 # - Adds regression test for multi-level ordering: date desc → status priority → name asc.
 
-import pytest
 from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
@@ -19,7 +18,7 @@ def test_create_event(client, auth_header):
             "rules": "Bo3",
             "status": "drafting",
         },
-        headers=auth_header
+        headers=auth_header,
     )
     assert response.status_code == 201
     data = response.get_json()
@@ -43,7 +42,9 @@ def test_get_events_with_counts(client, create_event, session):
 
 def test_update_event(client, create_event, auth_header):
     event = create_event(status="drafting")
-    response = client.put(f"/events/{event.id}", json={"status": "cancelled"}, headers=auth_header)
+    response = client.put(
+        f"/events/{event.id}", json={"status": "cancelled"}, headers=auth_header
+    )
     assert response.status_code == 200
     assert response.get_json()["status"] == "cancelled"
 
@@ -62,23 +63,32 @@ def test_delete_event(client, create_event, auth_header):
 
 
 def test_create_event_requires_auth(client):
-    resp = client.post("/events", json={
-        "name": "Fail Cup",
-        "date": "2025-09-21",
-        "rules": "Bo3",
-        "status": "drafting",
-    })
+    resp = client.post(
+        "/events",
+        json={
+            "name": "Fail Cup",
+            "date": "2025-09-21",
+            "rules": "Bo3",
+            "status": "drafting",
+        },
+    )
     assert resp.status_code == 401
 
 
 def test_get_events_sort_order(client, session):
     # Status order priority mapping: published > drafting > completed > cancelled
     # Newest date should come first
-    e1 = Event(name="Alpha", date="2025-09-10", status="drafting")   # older date
-    e2 = Event(name="Beta", date="2025-09-12", status="published")   # newer, high status
-    e3 = Event(name="Gamma", date="2025-09-12", status="completed")  # same date, lower status
-    e4 = Event(name="Delta", date="2025-09-12", status="drafting")   # same date, lower than published
-    e5 = Event(name="Zeta", date="2025-09-12", status="drafting")    # same date/status, sorted by name (Delta < Zeta)
+    e1 = Event(name="Alpha", date="2025-09-10", status="drafting")  # older date
+    e2 = Event(name="Beta", date="2025-09-12", status="published")  # newer, high status
+    e3 = Event(
+        name="Gamma", date="2025-09-12", status="completed"
+    )  # same date, lower status
+    e4 = Event(
+        name="Delta", date="2025-09-12", status="drafting"
+    )  # same date, lower than published
+    e5 = Event(
+        name="Zeta", date="2025-09-12", status="drafting"
+    )  # same date/status, sorted by name (Delta < Zeta)
 
     session.add_all([e1, e2, e3, e4, e5])
     session.commit()

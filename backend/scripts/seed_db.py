@@ -72,13 +72,15 @@ def run():
 
         # Reset sequences so autoincrement picks up after max IDs
         for table in ["events", "entrants", "matches"]:
-            seq_sql = text(f"""
+            seq_sql = text(
+                f"""
                 SELECT setval(
                   pg_get_serial_sequence('{table}', 'id'),
                   COALESCE((SELECT MAX(id) FROM {table}), 1) + 1,
                   false
                 )
-            """)
+            """
+            )
             db.session.execute(seq_sql)
 
         db.session.commit()
