@@ -2,14 +2,14 @@
 // Purpose: Centralize API base URL and inject JWT auth headers into fetch calls.
 // Notes:
 // - Wraps fetch calls with Authorization header if token exists.
-// - Exports helper for DELETE entrant (and more can use apiFetch).
+// - Exports helper for DELETE entrant (others can reuse apiFetch).
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.REACT_APP_API_URL || "http://localhost:5500";
 
 // Get headers including Authorization if token exists
 function getAuthHeaders() {
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem("token"); // matches AuthContext localStorage key
   return token
     ? {
         "Content-Type": "application/json",
@@ -42,5 +42,3 @@ export async function apiFetch(endpoint, options = {}) {
 export async function deleteEntrant(entrantId) {
   return apiFetch(`/entrants/${entrantId}`, { method: "DELETE" });
 }
-
-export { API_BASE_URL };
