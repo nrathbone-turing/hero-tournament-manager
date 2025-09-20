@@ -2,7 +2,7 @@
 // Purpose: Login form for existing users with Material UI styling.
 // Notes:
 // - Redirects to / after successful login.
-// - Stores access_token via useAuth (which uses apiFetch).
+// - Stores access_token via useAuth (which persists to localStorage).
 
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -26,10 +26,10 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(email, password); // apiFetch inside
+      await login(email, password); // handled in AuthContext
       navigate("/");
     } catch (err) {
-      setMessage(err.message);
+      setMessage(err.message || "Login failed");
     }
   };
 
