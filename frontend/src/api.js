@@ -1,7 +1,7 @@
 // File: frontend/src/api.js
 // Purpose: Centralize API base URL and inject JWT auth headers into fetch calls.
 // Notes:
-// - Wraps fetch calls with Authorization header if token exists.
+// - Wraps fetch calls with Authorization header if token exists (except login/signup).
 // - On 401 Unauthorized, clears token and redirects to /login.
 // - Exports helper for DELETE entrant (others can reuse apiFetch).
 
@@ -21,10 +21,14 @@ function getAuthHeaders() {
 
 // Generic fetch wrapper
 export async function apiFetch(endpoint, options = {}) {
+  const isAuthEndpoint =
+    endpoint === "/login" || endpoint === "/signup";
+
   const res = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
-      ...getAuthHeaders(),
+      "Content-Type": "application/json",
+      ...(isAuthEndpoint ? {} : getAuthHeaders()),
       ...(options.headers || {}),
     },
   });
