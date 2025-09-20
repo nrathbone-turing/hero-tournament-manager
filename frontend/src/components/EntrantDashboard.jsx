@@ -4,6 +4,7 @@
 // - Prevents duplicate submissions.
 // - Inline error feedback with role="alert".
 // - Clears errors after success.
+// - Adds debug logging for payload.
 
 import { useState } from "react";
 import { apiFetch } from "../api";
@@ -26,15 +27,19 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
     if (submitting) return;
     setSubmitting(true);
 
+    const payload = {
+      ...formData,
+      event_id: Number(eventId),
+      dropped: false, // always seed with dropped = false
+    };
+
+    console.log("🔎 EntrantDashboard submitting:", payload);
+
     try {
       await apiFetch("/entrants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          event_id: Number(eventId),
-          dropped: false, // always seed with dropped = false
-        }),
+        body: JSON.stringify(payload),
       });
 
       setFormData({ name: "", alias: "" });
