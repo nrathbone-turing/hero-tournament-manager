@@ -1,11 +1,8 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Manage list of events and allow event creation.
 // Notes:
-// - Includes defensive error handling + 500 redirect.
-// - Restores hero placeholders + centered form + scrollable list.
-// - Uses FormControl + InputLabel + Select for cleaner dropdown.
-// - Supports entrant_count or entrants.length for flexibility.
-// - Adds debug logs for fetch + create flows.
+// - Multi-level sorting handled in backend.
+// - Exposes data-testid="event-name" for clean test querying.
 
 import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate } from "react-router-dom";
@@ -42,12 +39,10 @@ export default function EventDashboard() {
 
   async function fetchEvents() {
     try {
-      console.log("🔎 Fetching events...");
       const data = await apiFetch("/events");
       setEvents(data);
       setFetchError(null);
     } catch (err) {
-      console.error("❌ Failed to fetch events:", err.message);
       if (err.message.includes("500")) {
         setRedirect500(true);
         return;
@@ -65,7 +60,6 @@ export default function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      console.log("🔎 Creating event with data:", formData);
       const newEvent = await apiFetch("/events", {
         method: "POST",
         body: JSON.stringify(formData),
@@ -74,8 +68,7 @@ export default function EventDashboard() {
       setEvents([...events, newEvent]);
       setFormData({ name: "", date: "", status: "drafting" });
       setCreateError(null);
-    } catch (err) {
-      console.error("❌ Failed to create event:", err.message);
+    } catch {
       setCreateError("Failed to create event");
     }
   }
@@ -200,7 +193,7 @@ export default function EventDashboard() {
         <Paper
           data-testid="event-list"
           sx={{
-            maxHeight: 300, // ~5 rows visible
+            maxHeight: 300,
             overflowY: "auto",
             "&::-webkit-scrollbar": { width: "10px" },
             "&::-webkit-scrollbar-track": {
@@ -228,7 +221,10 @@ export default function EventDashboard() {
               >
                 <ListItemText
                   primary={e.name}
-                  primaryTypographyProps={{ component: "span" }}
+                  primaryTypographyProps={{
+                    component: "span",
+                    "data-testid": "event-name",
+                  }}
                   secondary={`${e.date} (${e.status}) — ${
                     e.entrant_count ?? e.entrants?.length ?? 0
                   } entrants`}
