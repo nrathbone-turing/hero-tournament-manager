@@ -3,7 +3,7 @@
 // Notes:
 // - Provides default jest.fn for fetch.
 // - Includes helpers for success/failure responses.
-// - Suppresses noisy warnings.
+// - Suppresses noisy logs by default, with DEBUG_LOGS / VERBOSE_API_LOGS toggles.
 
 import "@testing-library/jest-dom";
 
@@ -27,6 +27,8 @@ export const mockEventsList = [
 export function mockFetchSuccess(data = mockEventsList) {
   global.fetch.mockResolvedValueOnce({
     ok: true,
+    status: 200,
+    statusText: "OK",
     json: async () => data,
   });
 }
@@ -34,28 +36,48 @@ export function mockFetchSuccess(data = mockEventsList) {
 export function mockFetchFailure(error = { error: "API Error" }) {
   global.fetch.mockResolvedValueOnce({
     ok: false,
+    status: 500,
+    statusText: "Internal Server Error",
     json: async () => error,
   });
 }
 
-// Silence act / router / MUI warnings
-const originalError = console.error;
-const originalWarn = console.warn;
+// --- Log suppression with toggles ---
+if (process.env.NODE_ENV === "test") {
+  const showAll = process.env.DEBUG_LOGS === "true";
+  const showApi = process.env.VERBOSE_API_LOGS === "true";
 
-beforeAll(() => {
-  console.error = (...args) => {
-    if (/apiFetch failed/.test(args[0])) return;
-    if (/not wrapped in act/.test(args[0])) return;
-    if (/MUI: The prop `xs` of `Grid` is deprecated/.test(args[0])) return;
-    originalError.call(console, ...args);
-  };
-  console.warn = (...args) => {
-    if (/React Router Future Flag Warning/.test(args[0])) return;
-    originalWarn.call(console, ...args);
-  };
-});
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
 
-afterAll(() => {
-  console.error = originalError;
-  console.warn = originalWarn;
-});
+  beforeAll(() => {
+    console.log = (...args) => {
+      if (showAll) return originalLog(...args);
+      if (showApi && /🔎 apiFetch:/.test(args[0])) return originalLog(...args);
+      if (/🔎/.test(args[0])) return; // suppress other debug
+      originalLog(...args);
+    };
+
+    console.error = (...args) => {
+      if (showAll) return originalError(...args);
+      if (/❌/.test(args[0])) return; // suppress apiFetch error logs
+      if (/not wrapped in act/.test(args[0])) return;
+      if (/MUI: The prop `xs` of `Grid` is deprecated/.test(args[0])) return;
+      originalError(...args);
+    };
+
+    console.warn = (...args) => {
+      if (showAll) return originalWarn(...args);
+      if (/⚠️/.test(args[0])) return; // suppress invalid winner_id etc.
+      if (/React Router Future Flag Warning/.test(args[0])) return;
+      originalWarn(...args);
+    };
+  });
+
+  afterAll(() => {
+    console.log = originalLog;
+    console.error = originalError;
+    console.warn = originalWarn;
+  });
+}
