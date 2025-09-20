@@ -1,20 +1,17 @@
 # File: backend/app.py
 # Purpose: Flask application entry point.
 # Notes:
-# - Initializes Flask app and SQLAlchemy.
+# - Initializes Flask app, database, and JWT.
 # - Registers Blueprints for API routes.
-# - Normalizes JWT errors to return 401 Unauthorized instead of 422.
-# - Adds short-lived JWT expiry and an in-memory blocklist for logout/revocation.
+# - Centralizes config in backend/config.py.
 
-import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
-from datetime import timedelta
-from dotenv import load_dotenv
 
-from backend.database import db, init_db
+from backend.config import Config
+from backend.database import db
 from backend.routes.events import bp as events_bp
 from backend.routes.entrants import bp as entrants_bp
 from backend.routes.matches import bp as matches_bp
@@ -22,26 +19,14 @@ from backend.routes.auth import auth_bp
 from backend.blocklist import jwt_blocklist
 
 
-def create_app():
-    load_dotenv()
+def create_app(config_class=Config):
     app = Flask(__name__)
-    
-    # Use DATABASE_URL from .env if available, else fallback to SQLite
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///tournaments.db"
-    )
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-key")
-    app.config["JWT_TOKEN_LOCATION"] = ["headers"]
-    app.config["JWT_HEADER_TYPE"] = "Bearer"
-    app.config["JWT_ALGORITHM"] = "HS256"
+    app.config.from_object(config_class)
 
-    # Short-lived tokens for testing expiry
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(seconds=1)
-
+    # Extensions
     db.init_app(app)
-    CORS(app)  # allow frontend on localhost:3000 to call
     Migrate(app, db)
+    CORS(app, origins=[Config.FRONTEND_URL])
     jwt = JWTManager(app)
 
     # ------------------------
@@ -63,14 +48,13 @@ def create_app():
     def handle_revoked_token(jwt_header, jwt_payload):
         return jsonify(error="Invalid or expired token"), 401
 
-    # ------------------------
-    # Blocklist check for revoked tokens
-    # ------------------------
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
         return jwt_payload["jti"] in jwt_blocklist
 
+    # ------------------------
     # Register Blueprints
+    # ------------------------
     app.register_blueprint(events_bp)
     app.register_blueprint(entrants_bp)
     app.register_blueprint(matches_bp)
