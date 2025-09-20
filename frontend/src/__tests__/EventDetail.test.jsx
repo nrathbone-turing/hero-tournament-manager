@@ -128,7 +128,6 @@ describe("EventDetail", () => {
     await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));  
   });
 
-
   test("renders dropped entrant as placeholder", async () => {
     mockFetchSuccess({
       id: 1,
@@ -147,7 +146,6 @@ describe("EventDetail", () => {
     expect(screen.getByText("-")).toBeInTheDocument(); // alias column shows dash
   });
 });
-
 
 describe("EventDetail - edge cases", () => {
   test("remove entrant failure shows alert", async () => {

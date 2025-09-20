@@ -11,7 +11,7 @@ import { mockFetchSuccess, mockFetchFailure } from "../setupTests";
 
 describe("MatchDashboard", () => {
   test("renders Add Match form", () => {
-    renderWithRouter(<MatchDashboard eventId={1} />);
+    renderWithRouter(<MatchDashboard eventId={1} />, { route: "/" });
     expect(
       screen.getByRole("heading", { name: /add match/i }),
     ).toBeInTheDocument();
@@ -29,7 +29,9 @@ describe("MatchDashboard", () => {
       event_id: 1,
     });
 
-    renderWithRouter(<MatchDashboard eventId={1} onMatchAdded={mockOnAdded} />);
+    renderWithRouter(<MatchDashboard eventId={1} onMatchAdded={mockOnAdded} />, {
+      route: "/",
+    });
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
@@ -41,7 +43,7 @@ describe("MatchDashboard", () => {
   });
 
   test("shows error when winner_id does not match entrants", async () => {
-    renderWithRouter(<MatchDashboard eventId={1} />);
+    renderWithRouter(<MatchDashboard eventId={1} />, { route: "/" });
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");
@@ -56,7 +58,7 @@ describe("MatchDashboard", () => {
 
   test("shows error on API failure", async () => {
     mockFetchFailure();
-    renderWithRouter(<MatchDashboard eventId={1} />);
+    renderWithRouter(<MatchDashboard eventId={1} />, { route: "/" });
     await userEvent.type(screen.getByLabelText(/round/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 1 id/i), "1");
     await userEvent.type(screen.getByLabelText(/entrant 2 id/i), "2");

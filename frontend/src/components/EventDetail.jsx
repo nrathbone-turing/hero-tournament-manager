@@ -5,6 +5,7 @@
 // - Handles soft-deleted entrants by showing "Dropped" instead of crashing.
 // - Provides inline error feedback with role="alert".
 // - Redirects to /404 or /500 for test-friendly error handling.
+// - Adds debug logging for API flows.
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Navigate, Link as RouterLink } from "react-router-dom";
@@ -47,10 +48,12 @@ export default function EventDetail() {
   const fetchEvent = useCallback(async () => {
     try {
       setLoading(true);
+      console.log("🔎 Fetching event:", id);
       const data = await apiFetch(`/events/${id}`);
       setEvent(data);
       setError(null);
     } catch (err) {
+      console.error("❌ Failed to fetch event:", id, err.message);
       if (err.message.includes("404")) {
         setRedirect404(true);
         return;
@@ -72,10 +75,12 @@ export default function EventDetail() {
   async function handleRemoveEntrant(e) {
     e.preventDefault();
     try {
+      console.log("🗑 Removing entrant:", removeId);
       await apiFetch(`/entrants/${removeId}`, { method: "DELETE" });
       setRemoveId("");
       fetchEvent();
-    } catch {
+    } catch (err) {
+      console.error("❌ Failed to remove entrant:", removeId, err.message);
       setError("Failed to remove entrant");
     }
   }
@@ -86,13 +91,15 @@ export default function EventDetail() {
     const prevStatus = event.status;
 
     try {
+      console.log("🔄 Updating event status:", { id, newStatus });
       await apiFetch(`/events/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
       await fetchEvent();
-    } catch {
+    } catch (err) {
+      console.error("❌ Failed to update status:", err.message);
       setError("Failed to update status");
       setEvent({ ...event, status: prevStatus });
     }
