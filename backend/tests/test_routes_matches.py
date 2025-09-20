@@ -3,6 +3,7 @@
 # Notes:
 # - Uses helper fixture seed_event_with_entrants from conftest.py.
 # - Covers create, read, update, and delete for Match.
+# - Includes validation for winner_id correctness.
 
 from backend.models import Match, db
 from sqlalchemy import select
@@ -20,10 +21,31 @@ def test_create_match(client, seed_event_with_entrants, auth_header):
             "scores": "2-1",
             "winner_id": e1.id,
         },
-        headers=auth_header
+        headers=auth_header,
     )
     assert response.status_code == 201
-    assert response.get_json()["winner_id"] == e1.id
+    data = response.get_json()
+    assert data["winner_id"] == e1.id
+    assert data["entrant1_id"] == e1.id
+    assert data["entrant2_id"] == e2.id
+
+
+def test_create_match_rejects_invalid_winner(client, seed_event_with_entrants, auth_header):
+    event, e1, e2 = seed_event_with_entrants()
+    resp = client.post(
+        "/matches",
+        json={
+            "event_id": event.id,
+            "round": 1,
+            "entrant1_id": e1.id,
+            "entrant2_id": e2.id,
+            "scores": "2-1",
+            "winner_id": 999,  # not one of the entrants
+        },
+        headers=auth_header,
+    )
+    assert resp.status_code == 400
+    assert "winner id must match" in resp.get_json()["error"].lower()
 
 
 def test_get_matches(client, seed_event_with_entrants, session):
@@ -41,7 +63,8 @@ def test_get_matches(client, seed_event_with_entrants, session):
 
     response = client.get("/matches")
     assert response.status_code == 200
-    assert any(m["scores"] == "1-0" for m in response.get_json())
+    matches = response.get_json()
+    assert any(m["scores"] == "1-0" for m in matches)
 
 
 def test_update_match(client, seed_event_with_entrants, session, auth_header):
@@ -52,7 +75,9 @@ def test_update_match(client, seed_event_with_entrants, session, auth_header):
     session.add(match)
     session.commit()
 
-    response = client.put(f"/matches/{match.id}", json={"scores": "2-0"}, headers=auth_header)
+    response = client.put(
+        f"/matches/{match.id}", json={"scores": "2-0"}, headers=auth_header
+    )
     assert response.status_code == 200
     assert response.get_json()["scores"] == "2-0"
 
@@ -77,10 +102,13 @@ def test_delete_match(client, seed_event_with_entrants, session, auth_header):
 
 
 def test_create_event_requires_auth(client):
-    resp = client.post("/events", json={
-        "name": "Fail Cup",
-        "date": "2025-09-21",
-        "rules": "Bo3",
-        "status": "drafting",
-    })
+    resp = client.post(
+        "/events",
+        json={
+            "name": "Fail Cup",
+            "date": "2025-09-21",
+            "rules": "Bo3",
+            "status": "drafting",
+        },
+    )
     assert resp.status_code == 401
