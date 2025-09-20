@@ -26,7 +26,7 @@ def test_create_match(client, seed_event_with_entrants, auth_header):
     assert response.get_json()["winner_id"] == e1.id
 
 
-def test_get_matches(client, seed_event_with_entrants, session):
+def test_get_matches(client, seed_event_with_entrants, session, auth_header):
     event, e1, e2 = seed_event_with_entrants()
     match = Match(
         event_id=event.id,
@@ -39,7 +39,7 @@ def test_get_matches(client, seed_event_with_entrants, session):
     session.add(match)
     session.commit()
 
-    response = client.get("/matches")
+    response = client.get("/matches", headers=auth_header)
     assert response.status_code == 200
     assert any(m["scores"] == "1-0" for m in response.get_json())
 
@@ -52,7 +52,9 @@ def test_update_match(client, seed_event_with_entrants, session, auth_header):
     session.add(match)
     session.commit()
 
-    response = client.put(f"/matches/{match.id}", json={"scores": "2-0"}, headers=auth_header)
+    response = client.put(
+        f"/matches/{match.id}", json={"scores": "2-0"}, headers=auth_header
+    )
     assert response.status_code == 200
     assert response.get_json()["scores"] == "2-0"
 
