@@ -43,6 +43,7 @@ def get_events():
         )
         .outerjoin(Entrant, Entrant.event_id == Event.id)
         .group_by(Event.id)
+        .order_by(Event.date.desc())
         .all()
     )
 
