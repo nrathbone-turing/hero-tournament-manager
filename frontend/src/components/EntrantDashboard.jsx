@@ -6,7 +6,7 @@
 // - Clears errors after success.
 
 import { useState } from "react";
-import { API_BASE_URL } from "../api";
+import { apiFetch } from "../api";
 import {
   Card,
   CardContent,
@@ -27,17 +27,16 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
     setSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/entrants`, {
+      await apiFetch("/entrants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
-      if (!res.ok) throw new Error("Failed to add entrant");
 
       setFormData({ name: "", alias: "" });
       setError(null);
       if (typeof onEntrantAdded === "function") onEntrantAdded();
-    } catch (err) {
+    } catch {
       setError("Failed to add entrant");
     } finally {
       setSubmitting(false);
