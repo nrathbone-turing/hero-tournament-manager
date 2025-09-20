@@ -12,7 +12,7 @@ import { mockFetchSuccess } from "../setupTests";
 
 describe("EntrantDashboard", () => {
   test("renders form", () => {
-    renderWithRouter(<EntrantDashboard eventId={1} />);
+    renderWithRouter(<EntrantDashboard eventId={1} />, { route: "/" });
     expect(
       screen.getByRole("heading", { name: /add entrant/i }),
     ).toBeInTheDocument();
@@ -30,6 +30,7 @@ describe("EntrantDashboard", () => {
 
     renderWithRouter(
       <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
+      { route: "/" },
     );
     await userEvent.type(screen.getByLabelText(/name/i), "Wonder Woman");
     await userEvent.type(screen.getByLabelText(/alias/i), "Amazon Princess");
@@ -41,7 +42,7 @@ describe("EntrantDashboard", () => {
 
 describe("EntrantDashboard - edge cases", () => {
   test("blocks submission when fields are empty", async () => {
-    renderWithRouter(<EntrantDashboard eventId={1} />);
+    renderWithRouter(<EntrantDashboard eventId={1} />, { route: "/" });
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
     // expect inline error message
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -51,7 +52,7 @@ describe("EntrantDashboard - edge cases", () => {
 
   test("shows error when API call fails", async () => {
     global.fetch.mockResolvedValueOnce({ ok: false });
-    renderWithRouter(<EntrantDashboard eventId={1} />);
+    renderWithRouter(<EntrantDashboard eventId={1} />, { route: "/" });
     await userEvent.type(screen.getByLabelText(/name/i), "ErrorHero");
     await userEvent.type(screen.getByLabelText(/alias/i), "Oops");
     await userEvent.click(screen.getByRole("button", { name: /add entrant/i }));
@@ -69,6 +70,7 @@ describe("EntrantDashboard - edge cases", () => {
 
     renderWithRouter(
       <EntrantDashboard eventId={1} onEntrantAdded={mockOnAdded} />,
+      { route: "/" },
     );
     await userEvent.type(screen.getByLabelText(/name/i), "Flash");
     await userEvent.type(screen.getByLabelText(/alias/i), "Barry");

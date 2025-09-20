@@ -13,7 +13,7 @@ import { mockFetchSuccess } from "../setupTests";
 describe("EventDashboard", () => {
   test("renders events heading", async () => {
     mockFetchSuccess();
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     expect(
       await screen.findByRole("heading", { name: /events/i }),
     ).toBeInTheDocument();
@@ -35,7 +35,7 @@ describe("EventDashboard", () => {
         entrants: Array(5).fill({ id: 2, name: "Villain" }),
       },
     ]);
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     expect(await screen.findByText(/3 entrants/i)).toBeInTheDocument();
     expect(await screen.findByText(/5 entrants/i)).toBeInTheDocument();
   });
@@ -59,7 +59,7 @@ describe("EventDashboard", () => {
       },
     ]); // reload
 
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     await userEvent.type(screen.getByLabelText(/name/i), "Test Event");
     await userEvent.type(screen.getByLabelText(/date/i), "2025-09-20");
     await userEvent.click(
@@ -73,12 +73,12 @@ describe("EventDashboard", () => {
 describe("EventDashboard - edge cases", () => {
   test("shows placeholder when no events exist", async () => {
     global.fetch.mockResolvedValueOnce({ ok: true, json: async () => [] });
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     expect(await screen.findByText(/no events yet/i)).toBeInTheDocument();
   });
 
   test("prevents event creation with missing fields", async () => {
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     await userEvent.click(
       screen.getByRole("button", { name: /create event/i }),
     );
@@ -90,7 +90,7 @@ describe("EventDashboard - edge cases", () => {
       .mockResolvedValueOnce({ ok: false }) // fetch events
       .mockResolvedValueOnce({ ok: false }); // create event
 
-    renderWithRouter(<EventDashboard />);
+    renderWithRouter(<EventDashboard />, { route: "/" });
     await userEvent.type(screen.getByLabelText(/event name/i), "Broken Event");
     await userEvent.click(
       screen.getByRole("button", { name: /create event/i }),
