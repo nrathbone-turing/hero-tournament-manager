@@ -2,7 +2,7 @@
 // Purpose: Signup form for new users with Material UI styling.
 // Notes:
 // - Redirects to / after successful signup.
-// - Uses MUI Container, Paper, TextField, and Button for consistent design.
+// - Stores access_token via useAuth (which uses apiFetch).
 
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -27,7 +27,7 @@ export default function SignupForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await signup(username, email, password);
+      await signup(username, email, password); // apiFetch inside
       setMessage(`Signed up as ${username}`);
       setTimeout(() => navigate("/"), 800);
     } catch (err) {
