@@ -6,7 +6,7 @@
 // - Clears errors after success.
 
 import { useState } from "react";
-import { API_BASE_URL } from "../api";
+import { apiFetch } from "../api";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 
 export default function MatchDashboard({ eventId, onMatchAdded }) {
-  const [formData, setFormData] = useState({
+ const [formData, setFormData] = useState({
     round: "",
     entrant1_id: "",
     entrant2_id: "",
@@ -33,12 +33,10 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     setSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE_URL}/matches`, {
+      await apiFetch("/matches", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, event_id: eventId }),
       });
-      if (!res.ok) throw new Error("Failed to add match");
 
       setFormData({
         round: "",
@@ -49,7 +47,7 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
       });
       setError(null);
       if (typeof onMatchAdded === "function") onMatchAdded();
-    } catch (err) {
+    } catch {
       setError("Failed to add match");
     } finally {
       setSubmitting(false);

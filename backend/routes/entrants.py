@@ -27,6 +27,7 @@ def create_entrant():
 
 
 @bp.route("", methods=["GET"])
+@jwt_required()
 def get_entrants():
     """Retrieve all Entrants (optionally filter by event_id)."""
     event_id = request.args.get("event_id", type=int)
