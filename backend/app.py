@@ -76,8 +76,8 @@ def create_app():
     app.register_blueprint(matches_bp)
     app.register_blueprint(auth_bp)
 
-    with app.app_context():
-        init_db()
+    # with app.app_context():
+    #     init_db()
 
     return app
 
