@@ -26,7 +26,16 @@ def create_app(config_class=Config):
     # Extensions
     db.init_app(app)
     Migrate(app, db)
-    CORS(app, origins=[Config.FRONTEND_URL])
+
+    # Explicit CORS config
+    CORS(
+        app,
+        origins=[Config.FRONTEND_URL],
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    )
+
     jwt = JWTManager(app)
 
     # ------------------------
