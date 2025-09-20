@@ -1,10 +1,11 @@
 // File: frontend/src/components/EventDashboard.jsx
 // Purpose: Manage list of events and allow event creation.
 // Notes:
-// - Keeps updated error handling + 404/500 redirect logic from current version.
-// - Restores UI from old version: hero placeholders, centered form, scrollable event list.
+// - Includes defensive error handling + 500 redirect.
+// - Restores hero placeholders + centered form + scrollable list.
 // - Uses FormControl + InputLabel + Select for cleaner dropdown.
 // - Supports entrant_count or entrants.length for flexibility.
+// - Adds debug logs for fetch + create flows.
 
 import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate } from "react-router-dom";
@@ -41,11 +42,12 @@ export default function EventDashboard() {
 
   async function fetchEvents() {
     try {
+      console.log("🔎 Fetching events...");
       const data = await apiFetch("/events");
-
       setEvents(data);
       setFetchError(null);
     } catch (err) {
+      console.error("❌ Failed to fetch events:", err.message);
       if (err.message.includes("500")) {
         setRedirect500(true);
         return;
@@ -63,15 +65,17 @@ export default function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
+      console.log("🔎 Creating event with data:", formData);
       const newEvent = await apiFetch("/events", {
-                  method: "POST",
+        method: "POST",
         body: JSON.stringify(formData),
       });
 
       setEvents([...events, newEvent]);
       setFormData({ name: "", date: "", status: "drafting" });
       setCreateError(null);
-    } catch {
+    } catch (err) {
+      console.error("❌ Failed to create event:", err.message);
       setCreateError("Failed to create event");
     }
   }
