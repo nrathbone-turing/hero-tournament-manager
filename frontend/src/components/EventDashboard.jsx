@@ -2,6 +2,7 @@
 // Purpose: Manage list of events and allow event creation.
 // Notes:
 // - Multi-level sorting handled in backend.
+// - Hero image placeholders replaced with static hero/villain images.
 // - Exposes data-testid="event-name" for clean test querying.
 
 import { useEffect, useState } from "react";
@@ -83,20 +84,23 @@ export default function EventDashboard() {
 
       {/* Hero images + form */}
       <Box sx={{ display: "flex", gap: 2, mb: 4 }}>
+        {/* Hero side */}
         <Paper
-          data-testid="hero-image-placeholder"
           sx={{
             flex: 1,
             height: 200,
-            bgcolor: "grey.200",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "hidden",
+            borderRadius: 2,
           }}
         >
-          Hero Image Placeholder
+          <img
+            src="https://placehold.co/600x400/cccccc/000000?text=Hero"
+            alt="Hero placeholder"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         </Paper>
 
+        {/* Form */}
         <Box
           component="form"
           role="form"
@@ -155,18 +159,20 @@ export default function EventDashboard() {
           )}
         </Box>
 
+        {/* Villain side */}
         <Paper
-          data-testid="hero-image-placeholder"
           sx={{
             flex: 1,
             height: 200,
-            bgcolor: "grey.200",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            overflow: "hidden",
+            borderRadius: 2,
           }}
         >
-          Hero Image Placeholder
+          <img
+            src="https://placehold.co/600x400/cccccc/000000?text=Villain"
+            alt="Villain placeholder"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         </Paper>
       </Box>
 
@@ -181,13 +187,9 @@ export default function EventDashboard() {
         </Typography>
       ) : events.length === 0 ? (
         <>
-          <Paper
-            data-testid="hero-image-placeholder"
-            sx={{ p: 4, textAlign: "center" }}
-          >
-            Hero Image Placeholder
+          <Paper sx={{ p: 4, textAlign: "center" }}>
+            <Typography>No events yet</Typography>
           </Paper>
-          <Typography align="center">No events yet</Typography>
         </>
       ) : (
         <Paper
