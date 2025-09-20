@@ -127,7 +127,27 @@ describe("EventDetail", () => {
     await userEvent.click(await screen.findByRole("option", { name: /published/i }));
     await waitFor(() => expect(statusSelect).toHaveTextContent(/published/i));  
   });
+
+
+  test("renders dropped entrant as placeholder", async () => {
+    mockFetchSuccess({
+      id: 1,
+      name: "Hero Cup",
+      date: "2025-09-12",
+      status: "published",
+      entrants: [
+        { id: 5, name: "Dropped", alias: null, event_id: 1, dropped: true },
+      ],
+      matches: [],
+    });
+
+    renderWithRouter(<EventDetail />, { route: "/events/1" });
+
+    expect(await screen.findByText(/Dropped/)).toBeInTheDocument();
+    expect(screen.getByText("-")).toBeInTheDocument(); // alias column shows dash
+  });
 });
+
 
 describe("EventDetail - edge cases", () => {
   test("remove entrant failure shows alert", async () => {
