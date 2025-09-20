@@ -1,8 +1,8 @@
 // File: frontend/src/context/AuthContext.js
 // Purpose: Provides authentication context and helper functions.
 // Notes:
-// - Stores current user and JWT token.
-// - Exposes login, signup, and logout methods.
+// - Signup only creates a user, does not log them in.
+// - Login issues and stores JWT token.
 // - Persists token in localStorage for reloads.
 // - Provides isAuthenticated flag.
 
@@ -27,17 +27,16 @@ export default function AuthProvider({ children }) {
     }
   }, [token]);
 
+  // Signup only creates a user, no token
   const signup = async (username, email, password) => {
     const data = await apiFetch("/signup", {
       method: "POST",
       body: JSON.stringify({ username, email, password }),
     });
-    const newToken = data.access_token || data.token;
-    if (newToken) setToken(newToken);
-    setUser({ username, email });
-    return data;
+    return data; // let the component handle redirect to /login
   };
 
+  // Login sets token + user
   const login = async (email, password) => {
     const data = await apiFetch("/login", {
       method: "POST",
