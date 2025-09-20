@@ -25,6 +25,7 @@ describe("EntrantDashboard", () => {
       name: "Wonder Woman",
       alias: "Amazon Princess",
       event_id: 1,
+      dropped: false,
     });
 
     renderWithRouter(

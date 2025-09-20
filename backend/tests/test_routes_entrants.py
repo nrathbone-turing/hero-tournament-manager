@@ -4,7 +4,7 @@
 # - Uses helpers from conftest.py to create Events.
 # - Covers create, read, update, and delete.
 
-from backend.models import Entrant, db
+from backend.models import Entrant, Match, db
 from sqlalchemy import select
 
 
@@ -47,20 +47,38 @@ def test_update_entrant(client, create_event, session, auth_header):
     assert result.alias == "Updated Alias"
 
 
-def test_delete_entrant(client, create_event, session, auth_header):
+def test_delete_entrant_hard_delete_when_no_matches(client, create_event, session, auth_header):
     event = create_event()
-    entrant = Entrant(name="Delete Me", alias="Temp", event_id=event.id)
+    entrant = Entrant(name="Deleteable", alias="Temp", event_id=event.id)
     session.add(entrant)
     session.commit()
 
     response = client.delete(f"/entrants/{entrant.id}", headers=auth_header)
     assert response.status_code == 204
-    assert (
-        db.session.execute(
-            select(Entrant).filter_by(id=entrant.id)
-        ).scalar_one_or_none()
-        is None
+    assert db.session.get(Entrant, entrant.id) is None
+
+
+def test_delete_entrant_soft_delete_when_in_match(client, seed_event_with_entrants, session, auth_header):
+    event, e1, e2 = seed_event_with_entrants()
+    # Add a match involving e1
+    match = Match(
+        event_id=event.id, round=1, entrant1_id=e1.id, entrant2_id=e2.id, scores="1-0", winner_id=e1.id
     )
+    session.add(match)
+    session.commit()
+
+    response = client.delete(f"/entrants/{e1.id}", headers=auth_header)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["dropped"] is True
+    assert data["name"] == "Dropped"
+
+    # Entrant should still exist in DB but marked as dropped
+    updated = db.session.get(Entrant, e1.id)
+    assert updated.dropped is True
+    assert updated.name == "Dropped"
+    # Match should still reference this entrant ID
+    assert db.session.get(Match, match.id).entrant1_id == e1.id
 
 
 def test_create_event_requires_auth(client):

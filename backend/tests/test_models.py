@@ -101,3 +101,19 @@ def test_match_to_dict_with_missing_winner(session):
     session.commit()
     data = match.to_dict()
     assert data["winner_id"] is None
+
+
+def test_soft_delete_marks_entrant_as_dropped(session):
+    event = Event(name="Drop Cup", status="drafting")
+    entrant = Entrant(name="TempHero", alias="Alias", event=event)
+    session.add_all([event, entrant])
+    session.commit()
+
+    # Call the model method directly
+    entrant.soft_delete()
+    session.commit()
+
+    refreshed = session.get(Entrant, entrant.id)
+    assert refreshed.dropped is True
+    assert refreshed.name == "Dropped"
+    assert refreshed.alias is None

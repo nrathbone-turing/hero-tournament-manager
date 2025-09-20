@@ -1,9 +1,8 @@
+"""Baseline schema with entrants.dropped
 
-"""baseline postgres schema
-
-Revision ID: 506c4d10e458
+Revision ID: 490e61ea68b9
 Revises: 
-Create Date: 2025-09-20 11:37:35.115653
+Create Date: 2025-09-20 12:47:41.407203
 
 """
 from alembic import op
@@ -11,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '506c4d10e458'
+revision = '490e61ea68b9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -42,6 +41,7 @@ def upgrade():
     sa.Column('name', sa.String(length=80), nullable=False),
     sa.Column('alias', sa.String(length=80), nullable=True),
     sa.Column('event_id', sa.Integer(), nullable=False),
+    sa.Column('dropped', sa.Boolean(), nullable=False),
     sa.ForeignKeyConstraint(['event_id'], ['events.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

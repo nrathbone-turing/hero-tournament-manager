@@ -58,6 +58,13 @@ def update_match(match_id):
 def delete_match(match_id):
     """Delete a Match by ID."""
     match = Match.query.get_or_404(match_id)
-    db.session.delete(match)
-    db.session.commit()
-    return "", 204
+
+    try:
+        db.session.delete(match)
+        db.session.commit()
+        print(f"✅ Deleted match {match_id}")
+        return "", 204
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error deleting match {match_id}: {e}")
+        return jsonify(error="Failed to delete match"), 500
