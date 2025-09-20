@@ -52,8 +52,15 @@ def update_entrant(entrant_id):
 @bp.route("/<int:entrant_id>", methods=["DELETE"])
 @jwt_required()
 def delete_entrant(entrant_id):
-    """Delete an Entrant by ID."""
+    """Soft-delete an Entrant by ID (mark as dropped)."""
     entrant = Entrant.query.get_or_404(entrant_id)
-    db.session.delete(entrant)
-    db.session.commit()
-    return "", 204
+
+    try:
+        entrant.soft_delete()
+        db.session.commit()
+        print(f"⚠️ Entrant {entrant_id} marked as dropped")
+        return jsonify(entrant.to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error soft-deleting entrant {entrant_id}: {e}")
+        return jsonify(error="Failed to drop entrant"), 500
