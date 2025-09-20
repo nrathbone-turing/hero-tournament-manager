@@ -1,6 +1,7 @@
 // File: frontend/src/components/EventDetail.jsx
 // Purpose: Detailed view of a single event with entrants, matches, and status controls.
 // Notes:
+// - Fixes status update PUT request by including status in JSON body.
 // - Handles soft-deleted entrants by showing "Dropped" instead of crashing.
 // - Provides inline error feedback with role="alert".
 // - Redirects to /404 or /500 for test-friendly error handling.
@@ -79,13 +80,16 @@ export default function EventDetail() {
     }
   }
 
-  async function handleStatusChange(newStatus) {
+  async function handleStatusChange(e) {
     if (!event) return;
+    const newStatus = e.target.value;
     const prevStatus = event.status;
+
     try {
       await apiFetch(`/events/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
       });
       await fetchEvent();
     } catch {
