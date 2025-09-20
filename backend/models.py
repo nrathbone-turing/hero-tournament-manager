@@ -2,11 +2,12 @@
 # Purpose: Defines SQLAlchemy models for Hero Tournament Manager with validations.
 # Notes:
 # - Enforces DB-level constraints: non-null names, valid statuses, sane match setup.
+# - Uses "soft delete" for entrants (mark as dropped instead of hard delete).
 # - Includes to_dict() methods with optional related info.
 
-from sqlalchemy import Enum, CheckConstraint, Column, Integer, String
+from sqlalchemy import Enum, CheckConstraint
 from werkzeug.security import generate_password_hash, check_password_hash
-from backend.database import Base, db
+from backend.database import db
 
 # Allowed event statuses
 EVENT_STATUSES = ("drafting", "published", "cancelled", "completed")
@@ -57,11 +58,19 @@ class Entrant(db.Model):
     name = db.Column(db.String(80), nullable=False)
     alias = db.Column(db.String(80), nullable=True)
     event_id = db.Column(db.Integer, db.ForeignKey("events.id"), nullable=False)
+    dropped = db.Column(db.Boolean, default=False, nullable=False)
 
     event = db.relationship("Event", back_populates="entrants")
 
     def __repr__(self):
-        return f"<Entrant {self.name} ({self.alias})>"
+        status = "dropped" if self.dropped else "active"
+        return f"<Entrant {self.name} ({self.alias}) - {status}>"
+
+    def soft_delete(self):
+        """Mark entrant as dropped instead of deleting."""
+        self.name = "Dropped"
+        self.alias = None
+        self.dropped = True
 
     def to_dict(self):
         return {
@@ -69,6 +78,7 @@ class Entrant(db.Model):
             "name": self.name,
             "alias": self.alias,
             "event_id": self.event_id,
+            "dropped": self.dropped,
         }
 
 
