@@ -1,7 +1,7 @@
 # File: backend/tests/conftest.py
 # Purpose: Global pytest fixtures for backend tests.
 # Provides:
-# - app: Flask app created via factory (uses in-memory SQLite by default for speed)
+# - app: Flask app created via factory (uses TestConfig)
 # - client: Flask test client for API requests
 # - session: SQLAlchemy session scoped to test context
 # - Helpers: create_event, seed_event_with_entrants, auth_header
@@ -9,26 +9,23 @@
 import pytest
 from backend.app import create_app
 from backend.models import db, Event, Entrant
+from backend.config import TestConfig
 from flask_jwt_extended import create_access_token
 
 
+# ------------------------------
+# Core fixtures
+# ------------------------------
 @pytest.fixture(scope="session")
 def app():
-    """Create a Flask app instance for testing with in-memory SQLite."""
-    app = create_app()
-    app.config.update(
-        {
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-            "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
-            "JWT_SECRET_KEY": "test-secret",
-        }
-    )
+    """Create a Flask app instance for testing with TestConfig."""
+    app = create_app(TestConfig)
     return app
+
 
 @pytest.fixture(autouse=True)
 def reset_db(app):
-    """Reset schema before each test to avoid PK collisions."""
+    """Reset schema before each test to ensure isolation."""
     with app.app_context():
         db.drop_all()
         db.create_all()
@@ -55,6 +52,7 @@ def session(app):
 # ------------------------------
 @pytest.fixture
 def create_event(session):
+    """Helper to create a single Event."""
     def _create_event(**kwargs):
         event = Event(
             name=kwargs.get("name", "Test Cup"),
@@ -65,12 +63,12 @@ def create_event(session):
         session.add(event)
         session.commit()
         return event
-
     return _create_event
 
 
 @pytest.fixture
 def seed_event_with_entrants(session, create_event):
+    """Helper to create an Event with two Entrants."""
     def _seed_event_with_entrants():
         event = create_event(name="Match Cup", status="published")
         e1 = Entrant(name="Hero A", alias="Alpha", event_id=event.id)
@@ -78,7 +76,6 @@ def seed_event_with_entrants(session, create_event):
         session.add_all([e1, e2])
         session.commit()
         return event, e1, e2
-
     return _seed_event_with_entrants
 
 
@@ -88,4 +85,3 @@ def auth_header(app):
     with app.app_context():
         token = create_access_token(identity="testuser")
         return {"Authorization": f"Bearer {token}"}
-
