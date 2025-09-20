@@ -1,9 +1,9 @@
 // File: frontend/src/components/EventDetail.jsx
 // Purpose: Detailed view of a single event with entrants, matches, and status controls.
 // Notes:
-// - Redirects to /404 or /500 with <Navigate /> for test-friendly handling.
+// - Handles soft-deleted entrants by showing "Dropped" instead of crashing.
 // - Provides inline error feedback with role="alert".
-// - Handles entrants, matches, and status updates.
+// - Redirects to /404 or /500 for test-friendly error handling.
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Navigate, Link as RouterLink } from "react-router-dom";
@@ -131,9 +131,7 @@ export default function EventDetail() {
           {event.name} — {event.date}
         </Typography>
         <FormControl size="small">
-          <InputLabel id="status-label"
-          >Status
-          </InputLabel>
+          <InputLabel id="status-label">Status</InputLabel>
           <Select
             labelId="status-label"
             id="status-select"
@@ -235,20 +233,6 @@ export default function EventDetail() {
                 flex: 1,
                 overflowY: "auto",
                 maxHeight: 500,
-                "&::-webkit-scrollbar": {
-                  width: "10px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  backgroundColor: "#f1f1f1",
-                  borderRadius: "10px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#888",
-                  borderRadius: "10px",
-                },
-                "&::-webkit-scrollbar-thumb:hover": {
-                  backgroundColor: "#555",
-                },
               }}
               data-testid="entrants-scroll"
             >
@@ -264,8 +248,12 @@ export default function EventDetail() {
                   {event.entrants?.map((entrant) => (
                     <TableRow key={entrant.id}>
                       <TableCell>{entrant.id}</TableCell>
-                      <TableCell>{entrant.name}</TableCell>
-                      <TableCell>{entrant.alias}</TableCell>
+                      <TableCell>
+                        {entrant.dropped ? "Dropped" : entrant.name}
+                      </TableCell>
+                      <TableCell>
+                        {entrant.dropped ? "-" : entrant.alias}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -293,20 +281,6 @@ export default function EventDetail() {
                 flex: 1,
                 overflowY: "auto",
                 maxHeight: 500,
-                "&::-webkit-scrollbar": {
-                  width: "10px",
-                },
-                "&::-webkit-scrollbar-track": {
-                  backgroundColor: "#f1f1f1",
-                  borderRadius: "10px",
-                },
-                "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: "#888",
-                  borderRadius: "10px",
-                },
-                "&::-webkit-scrollbar-thumb:hover": {
-                  backgroundColor: "#555",
-                },
               }}
               data-testid="matches-scroll"
             >
@@ -323,18 +297,22 @@ export default function EventDetail() {
                 </TableHead>
                 <TableBody>
                   {event.matches?.map((m) => {
-                    const winner = event.entrants?.find(
-                      (e) => e.id === m.winner_id,
-                    );
+                    const e1 = event.entrants?.find((e) => e.id === m.entrant1_id);
+                    const e2 = event.entrants?.find((e) => e.id === m.entrant2_id);
+                    const w = event.entrants?.find((e) => e.id === m.winner_id);
                     return (
                       <TableRow key={m.id}>
                         <TableCell>{m.id}</TableCell>
                         <TableCell>{m.round}</TableCell>
-                        <TableCell>{m.entrant1_id}</TableCell>
-                        <TableCell>{m.entrant2_id}</TableCell>
+                        <TableCell>{e1?.dropped ? "Dropped" : e1?.name || "-"}</TableCell>
+                        <TableCell>{e2?.dropped ? "Dropped" : e2?.name || "-"}</TableCell>
                         <TableCell>{m.scores}</TableCell>
                         <TableCell>
-                          {winner ? `${winner.name} (${winner.alias})` : "TBD"}
+                          {w
+                            ? w.dropped
+                              ? "Dropped"
+                              : `${w.name} (${w.alias})`
+                            : "TBD"}
                         </TableCell>
                       </TableRow>
                     );

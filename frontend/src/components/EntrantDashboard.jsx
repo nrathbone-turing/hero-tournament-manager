@@ -30,7 +30,11 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
       await apiFetch("/entrants", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, event_id: eventId }),
+        body: JSON.stringify({
+          ...formData,
+          event_id: eventId,
+          dropped: false, // always seed with dropped = false
+        }),
       });
 
       setFormData({ name: "", alias: "" });
