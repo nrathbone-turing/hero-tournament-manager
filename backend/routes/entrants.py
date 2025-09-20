@@ -52,15 +52,36 @@ def update_entrant(entrant_id):
 @bp.route("/<int:entrant_id>", methods=["DELETE"])
 @jwt_required()
 def delete_entrant(entrant_id):
-    """Soft-delete an Entrant by ID (mark as dropped)."""
+    """Delete an Entrant by ID.
+    - Hard delete if not referenced in matches
+    - Soft delete (mark dropped) if referenced in matches
+    """
     entrant = Entrant.query.get_or_404(entrant_id)
 
+    from backend.models import Match  # avoid circular import
+
+    # Check if entrant is tied to any matches
+    has_matches = (
+        Match.query.filter(
+            (Match.entrant1_id == entrant_id)
+            | (Match.entrant2_id == entrant_id)
+            | (Match.winner_id == entrant_id)
+        ).count()
+        > 0
+    )
+
     try:
-        entrant.soft_delete()
-        db.session.commit()
-        print(f"⚠️ Entrant {entrant_id} marked as dropped")
-        return jsonify(entrant.to_dict()), 200
+        if has_matches:
+            entrant.soft_delete()
+            db.session.commit()
+            print(f"⚠️ Entrant {entrant_id} marked as dropped (still in matches)")
+            return jsonify(entrant.to_dict()), 200
+        else:
+            db.session.delete(entrant)
+            db.session.commit()
+            print(f"✅ Entrant {entrant_id} fully deleted (no matches)")
+            return "", 204
     except Exception as e:
         db.session.rollback()
-        print(f"❌ Error soft-deleting entrant {entrant_id}: {e}")
-        return jsonify(error="Failed to drop entrant"), 500
+        print(f"❌ Error deleting entrant {entrant_id}: {e}")
+        return jsonify(error="Failed to delete entrant"), 500
