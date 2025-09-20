@@ -4,10 +4,12 @@
 # - Reads from backend/seeds/events.json, entrants.json, matches.json
 # - Inserts into SQLAlchemy models via Flask app context.
 # - Seeds exactly one admin user (no logins for BYE or entrants).
+# - Resets Postgres sequences to avoid duplicate key issues.
 # - Run with: npm run db:clear && npm run db:seed
 
 import os
 import json
+from sqlalchemy.sql import text
 from backend.app import create_app
 from backend.models import db, Event, Entrant, Match, User
 
@@ -34,13 +36,13 @@ def run():
                 Event(id=e["id"], name=e["name"], date=e["date"], status=e["status"])
             )
 
-        # Insert Entrants (read dropped flag if present)
+        # Insert Entrants (skip creating logins for entrants)
         for en in entrants:
             db.session.add(
                 Entrant(
                     id=en["id"],
                     name=en["name"],
-                    alias=en.get("alias"),
+                    alias=en["alias"],
                     event_id=en["event_id"],
                     dropped=en.get("dropped", False),
                 )
@@ -67,12 +69,27 @@ def run():
             db.session.add(admin)
 
         db.session.commit()
+
+        # Reset sequences so autoincrement picks up after max IDs
+        for table in ["events", "entrants", "matches"]:
+            seq_sql = text(f"""
+                SELECT setval(
+                  pg_get_serial_sequence('{table}', 'id'),
+                  COALESCE((SELECT MAX(id) FROM {table}), 1) + 1,
+                  false
+                )
+            """)
+            db.session.execute(seq_sql)
+
+        db.session.commit()
+
         print(
             f"✅ Inserted {len(events)} events, "
             f"{len(entrants)} entrants, "
             f"{len(matches)} matches, "
             f"+ admin user"
         )
+        print("🔄 Sequences reset for events, entrants, and matches.")
 
 
 if __name__ == "__main__":

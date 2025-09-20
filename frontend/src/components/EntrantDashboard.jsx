@@ -32,7 +32,7 @@ export default function EntrantDashboard({ eventId, onEntrantAdded }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          event_id: eventId,
+          event_id: Number(eventId),
           dropped: false, // always seed with dropped = false
         }),
       });

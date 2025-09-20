@@ -20,18 +20,26 @@ function getAuthHeaders() {
 
 // Generic fetch wrapper
 export async function apiFetch(endpoint, options = {}) {
-  const res = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = `${API_BASE_URL}${endpoint}`;
+  console.log("🔎 apiFetch:", url, options); // helpful debug log
+
+  const res = await fetch(url, {
     ...options,
     headers: {
       ...getAuthHeaders(),
       ...(options.headers || {}),
     },
-
   });
 
-
   if (!res.ok) {
-    throw new Error(`API error: ${res.status} ${res.statusText}`);
+    let message = `API error: ${res.status} ${res.statusText}`;
+    try {
+      const body = await res.json();
+      if (body?.error) message = body.error; // prefer backend error messages
+    } catch {
+      /* ignore parse error */
+    }
+    throw new Error(message);
   }
 
   // If no body (204), return true
