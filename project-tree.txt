@@ -1,0 +1,38 @@
+.
+├── backend
+│   ├── __init__.py
+│   ├── app.py
+│   ├── blocklist.py
+│   ├── config.py
+│   ├── database.py
+│   ├── migrations
+│   ├── models.py
+│   ├── requirements.txt
+│   ├── routes
+│   ├── scripts
+│   ├── seeds
+│   ├── server.js
+│   └── tests
+├── frontend
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   ├── README.md
+│   └── src
+├── instance
+│   └── tournaments.db
+├── LICENSE
+├── package-lock.json
+├── package.json
+├── project-tree.txt
+├── pyproject.toml
+├── pytest.ini
+├── README.md
+├── requirements-dev.txt
+└── venv
+    ├── bin
+    ├── include
+    ├── lib
+    └── pyvenv.cfg
+
+15 directories, 21 files
