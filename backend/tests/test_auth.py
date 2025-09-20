@@ -145,10 +145,15 @@ def test_signup_missing_fields(client):
 # Expiry + revocation tests
 # -------------------------
 
+
 def test_expired_token_denied(client):
     client.post(
         "/signup",
-        json={"username": "expireuser", "email": "expire@example.com", "password": "pw"},
+        json={
+            "username": "expireuser",
+            "email": "expire@example.com",
+            "password": "pw",
+        },
     )
     login_resp = client.post(
         "/login", json={"email": "expire@example.com", "password": "pw"}

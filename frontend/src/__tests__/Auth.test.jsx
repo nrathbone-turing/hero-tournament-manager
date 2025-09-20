@@ -17,7 +17,8 @@ beforeEach(() => {
     if (url.endsWith("/signup")) {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve({ username: "testuser", email: "test@example.com" }),
+        json: () =>
+          Promise.resolve({ username: "testuser", email: "test@example.com" }),
       });
     }
     if (url.endsWith("/login")) {
@@ -45,9 +46,15 @@ test("signup form creates user", async () => {
     </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "testuser" } });
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+  fireEvent.change(screen.getByLabelText(/username/i), {
+    target: { value: "testuser" },
+  });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@example.com" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
   fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
   expect(await screen.findByText(/signed up as testuser/i)).toBeInTheDocument();
@@ -62,8 +69,12 @@ test("login form logs in", async () => {
     </AuthProvider>,
   );
 
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "test@example.com" } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "password123" } });
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: "test@example.com" },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: "password123" },
+  });
   fireEvent.click(screen.getByRole("button", { name: /log in/i }));
 
   await waitFor(() =>

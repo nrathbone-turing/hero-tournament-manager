@@ -18,7 +18,7 @@ function LocationSpy() {
 }
 
 describe("App routing", () => {
-    test("renders Navbar brand link", async () => {
+  test("renders Navbar brand link", async () => {
     mockFetchSuccess();
     renderWithRouter(<App />, { route: "/" });
 
@@ -75,7 +75,7 @@ describe("App routing (auth happy path)", () => {
 
     // confirm detail heading renders
     expect(
-      await screen.findByText(/Hero Cup — 2025-09-12/i)
+      await screen.findByText(/Hero Cup — 2025-09-12/i),
     ).toBeInTheDocument();
   });
 });

@@ -32,7 +32,7 @@ export default function LoginForm() {
       setMessage(err.message || "Login failed");
     }
   };
-  
+
   return (
     <Container maxWidth="sm" sx={{ mt: 6 }}>
       <Paper sx={{ p: 4 }}>

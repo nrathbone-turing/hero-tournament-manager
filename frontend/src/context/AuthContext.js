@@ -47,7 +47,8 @@ export default function AuthProvider({ children }) {
     const newToken = data.access_token || data.token;
     if (newToken) setToken(newToken);
     setUser({ username: email.split("@")[0], email });
-    return data;  };
+    return data;
+  };
 
   const logout = () => {
     setToken(null);
