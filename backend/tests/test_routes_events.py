@@ -25,14 +25,14 @@ def test_create_event(client, auth_header):
     assert "id" in data
 
 
-def test_get_events_with_counts(client, create_event, session, auth_header):
+def test_get_events_with_counts(client, create_event, session):
     event = create_event(name="Seed Event", status="published")
     e1 = Entrant(name="Alpha", alias="A", event_id=event.id)
     e2 = Entrant(name="Beta", alias="B", event_id=event.id)
     session.add_all([e1, e2])
     session.commit()
 
-    response = client.get("/events", headers=auth_header)
+    response = client.get("/events")
     assert response.status_code == 200
     data = response.get_json()
     seed_event = next(ev for ev in data if ev["name"] == "Seed Event")
@@ -41,9 +41,7 @@ def test_get_events_with_counts(client, create_event, session, auth_header):
 
 def test_update_event(client, create_event, auth_header):
     event = create_event(status="drafting")
-    response = client.put(
-        f"/events/{event.id}", json={"status": "cancelled"}, headers=auth_header
-    )
+    response = client.put(f"/events/{event.id}", json={"status": "cancelled"}, headers=auth_header)
     assert response.status_code == 200
     assert response.get_json()["status"] == "cancelled"
 

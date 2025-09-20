@@ -30,10 +30,10 @@ import {
 } from "@mui/material";
 import EntrantDashboard from "./EntrantDashboard";
 import MatchDashboard from "./MatchDashboard";
-import { apiFetch } from "../api";
+import { API_BASE_URL } from "../api";
 
 export default function EventDetail() {
-const { id } = useParams();
+  const { id } = useParams();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,19 +46,23 @@ const { id } = useParams();
   const fetchEvent = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await apiFetch(`/events/${id}`);
+      const res = await fetch(`${API_BASE_URL}/events/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setRedirect404(true);
+          return;
+        }
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
+        }
+        throw new Error("Failed to load event data");
+      }
+      const data = await res.json();
       setEvent(data);
       setError(null);
     } catch (err) {
-      if (err.message.includes("404")) {
-        setRedirect404(true);
-        return;
-      }
-      if (err.message.includes("500")) {
-        setRedirect500(true);
-        return;
-      }
-      setError("Failed to load event data");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,10 @@ const { id } = useParams();
   async function handleRemoveEntrant(e) {
     e.preventDefault();
     try {
-      await apiFetch(`/entrants/${removeId}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE_URL}/entrants/${removeId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to remove entrant");
       setRemoveId("");
       fetchEvent();
     } catch {
@@ -83,16 +90,29 @@ const { id } = useParams();
     if (!event) return;
     const prevStatus = event.status;
     try {
-      await apiFetch(`/events/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/events/${id}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...event, status: newStatus }),
       });
+      if (!res.ok) {
+        if (res.status === 404) {
+          setRedirect404(true);
+          return;
+        }
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
+        }
+        throw new Error("Failed to update status");
+      }
       await fetchEvent();
     } catch {
       setError("Failed to update status");
       setEvent({ ...event, status: prevStatus });
     }
   }
+
   if (redirect404) return <Navigate to="/404" replace />;
   if (redirect500) return <Navigate to="/500" replace />;
 

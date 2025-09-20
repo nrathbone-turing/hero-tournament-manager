@@ -96,10 +96,8 @@ def test_match_to_dict_with_missing_winner(session):
     event = Event(name="Mystery Cup", status="drafting")
     e1 = Entrant(name="Hero", event=event)
     e2 = Entrant(name="Villain", event=event)
-    session.add_all([event, e1, e2])
-    session.flush()
-    match = Match(event=event, round=1, entrant1_id=e1.id, entrant2_id=e2.id, scores="0-0")
-    session.add(match)
+    match = Match(event=event, round=1, entrant1_id=1, entrant2_id=2, scores="0-0")
+    session.add_all([event, e1, e2, match])
     session.commit()
     data = match.to_dict()
     assert data["winner_id"] is None

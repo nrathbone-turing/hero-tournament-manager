@@ -21,13 +21,13 @@ def test_create_entrant(client, create_event, auth_header):
     assert data["event_id"] == event.id
 
 
-def test_get_entrants(client, create_event, session, auth_header):
+def test_get_entrants(client, create_event, session):
     event = create_event()
     entrant = Entrant(name="Batman", alias="Dark Knight", event_id=event.id)
     session.add(entrant)
     session.commit()
 
-    response = client.get("/entrants", headers=auth_header)
+    response = client.get("/entrants")
     assert response.status_code == 200
     data = response.get_json()
     assert any(ent["name"] == "Batman" for ent in data)
@@ -39,9 +39,7 @@ def test_update_entrant(client, create_event, session, auth_header):
     session.add(entrant)
     session.commit()
 
-    response = client.put(
-        f"/entrants/{entrant.id}", json={"alias": "Updated Alias"}, headers=auth_header
-    )
+    response = client.put(f"/entrants/{entrant.id}", json={"alias": "Updated Alias"}, headers=auth_header)
     assert response.status_code == 200
     assert response.get_json()["alias"] == "Updated Alias"
 

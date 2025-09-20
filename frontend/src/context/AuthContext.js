@@ -7,7 +7,7 @@
 // - Provides isAuthenticated flag.
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { apiFetch } from "../api";
+import { API_BASE_URL } from "../api";
 
 const AuthContext = createContext();
 
@@ -28,25 +28,37 @@ export default function AuthProvider({ children }) {
   }, [token]);
 
   const signup = async (username, email, password) => {
-    const data = await apiFetch("/signup", {
+    const resp = await fetch(`${API_BASE_URL}/signup`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });
-    const newToken = data.access_token || data.token;
-    if (newToken) setToken(newToken);
-    setUser({ username, email });
-    return data;
+    if (resp.ok) {
+      const data = await resp.json();
+      setUser(data);
+      return data;
+    } else {
+      const err = await resp.json();
+      throw new Error(err.error || "Signup failed");
+    }
   };
 
   const login = async (email, password) => {
-    const data = await apiFetch("/login", {
+    const resp = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const newToken = data.access_token || data.token;
-    if (newToken) setToken(newToken);
-    setUser({ username: email.split("@")[0], email });
-    return data;
+    if (resp.ok) {
+      const data = await resp.json();
+      const newToken = data.access_token || data.token;
+      setToken(newToken);
+      setUser({ username: email.split("@")[0], email });
+      return data;
+    } else {
+      const err = await resp.json();
+      throw new Error(err.error || "Login failed");
+    }
   };
 
   const logout = () => {
