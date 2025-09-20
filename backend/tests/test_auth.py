@@ -156,6 +156,7 @@ def test_expired_token_denied(client):
     token = login_resp.get_json()["access_token"]
 
     # wait for expiry (config sets very short expiry in test env)
+    import time
     time.sleep(2)
 
     headers = {"Authorization": f"Bearer {token}"}

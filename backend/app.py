@@ -6,13 +6,11 @@
 # - Normalizes JWT errors to return 401 Unauthorized instead of 422.
 # - Adds short-lived JWT expiry and an in-memory blocklist for logout/revocation.
 
-import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from datetime import timedelta
-from dotenv import load_dotenv
 
 from backend.database import db, init_db
 from backend.routes.events import bp as events_bp
@@ -23,15 +21,10 @@ from backend.blocklist import jwt_blocklist
 
 
 def create_app():
-    load_dotenv()
     app = Flask(__name__)
-    
-    # Use DATABASE_URL from .env if available, else fallback to SQLite
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///tournaments.db"
-    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tournaments.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "super-secret-key")
+    app.config["JWT_SECRET_KEY"] = "super-secret-key"
     app.config["JWT_TOKEN_LOCATION"] = ["headers"]
     app.config["JWT_HEADER_TYPE"] = "Bearer"
     app.config["JWT_ALGORITHM"] = "HS256"
@@ -76,8 +69,8 @@ def create_app():
     app.register_blueprint(matches_bp)
     app.register_blueprint(auth_bp)
 
-    # with app.app_context():
-    #     init_db()
+    with app.app_context():
+        init_db()
 
     return app
 

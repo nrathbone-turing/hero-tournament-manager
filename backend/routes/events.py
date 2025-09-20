@@ -30,7 +30,6 @@ def create_event():
 
 
 @bp.route("", methods=["GET"])
-@jwt_required()
 def get_events():
     """Retrieve all Events with entrant counts."""
     events = (
@@ -44,7 +43,6 @@ def get_events():
         )
         .outerjoin(Entrant, Entrant.event_id == Event.id)
         .group_by(Event.id)
-        .order_by(Event.date.desc()) 
         .all()
     )
 
@@ -69,7 +67,6 @@ def get_events():
 
 
 @bp.route("/<int:event_id>", methods=["GET"])
-@jwt_required()
 def get_event(event_id):
     """Retrieve a single Event with entrants + matches (with names)."""
     event = Event.query.get_or_404(event_id)

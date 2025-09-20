@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from "react";
 import { Link as RouterLink, Navigate } from "react-router-dom";
-import { apiFetch } from "../api";
+import { API_BASE_URL } from "../api";
 import {
   Container,
   Typography,
@@ -41,14 +41,18 @@ export default function EventDashboard() {
 
   async function fetchEvents() {
     try {
-      const data = await apiFetch("/events");
+      const res = await fetch(`${API_BASE_URL}/events`);
+      if (!res.ok) {
+        if (res.status >= 500) {
+          setRedirect500(true);
+          return;
+        }
+        throw new Error("Failed to fetch events");
+      }
+      const data = await res.json();
       setEvents(data);
       setFetchError(null);
-    } catch (err) {
-      if (err.message.includes("500")) {
-        setRedirect500(true);
-        return;
-      }
+    } catch {
       setFetchError("Failed to fetch events");
     } finally {
       setLoading(false);
@@ -62,10 +66,13 @@ export default function EventDashboard() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const newEvent = await apiFetch("/events", {
+      const res = await fetch(`${API_BASE_URL}/events`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      if (!res.ok) throw new Error("Failed to create event");
+      const newEvent = await res.json();
       setEvents([...events, newEvent]);
       setFormData({ name: "", date: "", status: "drafting" });
       setCreateError(null);
@@ -75,7 +82,7 @@ export default function EventDashboard() {
   }
 
   if (redirect500) return <Navigate to="/500" replace />;
-  
+
   return (
     <Container maxWidth="lg" sx={{ mt: 6 }}>
       <Typography variant="h4" gutterBottom align="center">

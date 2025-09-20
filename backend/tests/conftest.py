@@ -1,20 +1,18 @@
 # File: backend/tests/conftest.py
 # Purpose: Global pytest fixtures for backend tests.
 # Provides:
-# - app: Flask app created via factory (uses in-memory SQLite by default for speed)
+# - app: Flask app created via factory (uses in-memory SQLite)
 # - client: Flask test client for API requests
 # - session: SQLAlchemy session scoped to test context
-# - Helpers: create_event, seed_event_with_entrants, auth_header
 
 import pytest
 from backend.app import create_app
 from backend.models import db, Event, Entrant
-from flask_jwt_extended import create_access_token
 
 
 @pytest.fixture(scope="session")
 def app():
-    """Create a Flask app instance for testing with in-memory SQLite."""
+    """Create a Flask app instance for testing with in-memory DB."""
     app = create_app()
     app.config.update(
         {
@@ -24,17 +22,12 @@ def app():
             "JWT_SECRET_KEY": "test-secret",
         }
     )
-    return app
 
-
-@pytest.fixture(autouse=True)
-def reset_db(app):
-    """Reset schema before each test to avoid PK collisions."""
     with app.app_context():
-        db.drop_all()
         db.create_all()
-        yield
+        yield app
         db.session.remove()
+        db.drop_all()
 
 
 @pytest.fixture
@@ -66,6 +59,7 @@ def create_event(session):
         session.add(event)
         session.commit()
         return event
+
     return _create_event
 
 
@@ -78,8 +72,11 @@ def seed_event_with_entrants(session, create_event):
         session.add_all([e1, e2])
         session.commit()
         return event, e1, e2
+
     return _seed_event_with_entrants
 
+
+from flask_jwt_extended import create_access_token
 
 @pytest.fixture
 def auth_header(app):
@@ -87,3 +84,4 @@ def auth_header(app):
     with app.app_context():
         token = create_access_token(identity="testuser")
         return {"Authorization": f"Bearer {token}"}
+
