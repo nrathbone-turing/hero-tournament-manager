@@ -2,14 +2,23 @@
 # Purpose: Defines Flask Blueprint for Event CRUD routes.
 # Notes:
 # - Adds better error handling + debug logs.
+# - Multi-level sorting: date desc → status priority → name asc.
 
 from flask import Blueprint, request, jsonify
-from sqlalchemy import func
+from sqlalchemy import func, case, asc, desc
 from flask_jwt_extended import jwt_required
 from backend.models import db, Event, Entrant
 import traceback
 
 bp = Blueprint("events", __name__, url_prefix="/events")
+
+STATUS_ORDER = case(
+    (Event.status == "published", 1),
+    (Event.status == "drafting", 2),
+    (Event.status == "completed", 3),
+    (Event.status == "cancelled", 4),
+    else_=5,
+)
 
 
 @bp.route("", methods=["POST"])
@@ -50,7 +59,11 @@ def get_events():
             )
             .outerjoin(Entrant, Entrant.event_id == Event.id)
             .group_by(Event.id)
-            .order_by(Event.date.desc())
+            .order_by(
+                desc(Event.date),   # newest first
+                STATUS_ORDER,       # published → drafting → completed → cancelled
+                asc(Event.name),    # alphabetical
+            )
             .all()
         )
         return (

@@ -3,7 +3,9 @@
 # Notes:
 # - Uses Flask test client fixture (`client`) and helpers from conftest.py.
 # - Covers create, read (with entrant counts), update, and delete.
+# - Adds regression test for multi-level ordering: date desc → status priority → name asc.
 
+import pytest
 from backend.models import Event, Entrant, db
 from sqlalchemy import select
 
@@ -67,3 +69,29 @@ def test_create_event_requires_auth(client):
         "status": "drafting",
     })
     assert resp.status_code == 401
+
+
+def test_get_events_sort_order(client, session):
+    # Status order priority mapping: published > drafting > completed > cancelled
+    # Newest date should come first
+    e1 = Event(name="Alpha", date="2025-09-10", status="drafting")   # older date
+    e2 = Event(name="Beta", date="2025-09-12", status="published")   # newer, high status
+    e3 = Event(name="Gamma", date="2025-09-12", status="completed")  # same date, lower status
+    e4 = Event(name="Delta", date="2025-09-12", status="drafting")   # same date, lower than published
+    e5 = Event(name="Zeta", date="2025-09-12", status="drafting")    # same date/status, sorted by name (Delta < Zeta)
+
+    session.add_all([e1, e2, e3, e4, e5])
+    session.commit()
+
+    resp = client.get("/events")
+    assert resp.status_code == 200
+    events = resp.get_json()
+
+    # Extract order of names
+    names = [e["name"] for e in events]
+
+    # Expected order:
+    # - Newest date (2025-09-12) first
+    # - Within that date: published > drafting (alphabetical Delta < Zeta) > completed
+    # - Then the older 2025-09-10 event last
+    assert names == ["Beta", "Delta", "Zeta", "Gamma", "Alpha"]
