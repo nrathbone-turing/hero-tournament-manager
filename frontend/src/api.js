@@ -2,6 +2,7 @@
 // Purpose: Centralize API base URL and inject JWT auth headers into fetch calls.
 // Notes:
 // - Wraps fetch calls with Authorization header if token exists.
+// - Adds console.error logging for failures.
 // - Exports helper for DELETE entrant (others can reuse apiFetch).
 
 export const API_BASE_URL =
@@ -21,7 +22,7 @@ function getAuthHeaders() {
 // Generic fetch wrapper
 export async function apiFetch(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log("🔎 apiFetch:", url, options); // helpful debug log
+  console.log("🔎 apiFetch:", url, options);
 
   const res = await fetch(url, {
     ...options,
@@ -32,13 +33,14 @@ export async function apiFetch(endpoint, options = {}) {
   });
 
   if (!res.ok) {
-    let message = `API error: ${res.status} ${res.statusText}`;
+    let message = `API error: ${res.status} ${res.statusText || ""}`.trim();
     try {
       const body = await res.json();
       if (body?.error) message = body.error; // prefer backend error messages
     } catch {
       /* ignore parse error */
     }
+    console.error("❌ apiFetch failed:", url, message);
     throw new Error(message);
   }
 
