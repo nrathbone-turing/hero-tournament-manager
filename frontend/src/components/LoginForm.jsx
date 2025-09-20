@@ -3,8 +3,9 @@
 // Notes:
 // - Redirects to / after successful login.
 // - Stores access_token via useAuth (which persists to localStorage).
+// - If already authenticated, redirects to / immediately.
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,11 +18,18 @@ import {
 } from "@mui/material";
 
 export default function LoginForm() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
