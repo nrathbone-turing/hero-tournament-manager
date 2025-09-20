@@ -1,9 +1,9 @@
 # File: backend/routes/matches.py
 # Purpose: Defines Flask Blueprint for Match CRUD routes.
 # Notes:
-# - Supports create, read (list), update, and delete.
-# - Uses Match.to_dict() for consistent serialization.
-# - Always returns matches with entrant names for frontend convenience.
+# - Casts IDs to integers defensively.
+# - Validates that winner_id matches entrant1_id or entrant2_id.
+# - Returns matches with entrant names for frontend convenience.
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
@@ -16,18 +16,33 @@ bp = Blueprint("matches", __name__, url_prefix="/matches")
 @jwt_required()
 def create_match():
     """Create a new Match."""
-    data = request.get_json()
-    match = Match(
-        event_id=data.get("event_id"),
-        round=data.get("round"),
-        entrant1_id=data.get("entrant1_id"),
-        entrant2_id=data.get("entrant2_id"),
-        scores=data.get("scores"),
-        winner_id=data.get("winner_id"),
-    )
-    db.session.add(match)
-    db.session.commit()
-    return jsonify(match.to_dict(include_names=True)), 201
+    data = request.get_json() or {}
+    try:
+        event_id = int(data.get("event_id"))
+        entrant1_id = int(data.get("entrant1_id"))
+        entrant2_id = int(data.get("entrant2_id"))
+        round_num = int(data.get("round")) if data.get("round") else None
+        winner_id = int(data["winner_id"]) if data.get("winner_id") else None
+
+        # Validation: winner must match one of the entrants
+        if winner_id and winner_id not in (entrant1_id, entrant2_id):
+            return jsonify(error="Winner ID must match one of the entrants"), 400
+
+        match = Match(
+            event_id=event_id,
+            round=round_num,
+            entrant1_id=entrant1_id,
+            entrant2_id=entrant2_id,
+            scores=data.get("scores"),
+            winner_id=winner_id,
+        )
+        db.session.add(match)
+        db.session.commit()
+        return jsonify(match.to_dict(include_names=True)), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error creating match: {e}")
+        return jsonify(error="Failed to create match"), 500
 
 
 @bp.route("", methods=["GET"])

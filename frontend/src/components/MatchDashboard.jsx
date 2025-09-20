@@ -1,9 +1,9 @@
 // File: frontend/src/components/MatchDashboard.jsx
 // Purpose: MUI-styled form for creating matches.
 // Notes:
-// - Prevents duplicate submissions.
-// - Inline error feedback with role="alert".
-// - Clears errors after success.
+// - Casts entrant IDs + winner ID to numbers before sending.
+// - Validates that winner_id (if provided) is one of the entrants.
+// - Prevents duplicate submissions and shows inline error feedback.
 
 import { useState } from "react";
 import { apiFetch } from "../api";
@@ -33,9 +33,30 @@ export default function MatchDashboard({ eventId, onMatchAdded }) {
     setSubmitting(true);
 
     try {
+      const payload = {
+        event_id: Number(eventId),
+        round: Number(formData.round),
+        entrant1_id: Number(formData.entrant1_id),
+        entrant2_id: Number(formData.entrant2_id),
+        scores: formData.scores,
+        winner_id: formData.winner_id ? Number(formData.winner_id) : null,
+      };
+
+      // Validation: winner must be one of the entrants
+      if (
+        payload.winner_id &&
+        payload.winner_id !== payload.entrant1_id &&
+        payload.winner_id !== payload.entrant2_id
+      ) {
+        setError("Winner ID must match one of the entrants");
+        setSubmitting(false);
+        return;
+      }
+
       await apiFetch("/matches", {
         method: "POST",
-        body: JSON.stringify({ ...formData, event_id: eventId }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
       setFormData({
