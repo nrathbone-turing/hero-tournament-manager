@@ -44,6 +44,7 @@ const originalWarn = console.warn;
 
 beforeAll(() => {
   console.error = (...args) => {
+    if (/apiFetch failed/.test(args[0])) return;
     if (/not wrapped in act/.test(args[0])) return;
     if (/MUI: The prop `xs` of `Grid` is deprecated/.test(args[0])) return;
     originalError.call(console, ...args);
